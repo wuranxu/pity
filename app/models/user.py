@@ -5,7 +5,7 @@ from datetime import datetime
 class User(db.Model):
     id = db.Column(db.INT, primary_key=True)
     username = db.Column(db.String(16), unique=True, index=True)
-    nickname = db.Column(db.String(16), unique=True, index=True)
+    name = db.Column(db.String(16), index=True)
     password = db.Column(db.String(32), unique=False)
     email = db.Column(db.String(64), unique=True, nullable=False)
     role = db.Column(db.INT, default=0, comment="0: 普通用户 1: 组长 2: 超级管理员")
@@ -14,11 +14,11 @@ class User(db.Model):
     deleted_at = db.Column(db.DATETIME)
     last_login_at = db.Column(db.DATETIME)
 
-    def __init__(self, username, nickname, password, email):
+    def __init__(self, username, name, password, email):
         self.username = username
         self.password = password
         self.email = email
-        self.nickname = nickname
+        self.name = name
         self.created_at = datetime.now()
         self.updated_at = datetime.now()
         self.role = 0
