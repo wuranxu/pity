@@ -1,11 +1,13 @@
 from datetime import datetime
 
 from app import pity
+from app.controllers.request.http import req
 from app.utils.logger import Log
 from app.controllers.auth.user import auth
 
 # 注册蓝图
 pity.register_blueprint(auth)
+pity.register_blueprint(req)
 
 
 @pity.route('/')
