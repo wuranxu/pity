@@ -8,7 +8,7 @@
 
   希望大家都能够找到自己的方向，冲鸭！如果能够帮到大家，希望大家点个star，感激不尽~也欢迎大家提出各种各样的问题。
 
-![](https://gitee.com/woodywrx/picture/raw/master/2021-3-10/1615390483947-image.png)
+![](https://gitee.com/woodywrx/picture/raw/master/2021-3-10/1615391632083-image.png)
 
   也欢迎大家关注对应的公众号: **测试开发入坑**
   
