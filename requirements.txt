@@ -1,0 +1,7 @@
+flask-cors
+logbook
+pyjwt==1.7.1
+mysql-connector-python
+flask-sqlalchemy
+flask
+requests
