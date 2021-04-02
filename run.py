@@ -12,10 +12,10 @@ pity.register_blueprint(req)
 
 @pity.route('/')
 def hello_world():
-    log = Log("hello world")
-    log.info("有人访问了你的网站了")
+    # log = Log("hello world")
+    # log.info("有人访问了你的网站了")
     now = datetime.now().strftime("%Y-%M-%d %H:%M:%S")
-    print(now)
+    # print(now)
     return now
 
 
