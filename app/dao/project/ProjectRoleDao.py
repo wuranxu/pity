@@ -1,3 +1,5 @@
+from typing import List
+
 from app.models import db
 from app.models.project_role import ProjectRole
 from app.utils.logger import Log
@@ -7,7 +9,7 @@ class ProjectRoleDao(object):
     log = Log("ProjectRoleDao")
 
     @staticmethod
-    def list_project_by_user(user_id):
+    def list_project_by_user(user_id) -> (List, str):
         """
         通过user_id获取项目列表
         :param user_id:
@@ -43,4 +45,3 @@ class ProjectRoleDao(object):
             ProjectRoleDao.log.error(f"添加项目用户失败, {e}")
             return f"添加项目用户失败, {e}"
         return None
-
