@@ -12,8 +12,9 @@ class Project(db.Model):
     create_user = db.Column(db.INT, nullable=True)
     update_user = db.Column(db.INT, nullable=True)
     private = db.Column(db.BOOLEAN, default=False)
+    description = db.Column(db.String(200))
 
-    def __init__(self, name, owner, create_user, private=False):
+    def __init__(self, name, owner, create_user, description="", private=False):
         self.name = name
         self.owner = owner
         self.private = private
@@ -21,4 +22,6 @@ class Project(db.Model):
         self.updated_at = datetime.now()
         self.create_user = create_user
         self.update_user = create_user
+        self.description = description
         self.deleted_at = None
+

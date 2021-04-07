@@ -38,12 +38,12 @@ class ProjectDao(object):
             return [], 0, f"获取用户: {user}项目列表失败, {e}"
 
     @staticmethod
-    def add_project(name, owner, user, private):
+    def add_project(name, owner, user, private, description):
         try:
             data = Project.query.filter_by(name=name, deleted_at=None).first()
             if data is not None:
                 return "项目已存在"
-            pr = Project(name, owner, user, private)
+            pr = Project(name, owner, user, description, private)
             db.session.add(pr)
             db.session.commit()
         except Exception as e:
