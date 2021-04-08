@@ -23,7 +23,7 @@ def list_project(user_info):
     result, total, err = ProjectDao.list_project(user_id, user_role, page, size, name)
     if err is not None:
         return jsonify(dict(code=110, data=result, msg=err))
-    return jsonify(dict(code=0, data=ResponseFactory.model_to_list(result), msg="操作成功"))
+    return jsonify(dict(code=0, data=ResponseFactory.model_to_list(result), total=total, msg="操作成功"))
 
 
 @pr.route("/insert", methods=["POST"])
