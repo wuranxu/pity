@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy import or_
 
 from app import pity
@@ -50,3 +52,38 @@ class ProjectDao(object):
             ProjectDao.log.error(f"新增项目: {name}失败, {e}")
             return f"新增项目: {name}失败, {e}"
         return None
+
+    @staticmethod
+    def update_project(user, role, project_id, name, owner, private, description):
+        try:
+            data = Project.query.filter_by(id=project_id, deleted_at=None).first()
+            if data is None:
+                return "项目不存在"
+            data.name = name
+            # 如果修改人不是owner或者超管
+            if data.owner != owner and (role < pity.config.get("ADMIN") or user != data.owner):
+                return "您没有权限修改项目负责人"
+            data.owner = owner
+            data.private = private
+            data.description = description
+            data.updated_at = datetime.now()
+            data.update_user = user
+            db.session.commit()
+        except Exception as e:
+            ProjectDao.log.error(f"编辑项目: {name}失败, {e}")
+            return f"编辑项目: {name}失败, {e}"
+        return None
+
+    @staticmethod
+    def query_project(project_id: int):
+        try:
+            data = Project.query.filter_by(id=project_id, deleted_at=None).first()
+            if data is None:
+                return None, [], "项目不存在"
+            roles, err = ProjectRoleDao.list_role(project_id)
+            if err is not None:
+                return None, [], err
+            return data, roles, None
+        except Exception as e:
+            ProjectDao.log.error(f"查询项目: {project_id}失败, {e}")
+            return None, [], f"查询项目: {project_id}失败, {e}"

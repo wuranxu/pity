@@ -23,6 +23,15 @@ class ProjectRoleDao(object):
             return [], f"查询项目失败, {e}"
 
     @staticmethod
+    def list_role(project_id: int):
+        try:
+            roles = ProjectRole.query.filter_by(project_id=project_id, deleted_at=None).all()
+            return roles, None
+        except Exception as e:
+            ProjectRoleDao.log.error(f"查询项目: {project_id}角色列表失败, {e}")
+            return [], f"查询项目: {project_id}角色列表失败, {e}"
+
+    @staticmethod
     def add_project_role(user_id, project_id, project_role, user):
         """
         为项目添加用户
