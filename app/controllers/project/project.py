@@ -72,10 +72,11 @@ def query_project(user_info):
     if project_id is None or not project_id.isdigit():
         return jsonify(dict(code=101, msg="请传入正确的project_id"))
     result = dict()
-    data, roles, err = ProjectDao.query_project(project_id)
+    data, roles, tree, err = ProjectDao.query_project(project_id)
     if err is not None:
         return jsonify(dict(code=110, data=result, msg=err))
-    result.update({"project": ResponseFactory.model_to_dict(data), "roles": ResponseFactory.model_to_list(roles)})
+    result.update({"project": ResponseFactory.model_to_dict(data), "roles": ResponseFactory.model_to_list(roles),
+                   "test_case": tree})
     return jsonify(dict(code=0, data=result, msg="操作成功"))
 
 
@@ -87,7 +88,7 @@ def insert_project_role(user_info):
         if data.get("user_id") is None or data.get("project_role") is None or data.get("project_id") is None:
             return jsonify(dict(code=101, msg="请求参数有误"))
         err = ProjectRoleDao.add_project_role(data.get("user_id"), data.get("project_id"), data.get("project_role"),
-                                              user_info["id"])
+                                              user_info["id"], user_info["role"])
         if err is not None:
             return jsonify(dict(code=110, msg=err))
     except Exception as e:
@@ -105,6 +106,21 @@ def update_project_role(user_info):
             return jsonify(dict(code=101, msg="请求参数有误"))
         err = ProjectRoleDao.update_project_role(data.get("id"), data.get("project_role"),
                                                  user_info["id"], user_info["role"])
+        if err is not None:
+            return jsonify(dict(code=110, msg=err))
+    except Exception as e:
+        return jsonify(dict(code=110, msg=str(e)))
+    return jsonify(dict(code=0, msg="操作成功"))
+
+
+@pr.route("/role/delete", methods=["POST"])
+@permission()
+def delete_project_role(user_info):
+    try:
+        data = request.get_json()
+        if data.get("id") is None:
+            return jsonify(dict(code=101, msg="请传入role_id"))
+        err = ProjectRoleDao.delete_project_role(data.get("id"), user_info["id"], user_info["role"])
         if err is not None:
             return jsonify(dict(code=110, msg=err))
     except Exception as e:

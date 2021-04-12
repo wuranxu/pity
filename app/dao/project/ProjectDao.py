@@ -4,6 +4,7 @@ from sqlalchemy import or_
 
 from app import pity
 from app.dao.project.ProjectRoleDao import ProjectRoleDao
+from app.dao.test_case.TestCaseDao import TestCaseDao
 from app.models import db
 from app.models.project import Project
 from app.utils.logger import Log
@@ -79,11 +80,14 @@ class ProjectDao(object):
         try:
             data = Project.query.filter_by(id=project_id, deleted_at=None).first()
             if data is None:
-                return None, [], "项目不存在"
+                return None, [], [], "项目不存在"
             roles, err = ProjectRoleDao.list_role(project_id)
             if err is not None:
-                return None, [], err
-            return data, roles, None
+                return None, [], [], err
+            tree, err = TestCaseDao.list_test_case(project_id)
+            if err is not None:
+                return None, [], [], err
+            return data, roles, tree, None
         except Exception as e:
             ProjectDao.log.error(f"查询项目: {project_id}失败, {e}")
-            return None, [], f"查询项目: {project_id}失败, {e}"
+            return None, [], [], f"查询项目: {project_id}失败, {e}"
