@@ -23,13 +23,15 @@ class TestCase(db.Model):
     create_user = db.Column(db.INT, nullable=False)
     update_user = db.Column(db.INT, nullable=False)
 
-    def __init__(self, name, request_type, url, project_id, tag, status, expected, create_user, request_header=None,
-                 request_method=None):
+    def __init__(self, name, request_type, url, project_id, status, expected, priority, create_user,
+                 catalogue, tag=None, request_header=None, request_method=None):
         self.name = name
         self.request_type = request_type
         self.url = url
+        self.priority = priority
         self.project_id = project_id
         self.tag = tag
+        self.catalogue = catalogue
         self.status = status
         self.expected = expected
         self.create_user = create_user

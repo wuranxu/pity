@@ -6,3 +6,4 @@ flask-sqlalchemy
 flask
 requests
 sqlalchemy==1.3.17
+jsonschema

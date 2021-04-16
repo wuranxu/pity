@@ -1,6 +1,7 @@
 from functools import wraps
 
 from flask import request, jsonify
+from jsonschema import validate, FormatChecker, ValidationError
 
 from app import pity
 from app.middleware.Jwt import UserToken
@@ -41,3 +42,23 @@ def permission(role=pity.config.get("GUEST")):
         return wrapper
 
     return login_required
+
+
+def json_validate(sc):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                if request.get_json() is not None:
+                    validate(request.get_json(), sc, format_checker=FormatChecker())
+                else:
+                    raise Exception("请求json参数不合法")
+            except ValidationError as e:
+                return jsonify(dict(code=101, msg=str(e.message)))  # 返回参数校验失败信息
+            except Exception as e:
+                return jsonify(dict(code=101, msg=str(e)))
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
