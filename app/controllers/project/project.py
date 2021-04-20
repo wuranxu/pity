@@ -35,9 +35,11 @@ def insert_project(user_info):
         data = request.get_json()
         if not data.get("name") or not data.get("owner"):
             return jsonify(dict(code=101, msg="项目名称/项目负责人不能为空"))
+        if not data.get("app", ""):
+            return jsonify(dict(code=101, msg="服务名称不能为空"))
         private = data.get("private", False)
-        err = ProjectDao.add_project(data.get("name"), data.get("owner"), user_id, private,
-                                     data.get("description", ""))
+        err = ProjectDao.add_project(data.get("name"), data.get("app"), data.get("owner"),
+                                     user_id, private, data.get("description", ""))
         if err is not None:
             return jsonify(dict(code=110, msg=err))
         return jsonify(dict(code=0, msg="操作成功"))
@@ -55,9 +57,11 @@ def update_project(user_info):
             return jsonify(dict(code=101, msg="项目id不能为空"))
         if not data.get("name") or not data.get("owner"):
             return jsonify(dict(code=101, msg="项目名称/项目负责人不能为空"))
+        if not data.get("app", ""):
+            return jsonify(dict(code=101, msg="服务名称不能为空"))
         private = data.get("private", False)
-        err = ProjectDao.update_project(user_id, role, data.get("id"), data.get("name"), data.get("owner"), private,
-                                        data.get("description", ""))
+        err = ProjectDao.update_project(user_id, role, data.get("id"), data.get("name"), data.get("app"),
+                                        data.get("owner"), private, data.get("description", ""))
         if err is not None:
             return jsonify(dict(code=110, msg=err))
         return jsonify(dict(code=0, msg="操作成功"))

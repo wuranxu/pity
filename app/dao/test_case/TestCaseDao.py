@@ -50,3 +50,14 @@ class TestCaseDao(object):
             TestCaseDao.log.error(f"添加用例失败: {str(e)}")
             return f"添加用例失败: {str(e)}"
         return None
+
+    @staticmethod
+    def query_test_case(case_id):
+        try:
+            data = TestCase.query.filter_by(id=case_id, deleted_at=None).first()
+            if data is None:
+                return None, "用例不存在"
+            return data, None
+        except Exception as e:
+            TestCaseDao.log.error(f"查询用例失败: {str(e)}")
+            return None, f"查询用例失败: {str(e)}"

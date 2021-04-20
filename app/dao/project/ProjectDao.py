@@ -41,12 +41,12 @@ class ProjectDao(object):
             return [], 0, f"获取用户: {user}项目列表失败, {e}"
 
     @staticmethod
-    def add_project(name, owner, user, private, description):
+    def add_project(name, app, owner, user, private, description):
         try:
             data = Project.query.filter_by(name=name, deleted_at=None).first()
             if data is not None:
                 return "项目已存在"
-            pr = Project(name, owner, user, description, private)
+            pr = Project(name, app, owner, user, description, private)
             db.session.add(pr)
             db.session.commit()
         except Exception as e:
@@ -55,12 +55,13 @@ class ProjectDao(object):
         return None
 
     @staticmethod
-    def update_project(user, role, project_id, name, owner, private, description):
+    def update_project(user, role, project_id, name, app, owner, private, description):
         try:
             data = Project.query.filter_by(id=project_id, deleted_at=None).first()
             if data is None:
                 return "项目不存在"
             data.name = name
+            data.app = app
             # 如果修改人不是owner或者超管
             if data.owner != owner and (role < pity.config.get("ADMIN") or user != data.owner):
                 return "您没有权限修改项目负责人"
