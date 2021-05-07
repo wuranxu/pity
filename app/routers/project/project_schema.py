@@ -27,12 +27,9 @@ class ProjectEditForm(BaseModel):
 
     @validator('id', 'name', 'app', 'owner')
     def name_not_empty(cls, v):
-        if isinstance(v, int) and v == 0:
+        if isinstance(v, str) and len(v.strip()) == 0:
             raise ParamsError("不能为空")
-        else:
-            if isinstance(v, str) and len(v.strip()) == 0:
-                raise ParamsError("不能为空")
-            return v
+        return v
 
 
 class ProjectRoleForm(BaseModel):
@@ -42,8 +39,6 @@ class ProjectRoleForm(BaseModel):
 
     @validator('user_id', 'project_role', 'project_id')
     def name_not_empty(cls, v):
-        if isinstance(v, int) and v == 0:
-            raise ParamsError("不能为空")
         if isinstance(v, str) and len(v.strip()) == 0:
             raise ParamsError("不能为空")
         return v
@@ -57,9 +52,7 @@ class ProjectRoleEditForm(BaseModel):
 
     @validator('id', 'user_id', 'project_role', 'project_id')
     def name_not_empty(cls, v):
-        if isinstance(v, int) and v == 0:
-            raise ParamsError("不能为空")
-        if len(v.strip()) == 0:
+        if isinstance(v, str) and len(v.strip()) == 0:
             raise ParamsError("不能为空")
         return v
 
@@ -69,8 +62,6 @@ class ProjectDelForm(BaseModel):
 
     @validator('id')
     def name_not_empty(cls, v):
-        if isinstance(v, int) and v == 0:
-            raise ParamsError("不能为空")
-        if len(v.strip()) == 0:
+        if isinstance(v, str) and len(v.strip()) == 0:
             raise ParamsError("不能为空")
         return v

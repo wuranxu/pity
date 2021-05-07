@@ -67,7 +67,7 @@ class ProjectDao(object):
                 data.name = name
                 data.app = app
                 # 如果修改人不是owner或者超管
-                if data.owner != owner and (role < pity.config.get("ADMIN") or user != data.owner):
+                if data.owner != owner and (role < Config.ADMIN or user != data.owner):
                     return "您没有权限修改项目负责人"
                 data.owner = owner
                 data.private = private

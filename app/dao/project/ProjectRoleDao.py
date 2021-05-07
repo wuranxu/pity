@@ -6,6 +6,7 @@ from app.models import Session
 from app.models.project import Project
 from app.models.project_role import ProjectRole
 from app.utils.logger import Log
+from config import Config
 
 
 class ProjectRoleDao(object):
@@ -38,7 +39,7 @@ class ProjectRoleDao(object):
 
     @staticmethod
     def has_permission(project_id, project_role, user, user_role, project_admin=False):
-        if user_role != pity.config.get("ADMIN"):
+        if user_role != Config.ADMIN:
             with Session() as session:
                 project = session.query(Project).filter_by(id=project_id).first()
                 if project is None:
