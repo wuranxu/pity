@@ -1,0 +1,76 @@
+from pydantic import validator, BaseModel
+
+from app.excpetions.ParamsException import ParamsError
+
+
+class ProjectForm(BaseModel):
+    name: str
+    app: str
+    owner: int
+    private: bool = False
+    description: str = ''
+
+    @validator('name', 'app', 'owner')
+    def name_not_empty(cls, v):
+        if isinstance(v, str) and len(v.strip()) == 0:
+            raise ParamsError("不能为空")
+        return v
+
+
+class ProjectEditForm(BaseModel):
+    id: int
+    name: str
+    app: str
+    owner: int
+    private: bool = False
+    description: str = ''
+
+    @validator('id', 'name', 'app', 'owner')
+    def name_not_empty(cls, v):
+        if isinstance(v, int) and v == 0:
+            raise ParamsError("不能为空")
+        else:
+            if isinstance(v, str) and len(v.strip()) == 0:
+                raise ParamsError("不能为空")
+            return v
+
+
+class ProjectRoleForm(BaseModel):
+    user_id: int
+    project_role: int
+    project_id: int
+
+    @validator('user_id', 'project_role', 'project_id')
+    def name_not_empty(cls, v):
+        if isinstance(v, int) and v == 0:
+            raise ParamsError("不能为空")
+        if isinstance(v, str) and len(v.strip()) == 0:
+            raise ParamsError("不能为空")
+        return v
+
+
+class ProjectRoleEditForm(BaseModel):
+    id: int
+    user_id: int
+    project_role: int
+    project_id: int
+
+    @validator('id', 'user_id', 'project_role', 'project_id')
+    def name_not_empty(cls, v):
+        if isinstance(v, int) and v == 0:
+            raise ParamsError("不能为空")
+        if len(v.strip()) == 0:
+            raise ParamsError("不能为空")
+        return v
+
+
+class ProjectDelForm(BaseModel):
+    id: int
+
+    @validator('id')
+    def name_not_empty(cls, v):
+        if isinstance(v, int) and v == 0:
+            raise ParamsError("不能为空")
+        if len(v.strip()) == 0:
+            raise ParamsError("不能为空")
+        return v
