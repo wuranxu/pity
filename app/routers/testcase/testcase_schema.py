@@ -22,3 +22,18 @@ class TestCaseForm(BaseModel):
         if isinstance(v, str) and len(v.strip()) == 0:
             raise ParamsError("不能为空")
         return v
+
+
+class TestCaseAssertsForm(BaseModel):
+    id: int = None
+    name: str
+    case_id: int
+    assert_type: str
+    expected: str
+    actually: str
+
+    @validator("name", "case_id", "assert_type", "expected", "actually")
+    def name_not_empty(cls, v):
+        if isinstance(v, str) and len(v.strip()) == 0:
+            raise ParamsError("不能为空")
+        return v

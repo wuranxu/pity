@@ -1,5 +1,6 @@
 from collections import defaultdict
 
+from app.dao.test_case.TestCaseAssertsDao import TestCaseAssertsDao
 from app.models import Session
 from app.models.test_case import TestCase
 from app.utils.logger import Log
@@ -25,11 +26,28 @@ class TestCaseDao(object):
         # 获取目录->用例的映射关系
         for cs in case_list:
             result[cs.catalogue].append(cs)
+
         keys = sorted(result.keys())
         tree = [dict(key=f"cat_{key}",
-                     children=[{"key": f"case_{child.id}", "title": child.name} for child in result[key]],
+                     children=[{"key": f"case_{child.id}", "title": child.name,
+                                "total": TestCaseDao.get_case_children_length(child.id),
+                                "children": TestCaseDao.get_case_children(child.id)} for child in result[key]],
                      title=key, total=len(result[key])) for key in keys]
         return tree
+
+    @staticmethod
+    def get_case_children(case_id: int):
+        data, err = TestCaseAssertsDao.list_test_case_asserts(case_id)
+        if err:
+            raise err
+        return [dict(key=f"asserts_{d.id}", title=d.name, case_id=case_id) for d in data]
+
+    @staticmethod
+    def get_case_children_length(case_id: int):
+        data, err = TestCaseAssertsDao.list_test_case_asserts(case_id)
+        if err:
+            raise err
+        return len(data)
 
     @staticmethod
     def insert_test_case(test_case, user):
