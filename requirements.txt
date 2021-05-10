@@ -1,5 +1,5 @@
 logbook
-pyjwt==1.7.1
+pyjwt==2.1.0
 mysql-connector-python
 requests
 sqlalchemy==1.4.11

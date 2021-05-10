@@ -2,6 +2,8 @@ from fastapi import FastAPI, Request, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError, HTTPException
 from fastapi.responses import JSONResponse
+from app.excpetions.RequestException import PermissionException
+from app.excpetions.RequestException import AuthException
 
 pity = FastAPI()
 
@@ -27,23 +29,34 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 
-@pity.exception_handler(Exception)
-async def unexpected_exception_error(request: Request, exc: Exception):
+# @pity.exception_handler(Exception)
+# async def unexpected_exception_error(request: Request, exc: Exception):
+#     return JSONResponse(
+#         status_code=status.HTTP_200_OK,
+#         content=jsonable_encoder({
+#             "code": 110,
+#             "msg": str(exc),
+#         })
+#     )
+
+
+@pity.exception_handler(PermissionException)
+async def unexpected_exception_error(request: Request, exc: PermissionException):
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content=jsonable_encoder({
-            "code": 110,
-            "msg": str(exc),
+            "code": 403,
+            "msg": exc.detail,
         })
     )
 
 
-@pity.exception_handler(HTTPException)
-async def unexpected_exception_error(request: Request, exc: HTTPException):
+@pity.exception_handler(AuthException)
+async def unexpected_exception_error(request: Request, exc: AuthException):
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content=jsonable_encoder({
-            "code": 110,
+            "code": 401,
             "msg": exc.detail,
         })
     )
