@@ -1,8 +1,9 @@
 from collections import defaultdict
 
 from app.dao.test_case.TestCaseAssertsDao import TestCaseAssertsDao
-from app.models import Session
+from app.models import Session, update_model
 from app.models.test_case import TestCase
+from app.routers.testcase.testcase_schema import TestCaseForm
 from app.utils.logger import Log
 
 
@@ -70,6 +71,26 @@ class TestCaseDao(object):
         except Exception as e:
             TestCaseDao.log.error(f"添加用例失败: {str(e)}")
             return f"添加用例失败: {str(e)}"
+        return None
+
+    @staticmethod
+    def update_test_case(test_case: TestCaseForm, user):
+        """
+
+        :param user: 修改人
+        :param test_case: 测试用例
+        :return:
+        """
+        try:
+            with Session() as session:
+                data = session.query(TestCase).filter_by(id=test_case.id, deleted_at=None).first()
+                if data is None:
+                    return "用例不存在"
+                update_model(data, test_case, user)
+                session.commit()
+        except Exception as e:
+            TestCaseDao.log.error(f"编辑用例失败: {str(e)}")
+            return f"编辑用例失败: {str(e)}"
         return None
 
     @staticmethod

@@ -17,6 +17,14 @@ async def insert_testcase(data: TestCaseForm, user_info=Depends(Permission())):
     return dict(code=0, msg="操作成功")
 
 
+@router.post("/update")
+async def update_testcase(data: TestCaseForm, user_info=Depends(Permission())):
+    err = TestCaseDao.update_test_case(data, user_info['id'])
+    if err:
+        return dict(code=110, msg=err)
+    return dict(code=0, msg="操作成功")
+
+
 @router.get("/query")
 async def query_testcase(caseId: int, user_info=Depends(Permission())):
     data, err = TestCaseDao.query_test_case(caseId)
