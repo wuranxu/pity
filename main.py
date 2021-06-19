@@ -3,14 +3,16 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app import pity
 from app.routers.auth import user
-from app.routers.testcase import testcase
-from app.routers.request import http
+from app.routers.config import environment
 from app.routers.project import project
+from app.routers.request import http
+from app.routers.testcase import testcase
 
 pity.include_router(user.router)
 pity.include_router(project.router)
 pity.include_router(http.router)
 pity.include_router(testcase.router)
+pity.include_router(environment.router)
 
 pity.add_middleware(
     CORSMiddleware,
@@ -21,4 +23,4 @@ pity.add_middleware(
 )
 
 if __name__ == "__main__":
-    uvicorn.run(app='main:pity', host='0.0.0.0', port=7777, reload=True)
+    uvicorn.run(app='main:pity', host='0.0.0.0', port=7777, reload=False)
