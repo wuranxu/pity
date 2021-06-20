@@ -30,7 +30,7 @@ class EnvironmentDao(object):
     def update_env(data: EnvironmentForm, user):
         try:
             with Session() as session:
-                query = session.query(Environment).filter_by(name=data.name, deleted_at=None).first()
+                query = session.query(Environment).filter_by(id=data.id, deleted_at=None).first()
                 if query is None:
                     return f"环境{data.name}不存在"
                 update_model(query, data, user)
