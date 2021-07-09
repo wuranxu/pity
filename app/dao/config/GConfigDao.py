@@ -48,7 +48,7 @@ class GConfigDao(object):
                 if env:
                     search.append(GConfig.env == env)
                 if key:
-                    search.append(GConfig.name.ilike("%{}%".format(key)))
+                    search.append(GConfig.key.ilike("%{}%".format(key)))
                 data = session.query(GConfig).filter(*search)
                 total = data.count()
                 return data.order_by(desc(GConfig.created_at)).offset((page - 1) * size).limit(
