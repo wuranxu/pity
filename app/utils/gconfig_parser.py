@@ -55,7 +55,8 @@ class YamlGConfigParser(GConfigParser):
 
 class StringGConfigParser(GConfigParser):
 
-    def parse(self, value, jsonpath):
+    @staticmethod
+    def parse(value, jsonpath):
         return value
 
 

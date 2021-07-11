@@ -13,7 +13,7 @@ from app.utils.logger import Log
 
 class Executor(object):
     log = Log("Executor")
-    el_exp = r"\$\{(.+)\}"
+    el_exp = r"\$\{(.+?)\}"
     pattern = re.compile(el_exp)
     # 需要替换全局变量的字段
     fields = ['body', 'url', 'request_header']
