@@ -94,7 +94,7 @@ class TestCaseDao(object):
         return None
 
     @staticmethod
-    def query_test_case(case_id):
+    def query_test_case(case_id) -> [TestCase, str]:
         try:
             with Session() as session:
                 data = session.query(TestCase).filter_by(id=case_id, deleted_at=None).first()

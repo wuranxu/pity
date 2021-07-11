@@ -15,6 +15,7 @@ class GConfigForm(BaseModel):
     def name_not_empty(cls, v):
         if isinstance(v, str) and len(v.strip()) == 0:
             raise ParamsError("不能为空")
-        if not v:
-            raise ParamsError("不能为空")
+        if not isinstance(v, int):
+            if not v:
+                raise ParamsError("不能为空")
         return v

@@ -48,7 +48,7 @@ class GConfigDao(object):
                 if env:
                     search.append(GConfig.env == env)
                 if key:
-                    search.append(GConfig.name.ilike("%{}%".format(key)))
+                    search.append(GConfig.key.ilike("%{}%".format(key)))
                 data = session.query(GConfig).filter(*search)
                 total = data.count()
                 return data.order_by(desc(GConfig.created_at)).offset((page - 1) * size).limit(
@@ -71,3 +71,14 @@ class GConfigDao(object):
             GConfigDao.log.error(f"删除变量失败: {str(e)}")
             return f"删除变量失败: {str(e)}"
         return None
+
+    @staticmethod
+    def get_gconfig_by_key(key: str, env: int = None) -> GConfig:
+        try:
+            filters = [GConfig.key == key, GConfig.deleted_at == None, GConfig.enable == True]
+            if env:
+                filters.append(GConfig.env == env)
+            with Session() as session:
+                return session.query(GConfig).filter(*filters).first()
+        except Exception as e:
+            raise Exception(f"查询全局变量失败: {str(e)}")

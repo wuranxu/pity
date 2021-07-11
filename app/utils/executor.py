@@ -2,16 +2,56 @@ import json
 import re
 from typing import List
 
+from app.dao.config.GConfigDao import GConfigDao
 from app.dao.test_case.TestCaseAssertsDao import TestCaseAssertsDao
 from app.dao.test_case.TestCaseDao import TestCaseDao
 from app.middleware.HttpClient import Request
+from app.models.test_case import TestCase
+from app.utils.gconfig_parser import StringGConfigParser, JSONGConfigParser, YamlGConfigParser
 from app.utils.logger import Log
 
 
 class Executor(object):
-    log = Log("executor")
+    log = Log("Executor")
     el_exp = r"\$\{(.+)\}"
     pattern = re.compile(el_exp)
+    # 需要替换全局变量的字段
+    fields = ['body', 'url', 'request_header']
+
+    @staticmethod
+    def parse_gconfig(data: TestCase, *fields):
+        for f in fields:
+            Executor.parse_field(data, f)
+
+    @staticmethod
+    def get_parser(key_type):
+        if key_type == 0:
+            return StringGConfigParser.parse
+        if key_type == 1:
+            return JSONGConfigParser.parse
+        if key_type == 2:
+            return YamlGConfigParser.parse
+        raise Exception(f"全局变量类型: {key_type}不合法, 请检查!")
+
+    @staticmethod
+    def parse_field(data: TestCase, field):
+        try:
+            field_origin = getattr(data, field)
+            variables = Executor.get_el_expression(field_origin)
+            for v in variables:
+                key = v.split(".")[0]
+                # TODO 注意此处实时查询数据库，后续需要改成Redis
+                cf = GConfigDao.get_gconfig_by_key(key)
+                if cf is not None:
+                    # 解析变量
+                    parse = Executor.get_parser(cf.key_type)
+                    new_value = parse(cf.value, v)
+                    new_field = field_origin.replace("${%s}" % v, new_value)
+                    setattr(data, field, new_field)
+                    field_origin = new_field
+        except Exception as e:
+            Executor.log.error(f"查询全局变量失败, error: {str(e)}")
+            raise
 
     @staticmethod
     def run(case_id: int):
@@ -20,6 +60,10 @@ class Executor(object):
             case_info, err = TestCaseDao.query_test_case(case_id)
             if err:
                 return result, err
+
+            # Step1: 替换全局变量
+            Executor.parse_gconfig(case_info, *Executor.fields)
+
             # 获取断言
             asserts, err = TestCaseAssertsDao.list_test_case_asserts(case_id)
             if err:
@@ -32,7 +76,7 @@ class Executor(object):
                 body = case_info.body
             else:
                 body = None
-            request_obj = Request(case_info.url, headers=headers, data=body)
+            request_obj = Request(case_info.url, headers=headers, data=body.encode())
             method = case_info.request_method.upper()
             response_info = request_obj.request(method)
             # 执行完成进行断言
