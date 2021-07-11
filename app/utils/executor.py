@@ -72,6 +72,8 @@ class Executor(object):
                 headers = json.loads(case_info.request_header)
             else:
                 headers = dict()
+            if "Content-Type" not in headers:
+                headers['Content-Type'] = "application/json; charset=UTF-8"
             if case_info.body != '':
                 body = case_info.body
             else:
