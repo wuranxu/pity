@@ -98,12 +98,15 @@ class Executor(object):
                 body = case_info.body
             else:
                 body = None
-            request_obj = Request(case_info.url, headers=headers, data=body.encode())
+            request_obj = Request(case_info.url, headers=headers, data=body.encode() if body is not None else body)
             method = case_info.request_method.upper()
             response_info = request_obj.request(method)
+
+            response_info["url"] = case_info.url
+            response_info["request_method"] = method
+
             # 执行完成进行断言
             response_info["asserts"] = self.my_assert(asserts, response_info)
-
             # 日志输出
             response_info["logs"] = "\n".join(self.logger)
             return response_info, None
