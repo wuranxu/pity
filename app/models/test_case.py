@@ -46,3 +46,6 @@ class TestCase(Base):
         self.request_method = request_method
         self.created_at = datetime.now()
         self.updated_at = datetime.now()
+
+    def __str__(self):
+        return f"[用例: {self.name}]({self.id}))"

@@ -45,6 +45,7 @@ class YamlGConfigParser(GConfigParser):
 
     @staticmethod
     def parse(value, jsonpath):
+        """Yaml解析器"""
         try:
             data = YamlGConfigParser.get_data(value)
             return GConfigParser.get(data, jsonpath)
@@ -57,6 +58,7 @@ class StringGConfigParser(GConfigParser):
 
     @staticmethod
     def parse(value, jsonpath):
+        """String解析器"""
         return value
 
 
@@ -67,6 +69,7 @@ class JSONGConfigParser(GConfigParser):
 
     @staticmethod
     def parse(value, jsonpath):
+        """JSON解析器"""
         try:
             data = JSONGConfigParser.get_data(value)
             return GConfigParser.get(data, jsonpath)

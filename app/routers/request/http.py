@@ -19,7 +19,8 @@ async def http_request(data: HttpRequestForm, user_info=Depends(Permission())):
 
 @router.get("/run")
 async def execute_case(case_id: int, user_info=Depends(Permission())):
-    result, err = Executor.run(case_id)
+    executor = Executor()
+    result, err = executor.run(case_id)
     if err:
         return dict(code=110, data=result, msg=err)
     return dict(code=0, data=result, msg="操作成功")
