@@ -1,3 +1,6 @@
+import asyncio
+import time
+
 from fastapi import Depends, APIRouter
 
 from app.middleware.HttpClient import Request
@@ -9,7 +12,7 @@ router = APIRouter(prefix="/request")
 
 
 @router.post("/http")
-async def http_request(data: HttpRequestForm, user_info=Depends(Permission())):
+def http_request(data: HttpRequestForm, user_info=Depends(Permission())):
     r = Request(data.url, data=data.body, headers=data.headers)
     response = r.request(data.method)
     if response.get("status"):
@@ -18,7 +21,7 @@ async def http_request(data: HttpRequestForm, user_info=Depends(Permission())):
 
 
 @router.get("/run")
-async def execute_case(case_id: int, user_info=Depends(Permission())):
+def execute_case(case_id: int, user_info=Depends(Permission())):
     executor = Executor()
     result, err = executor.run(case_id)
     if err:

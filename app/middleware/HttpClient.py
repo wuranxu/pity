@@ -28,11 +28,11 @@ class Request(object):
         elapsed = "-1ms"
         try:
             if method.upper() == "GET":
-                response = self.client.get(self.url, **self.kwargs)
+                response = self.client.get(self.url, **self.kwargs, timeout=30)
             elif method.upper() == 'POST':
-                response = self.client.post(self.url, **self.kwargs)
+                response = self.client.post(self.url, **self.kwargs, timeout=30)
             else:
-                response = self.client.request(method, self.url, **self.kwargs)
+                response = self.client.request(method, self.url, **self.kwargs, timeout=30)
             status_code = response.status_code
             if status_code != 200:
                 return Request.response(False, self.kwargs.get("data"), status_code)

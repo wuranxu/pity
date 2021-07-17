@@ -34,7 +34,7 @@ async def query_testcase(caseId: int, user_info=Depends(Permission())):
 
 
 @router.post("/asserts/insert")
-def insert_testcase_asserts(data: TestCaseAssertsForm, user_info=Depends(Permission())):
+async def insert_testcase_asserts(data: TestCaseAssertsForm, user_info=Depends(Permission())):
     err = TestCaseAssertsDao.insert_test_case_asserts(**data.dict(), user=user_info["id"])
     if err:
         return dict(code=110, msg=err)
