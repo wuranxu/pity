@@ -18,8 +18,9 @@ class User(Base):
     updated_at = Column(DATETIME, nullable=False)
     deleted_at = Column(DATETIME)
     last_login_at = Column(DATETIME)
+    avatar = Column(String(128), nullable=True, default=None)
 
-    def __init__(self, username, name, password, email):
+    def __init__(self, username, name, password, email, avatar=None):
         self.username = username
         self.password = password
         self.email = email
@@ -27,3 +28,4 @@ class User(Base):
         self.created_at = datetime.now()
         self.updated_at = datetime.now()
         self.role = 0
+        self.avatar = avatar
