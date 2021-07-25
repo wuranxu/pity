@@ -6,5 +6,6 @@ from app.models.test_case import TestCase
 from app.models.testcase_asserts import TestCaseAsserts
 from app.models.environment import Environment
 from app.models.gconfig import GConfig
+from app.models.constructor import Constructor
 
 Base.metadata.create_all(engine)

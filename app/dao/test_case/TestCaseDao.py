@@ -1,7 +1,11 @@
 from collections import defaultdict
+from typing import List
+
+from sqlalchemy import desc
 
 from app.dao.test_case.TestCaseAssertsDao import TestCaseAssertsDao
 from app.models import Session, update_model
+from app.models.constructor import Constructor
 from app.models.test_case import TestCase
 from app.routers.testcase.testcase_schema import TestCaseForm
 from app.utils.logger import Log
@@ -104,3 +108,48 @@ class TestCaseDao(object):
         except Exception as e:
             TestCaseDao.log.error(f"查询用例失败: {str(e)}")
             return None, f"查询用例失败: {str(e)}"
+
+    @staticmethod
+    def list_testcase_tree(projects) -> [List, dict]:
+        try:
+            result = []
+            project_map = {}
+            project_index = {}
+            for p in projects:
+                project_map[p.id] = p.name
+                result.append({
+                    "label": p.name,
+                    "value": p.id,
+                    "key": p.id,
+                    "children": [],
+                })
+                project_index[p.id] = len(result) - 1
+            with Session() as session:
+                data = session.query(TestCase).filter(TestCase.project_id.in_(project_map.keys()),
+                                                      TestCase.deleted_at == None).all()
+
+                for d in data:
+                    result[project_index[d.project_id]]["children"].append({
+                        "label": d.name,
+                        "value": d.id,
+                        "key": d.id,
+                    })
+                return result
+        except Exception as e:
+            TestCaseDao.log.error(f"获取用例列表失败: {str(e)}")
+            raise Exception("获取用例列表失败")
+
+    @staticmethod
+    def select_constructor(case_id: int):
+        """
+        通过case_id获取用例构造数据
+        :param case_id:
+        :return:
+        """
+        try:
+            with Session() as session:
+                data = session.query(Constructor).filter_by(case_id=case_id, deleted_at=None).order_by(
+                    desc(Constructor.created_at)).all()
+                return data
+        except Exception as e:
+            TestCaseDao.log.error(f"查询构造数据失败: {str(e)}")
