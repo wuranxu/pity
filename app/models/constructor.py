@@ -41,3 +41,6 @@ class Constructor(Base):
         self.create_user = user
         self.created_at = datetime.now()
         self.updated_at = datetime.now()
+
+    def __str__(self):
+        return f"[数据构造器: {self.name}]({self.id}))"

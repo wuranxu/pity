@@ -21,15 +21,20 @@ class Executor(object):
     # 需要替换全局变量的字段
     fields = ['body', 'url', 'request_header']
 
-    def __init__(self):
-        self._logger = list()
+    def __init__(self, log=None):
+        if log is None:
+            self._logger = list()
+            self._main = True
+        else:
+            self._logger = log
+            self._main = False
 
     @property
     def logger(self):
         return self._logger
 
-    def append(self, content):
-        self._logger.append("[{}]: 步骤开始 -> {}".format(datetime.now(), content))
+    def append(self, log_data, content):
+        log_data.append("[{}]: 步骤开始 -> {}".format(datetime.now().strftime('%Y-%m-%d %H:%M:%S'), content))
 
     @case_log
     def parse_gconfig(self, data: TestCase, *fields):
@@ -74,9 +79,8 @@ class Executor(object):
             Executor.log.error(f"查询全局变量失败, error: {str(e)}")
             raise
 
-    @case_log
-    def parse_params(self, data: TestCase, params: dict):
-        """替换变量"""
+    def parse_params(self, logger, data: TestCase, params: dict):
+        self.append(logger, "正在替换变量")
         try:
             for c in data.__table__.columns:
                 field_origin = getattr(data, c.name)
@@ -98,6 +102,9 @@ class Executor(object):
                         new_value = json.dumps(result, ensure_ascii=False)
                     else:
                         new_value = result
+                        if new_value is None:
+                            self.append(logger, "替换变量失败, 找不到对应的数据")
+                            continue
                     new_field = field_origin.replace("${%s}" % v, new_value)
                     setattr(data, c.name, new_field)
                     field_origin = new_field
@@ -110,20 +117,18 @@ class Executor(object):
         """获取构造数据"""
         return TestCaseDao.select_constructor(case_id)
 
-    @case_log
-    def execute_constructors(self, path, params, req_params, constructors: List[Constructor]):
+    def execute_constructors(self, logger, path, params, req_params, constructors: List[Constructor]):
         """开始构造数据"""
         if len(constructors) == 0:
-            self.append("构造方法为空, 跳出构造环节")
+            self.append(logger, "构造方法为空, 跳出构造环节")
         for i, c in enumerate(constructors):
-            self.execute_constructor(i, path, params, req_params, c)
+            self.execute_constructor(logger, i, path, params, req_params, c)
 
-    @case_log
-    def execute_constructor(self, index, path, params, req_params, constructor: Constructor):
+    def execute_constructor(self, logger, index, path, params, req_params, constructor: Constructor):
         if constructor.type == 0:
-            self.append(f"当前路径: {path}, 第{index + 1}条构造方法")
+            self.append(logger, f"当前路径: {path}, 第{index + 1}条构造方法")
             # 说明是case
-            executor = Executor()
+            executor = Executor(logger)
             data = json.loads(constructor.constructor_json)
             new_param = data.get("params")
             if new_param:
@@ -135,7 +140,7 @@ class Executor(object):
             if err:
                 raise Exception(f"{path}->{testcase.name} 第{index + 1}个构造方法执行失败: {err}")
             params[constructor.value] = result
-            self.parse_params(testcase, params)
+            self.parse_params(logger, testcase, params)
 
     @case_log
     def run(self, case_id: int, params_pool: dict = None, request_param: dict = None, path="主case"):
@@ -165,7 +170,7 @@ class Executor(object):
             constructors = self.get_constructor(case_id)
 
             # Step3: 执行构造方法
-            self.execute_constructors(path, case_params, req_params, constructors)
+            self.execute_constructors(self.logger, path, case_params, req_params, constructors)
 
             # Step4: 获取断言
             asserts, err = TestCaseAssertsDao.list_test_case_asserts(case_id)
@@ -177,7 +182,7 @@ class Executor(object):
             # TODO
 
             # Step6: 批量改写主方法参数
-            self.parse_params(case_info, case_params)
+            self.parse_params(self.logger, case_info, case_params)
 
             if case_info.request_header != "":
                 headers = json.loads(case_info.request_header)
@@ -194,7 +199,13 @@ class Executor(object):
             body = self.replace_body(request_param, body)
 
             # Step6: 完成http请求
-            request_obj = Request(case_info.url, headers=headers, data=body.encode() if body is not None else body)
+
+            if "form" not in headers['Content-Type']:
+                request_obj = Request(case_info.url, headers=headers, data=body.encode() if body is not None else body)
+            else:
+                if body is not None:
+                    body = json.loads(body)
+                request_obj = Request(case_info.url, headers=headers, data=body)
             method = case_info.request_method.upper()
             response_info = request_obj.request(method)
 
@@ -203,8 +214,9 @@ class Executor(object):
 
             # 执行完成进行断言
             response_info["asserts"] = self.my_assert(asserts, response_info)
-            # 日志输出
-            response_info["logs"] = "\n".join(self.logger)
+            # 日志输出, 如果不是开头用例则不记录
+            if self._main:
+                response_info["logs"] = "\n".join(self.logger)
             return response_info, None
         except Exception as e:
             Executor.log.error(f"执行用例失败: {str(e)}")
@@ -214,13 +226,15 @@ class Executor(object):
     def replace_body(self, req_params, body):
         """根据传入的构造参数进行参数替换"""
         try:
-            data = json.loads(body)
-            for k, v in req_params.items():
-                if data.get(k) is not None:
-                    data[k] = v
-            return json.dumps(data, ensure_ascii=False)
+            if body:
+                data = json.loads(body)
+                for k, v in req_params.items():
+                    if data.get(k) is not None:
+                        data[k] = v
+                return json.dumps(data, ensure_ascii=False)
+            self.append(self.logger, f"body为空, 不进行替换")
         except Exception as e:
-            self.append(f"替换请求body失败, {e}")
+            self.append(self.logger, f"替换请求body失败, {e}")
         return body
 
     @staticmethod
@@ -234,7 +248,7 @@ class Executor(object):
         """
         result = dict()
         if len(asserts) == 0:
-            self.logger.append("[{}]: 未设置断言, 用例结束".format(Executor.get_time()))
+            self.append(self.logger, "[{}]: 未设置断言, 用例结束".format(Executor.get_time()))
             return result
         for item in asserts:
             a, err = self.parse_variable(response_info, item.expected)
@@ -274,8 +288,7 @@ class Executor(object):
 
     @case_log
     def get_el_expression(self, string: str):
-        """
-        获取字符串中的el表达式
+        """获取字符串中的el表达式
         """
         return re.findall(Executor.pattern, string)
 

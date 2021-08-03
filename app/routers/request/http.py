@@ -1,3 +1,5 @@
+import json
+
 from fastapi import Depends, APIRouter
 
 from app.middleware.HttpClient import Request
@@ -10,7 +12,13 @@ router = APIRouter(prefix="/request")
 
 @router.post("/http")
 def http_request(data: HttpRequestForm, user_info=Depends(Permission())):
-    r = Request(data.url, data=data.body, headers=data.headers)
+    if "Content-Type" not in data.headers:
+        data.headers['Content-Type'] = "application/json; charset=UTF-8"
+    if "form" not in data.headers['Content-Type']:
+        r = Request(data.url, headers=data.headers, data=data.body.encode() if data.body is not None else data.body)
+    else:
+        body = json.loads(data.body)
+        r = Request(data.url, headers=data.headers, data=body if body is not None else body)
     response = r.request(data.method)
     if response.get("status"):
         return dict(code=0, data=response, msg="操作成功")

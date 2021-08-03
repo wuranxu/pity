@@ -1,4 +1,5 @@
 import datetime
+import json
 
 import requests
 
@@ -38,7 +39,8 @@ class Request(object):
                 return Request.response(False, self.kwargs.get("data"), status_code)
             elapsed = Request.get_elapsed(response.elapsed)
             data = self.get_response(response)
-            return Request.response(True, self.kwargs.get("data"), 200, data, response.headers, response.request.headers, elapsed=elapsed,
+            return Request.response(True, self.kwargs.get("data"), 200, data, response.headers,
+                                    response.request.headers, elapsed=elapsed,
                                     cookies=response.cookies)
         except Exception as e:
             return Request.response(False, self.kwargs.get("data"), status_code, msg=str(e), elapsed=elapsed)
@@ -60,7 +62,8 @@ class Request(object):
         cookies = {k: v for k, v in cookies.items()} if cookies is not None else {}
         return {
             "status": status, "response": response, "status_code": status_code,
-            "request_data": request_data,
+            "request_data": request_data if isinstance(request_data, str) else json.dumps(request_data,
+                                                                                          ensure_ascii=False),
             "response_header": response_header, "request_header": request_header,
             "msg": msg, "elapsed": elapsed, "cookies": cookies,
         }
