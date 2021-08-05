@@ -6,7 +6,7 @@ from typing import List
 from app.dao.config.GConfigDao import GConfigDao
 from app.dao.test_case.TestCaseAssertsDao import TestCaseAssertsDao
 from app.dao.test_case.TestCaseDao import TestCaseDao
-from app.middleware.HttpClient import Request
+from app.middleware.AsyncHttpClient import AsyncRequest
 from app.models.constructor import Constructor
 from app.models.test_case import TestCase
 from app.utils.decorator import case_log
@@ -117,14 +117,14 @@ class Executor(object):
         """获取构造数据"""
         return TestCaseDao.select_constructor(case_id)
 
-    def execute_constructors(self, logger, path, params, req_params, constructors: List[Constructor]):
+    async def execute_constructors(self, logger, path, params, req_params, constructors: List[Constructor]):
         """开始构造数据"""
         if len(constructors) == 0:
             self.append(logger, "构造方法为空, 跳出构造环节")
         for i, c in enumerate(constructors):
-            self.execute_constructor(logger, i, path, params, req_params, c)
+            await self.execute_constructor(logger, i, path, params, req_params, c)
 
-    def execute_constructor(self, logger, index, path, params, req_params, constructor: Constructor):
+    async def execute_constructor(self, logger, index, path, params, req_params, constructor: Constructor):
         if constructor.type == 0:
             self.append(logger, f"当前路径: {path}, 第{index + 1}条构造方法")
             # 说明是case
@@ -136,14 +136,14 @@ class Executor(object):
                 req_params.update(temp)
             case_id = data.get("case_id")
             testcase, _ = TestCaseDao.query_test_case(case_id)
-            result, err = executor.run(case_id, params, req_params, f"{path}->{testcase.name}")
+            result, err = await executor.run(case_id, params, req_params, f"{path}->{testcase.name}")
             if err:
                 raise Exception(f"{path}->{testcase.name} 第{index + 1}个构造方法执行失败: {err}")
             params[constructor.value] = result
             self.parse_params(logger, testcase, params)
 
     @case_log
-    def run(self, case_id: int, params_pool: dict = None, request_param: dict = None, path="主case"):
+    async def run(self, case_id: int, params_pool: dict = None, request_param: dict = None, path="主case"):
         """
         开始执行测试用例
         """
@@ -170,7 +170,7 @@ class Executor(object):
             constructors = self.get_constructor(case_id)
 
             # Step3: 执行构造方法
-            self.execute_constructors(self.logger, path, case_params, req_params, constructors)
+            await self.execute_constructors(self.logger, path, case_params, req_params, constructors)
 
             # Step4: 获取断言
             asserts, err = TestCaseAssertsDao.list_test_case_asserts(case_id)
@@ -201,14 +201,14 @@ class Executor(object):
             # Step6: 完成http请求
 
             if "form" not in headers['Content-Type']:
-                request_obj = Request(case_info.url, headers=headers, data=body.encode() if body is not None else body)
+                request_obj = AsyncRequest(case_info.url, headers=headers,
+                                           data=body.encode() if body is not None else body)
             else:
                 if body is not None:
                     body = json.loads(body)
-                request_obj = Request(case_info.url, headers=headers, data=body)
+                request_obj = AsyncRequest(case_info.url, headers=headers, data=body)
             method = case_info.request_method.upper()
-            response_info = request_obj.request(method)
-
+            response_info = await request_obj.invoke(method)
             response_info["url"] = case_info.url
             response_info["request_method"] = method
 
