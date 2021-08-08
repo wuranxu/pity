@@ -54,7 +54,7 @@ async def update_project(data: ProjectEditForm, user_info=Depends(Permission()))
 
 
 @router.get("/query")
-async def query_project(projectId: int, user_info=Depends(Permission())):
+def query_project(projectId: int, user_info=Depends(Permission())):
     result = dict()
     data, roles, tree, err = ProjectDao.query_project(projectId)
     if err is not None:

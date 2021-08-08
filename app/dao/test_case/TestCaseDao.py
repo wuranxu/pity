@@ -4,11 +4,12 @@ from typing import List
 from sqlalchemy import desc
 
 from app.dao.test_case.TestCaseAssertsDao import TestCaseAssertsDao
-from app.models import Session, update_model
+from app.models import Session, update_model, async_session
 from app.models.constructor import Constructor
 from app.models.test_case import TestCase
 from app.routers.testcase.testcase_schema import TestCaseForm
 from app.utils.logger import Log
+from sqlalchemy.future import select
 
 
 class TestCaseDao(object):
@@ -110,6 +111,20 @@ class TestCaseDao(object):
             return None, f"查询用例失败: {str(e)}"
 
     @staticmethod
+    async def async_query_test_case(case_id) -> [TestCase, str]:
+        try:
+            async with async_session() as session:
+                result = await session.execute(
+                    select(TestCase).where(TestCase.id == case_id, TestCase.deleted_at == None))
+                data = result.scalars().first()
+                if data is None:
+                    return None, "用例不存在"
+                return data, None
+        except Exception as e:
+            TestCaseDao.log.error(f"查询用例失败: {str(e)}")
+            return None, f"查询用例失败: {str(e)}"
+
+    @staticmethod
     def list_testcase_tree(projects) -> [List, dict]:
         try:
             result = []
@@ -151,5 +166,20 @@ class TestCaseDao(object):
                 data = session.query(Constructor).filter_by(case_id=case_id, deleted_at=None).order_by(
                     desc(Constructor.created_at)).all()
                 return data
+        except Exception as e:
+            TestCaseDao.log.error(f"查询构造数据失败: {str(e)}")
+
+    @staticmethod
+    async def async_select_constructor(case_id: int):
+        """
+        异步获取用例构造数据
+        :param case_id:
+        :return:
+        """
+        try:
+            async with async_session() as session:
+                sql = select(Constructor).where(Constructor.case_id == case_id, Constructor.deleted_at == None).order_by(Constructor.created_at)
+                data = await session.execute(sql)
+                return data.scalars().all()
         except Exception as e:
             TestCaseDao.log.error(f"查询构造数据失败: {str(e)}")

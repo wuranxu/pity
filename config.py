@@ -8,16 +8,20 @@ class Config(object):
     # JSON_AS_ASCII = False  # Flask jsonify编码问题
 
     # MySQL连接信息
-    MYSQL_HOST = "47.112.32.195"
+    # MYSQL_HOST = "47.112.32.195"
+    MYSQL_HOST = "127.0.0.1"
     MYSQL_PORT = 3306
     MYSQL_USER = "root"
-    MYSQL_PWD = "anrenear@33"
-    # MYSQL_PWD = "wuranxu@33"
+    # MYSQL_PWD = "anrenear@33"
+    MYSQL_PWD = "wuranxu@33"
     DBNAME = "pity"
 
     # sqlalchemy
     SQLALCHEMY_DATABASE_URI = 'mysql+mysqlconnector://{}:{}@{}:{}/{}'.format(
-                                    MYSQL_USER, MYSQL_PWD, MYSQL_HOST, MYSQL_PORT, DBNAME)
+        MYSQL_USER, MYSQL_PWD, MYSQL_HOST, MYSQL_PORT, DBNAME)
+
+    # 异步URI
+    ASYNC_SQLALCHEMY_URI = f'mysql+aiomysql://{MYSQL_USER}:{MYSQL_PWD}@{MYSQL_HOST}:{MYSQL_PORT}/{DBNAME}'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # 权限 0 普通用户 1 组长 2 管理员
@@ -38,4 +42,3 @@ class Config(object):
     # SECRET
     SECRET_KEY = "a13c22377318291d5932bc5b62c1885b344355a0"
     # SECRET_KEY = "c79fafe58ff45f6b5b51ddde70d2d645209e38b9"
-

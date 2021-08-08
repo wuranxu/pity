@@ -37,12 +37,12 @@ class Executor(object):
         log_data.append("[{}]: 步骤开始 -> {}".format(datetime.now().strftime('%Y-%m-%d %H:%M:%S'), content))
 
     @case_log
-    def parse_gconfig(self, data: TestCase, *fields):
+    async def parse_gconfig(self, data: TestCase, *fields):
         """
         解析全局变量
         """
         for f in fields:
-            self.parse_field(data, f)
+            await self.parse_field(data, f)
 
     @case_log
     def get_parser(self, key_type):
@@ -57,7 +57,7 @@ class Executor(object):
         raise Exception(f"全局变量类型: {key_type}不合法, 请检查!")
 
     @case_log
-    def parse_field(self, data: TestCase, field):
+    async def parse_field(self, data: TestCase, field):
         """
         解析字段
         """
@@ -67,7 +67,7 @@ class Executor(object):
             for v in variables:
                 key = v.split(".")[0]
                 # TODO 注意此处实时查询数据库，后续需要改成Redis
-                cf = GConfigDao.get_gconfig_by_key(key)
+                cf = await GConfigDao.async_get_gconfig_by_key(key)
                 if cf is not None:
                     # 解析变量
                     parse = self.get_parser(cf.key_type)
@@ -79,7 +79,7 @@ class Executor(object):
             Executor.log.error(f"查询全局变量失败, error: {str(e)}")
             raise
 
-    def parse_params(self, logger, data: TestCase, params: dict):
+    async def parse_params(self, logger, data: TestCase, params: dict):
         self.append(logger, "正在替换变量")
         try:
             for c in data.__table__.columns:
@@ -113,9 +113,9 @@ class Executor(object):
             raise Exception(f"替换变量失败, error: {str(e)}")
 
     @case_log
-    def get_constructor(self, case_id):
+    async def get_constructor(self, case_id):
         """获取构造数据"""
-        return TestCaseDao.select_constructor(case_id)
+        return await TestCaseDao.async_select_constructor(case_id)
 
     async def execute_constructors(self, logger, path, params, req_params, constructors: List[Constructor]):
         """开始构造数据"""
@@ -135,12 +135,12 @@ class Executor(object):
                 temp = json.loads(new_param)
                 req_params.update(temp)
             case_id = data.get("case_id")
-            testcase, _ = TestCaseDao.query_test_case(case_id)
+            testcase, _ = await TestCaseDao.async_query_test_case(case_id)
             result, err = await executor.run(case_id, params, req_params, f"{path}->{testcase.name}")
             if err:
                 raise Exception(f"{path}->{testcase.name} 第{index + 1}个构造方法执行失败: {err}")
             params[constructor.value] = result
-            self.parse_params(logger, testcase, params)
+            await self.parse_params(logger, testcase, params)
 
     @case_log
     async def run(self, case_id: int, params_pool: dict = None, request_param: dict = None, path="主case"):
@@ -159,21 +159,21 @@ class Executor(object):
             req_params = dict()
 
         try:
-            case_info, err = TestCaseDao.query_test_case(case_id)
+            case_info, err = await TestCaseDao.async_query_test_case(case_id)
             if err:
                 return result, err
 
             # Step1: 替换全局变量
-            self.parse_gconfig(case_info, *Executor.fields)
+            await self.parse_gconfig(case_info, *Executor.fields)
 
             # Step2: 获取构造数据
-            constructors = self.get_constructor(case_id)
+            constructors = await self.get_constructor(case_id)
 
             # Step3: 执行构造方法
             await self.execute_constructors(self.logger, path, case_params, req_params, constructors)
 
             # Step4: 获取断言
-            asserts, err = TestCaseAssertsDao.list_test_case_asserts(case_id)
+            asserts, err = await TestCaseAssertsDao.async_list_test_case_asserts(case_id)
 
             if err:
                 return result, err
@@ -182,7 +182,7 @@ class Executor(object):
             # TODO
 
             # Step6: 批量改写主方法参数
-            self.parse_params(self.logger, case_info, case_params)
+            await self.parse_params(self.logger, case_info, case_params)
 
             if case_info.request_header != "":
                 headers = json.loads(case_info.request_header)

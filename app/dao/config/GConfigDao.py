@@ -1,8 +1,8 @@
 from datetime import datetime
 
-from sqlalchemy import desc
+from sqlalchemy import desc, select
 
-from app.models import Session, update_model
+from app.models import Session, update_model, async_session
 from app.models.gconfig import GConfig
 from app.models.schema.gconfig import GConfigForm
 from app.utils.logger import Log
@@ -80,5 +80,18 @@ class GConfigDao(object):
                 filters.append(GConfig.env == env)
             with Session() as session:
                 return session.query(GConfig).filter(*filters).first()
+        except Exception as e:
+            raise Exception(f"查询全局变量失败: {str(e)}")
+
+    @staticmethod
+    async def async_get_gconfig_by_key(key: str, env: int = None) -> GConfig:
+        try:
+            filters = [GConfig.key == key, GConfig.deleted_at == None, GConfig.enable == True]
+            if env:
+                filters.append(GConfig.env == env)
+            async with async_session() as session:
+                sql = select(GConfig).where(*filters)
+                result = await session.execute(sql)
+                return result.scalars().first()
         except Exception as e:
             raise Exception(f"查询全局变量失败: {str(e)}")

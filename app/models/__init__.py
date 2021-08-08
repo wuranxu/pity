@@ -1,22 +1,21 @@
-# from flask_sqlalchemy import SQLAlchemy
-#
-# from app import pity
-#
-# db = SQLAlchemy(pity)
 from datetime import datetime
 
 from sqlalchemy import create_engine
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 from config import Config
 
+# 同步engine
 engine = create_engine(Config.SQLALCHEMY_DATABASE_URI, pool_recycle=1500)
+# 异步engine
+async_engine = create_async_engine(Config.ASYNC_SQLALCHEMY_URI)
 Session = sessionmaker(engine)
+async_session = sessionmaker(async_engine, class_=AsyncSession)
 # 创建对象的基类:
 Base = declarative_base()
-
-# from app.models import engine, Base
 
 Base.metadata.create_all(engine)
 
