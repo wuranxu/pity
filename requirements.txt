@@ -11,3 +11,5 @@ PyYAML~=5.3.1
 starlette~=0.13.6
 aiohttp~=3.6.2
 aiomysql
+aiofiles
+Jinja2
