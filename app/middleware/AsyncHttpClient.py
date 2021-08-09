@@ -46,7 +46,6 @@ class AsyncRequest(object):
             return request_body
         return json.dumps(request_body, ensure_ascii=False)
 
-
     @staticmethod
     async def collect(status, request_data, status_code=200, response=None, response_header=None,
                       request_header=None, cookies=None, elapsed=None, msg="success"):

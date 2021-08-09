@@ -1,3 +1,4 @@
+import asyncio
 import json
 import re
 from datetime import datetime
@@ -6,6 +7,8 @@ from typing import List
 from app.dao.config.GConfigDao import GConfigDao
 from app.dao.test_case.TestCaseAssertsDao import TestCaseAssertsDao
 from app.dao.test_case.TestCaseDao import TestCaseDao
+from app.dao.test_case.TestReport import TestReportDao
+from app.dao.test_case.TestResult import TestResultDao
 from app.middleware.AsyncHttpClient import AsyncRequest
 from app.models.constructor import Constructor
 from app.models.test_case import TestCase
@@ -225,6 +228,39 @@ class Executor(object):
             Executor.log.error(f"执行用例失败: {str(e)}")
             return result, f"执行用例失败: {str(e)}"
 
+    @staticmethod
+    async def run_single(data, report_id, case_id, params_pool: dict = None, request_param: dict = None,
+                         path="主case"):
+        start_at = datetime.now()
+        executor = Executor()
+        result, err = await executor.run(case_id, params_pool, request_param, path)
+        finished_at = datetime.now()
+        cost = "{}s".format((finished_at - start_at).seconds)
+        if err is not None:
+            status = 2
+        else:
+            if result.get("status"):
+                status = 0
+            else:
+                status = 1
+        asserts = json.dumps(result.get("asserts"), ensure_ascii=False)
+        url = result.get("url")
+        case_logs = result.get("logs")
+        body = result.get("request_data")
+        status_code = result.get("status_code")
+        request_method = result.get("request_method")
+        response = result.get("response")
+        if not isinstance(response, str):
+            response = json.dumps(response, ensure_ascii=False)
+        response_headers = json.dumps(result.get("response_header"), ensure_ascii=False)
+        cookies = json.dumps(result.get("cookies"), ensure_ascii=False)
+        data[case_id] = status
+        await TestResultDao.insert(report_id, case_id, status,
+                                   case_logs, start_at, finished_at,
+                                   url, body, request_method, cost,
+                                   asserts, response_headers, response,
+                                   status_code, cookies, 0)
+
     @case_log
     def replace_body(self, req_params, body):
         """根据传入的构造参数进行参数替换"""
@@ -324,3 +360,24 @@ class Executor(object):
         except Exception as e:
             return None, f"获取变量失败: {str(e)}"
         return json.dumps(result, ensure_ascii=False), None
+
+    @staticmethod
+    async def run_multiple(executor: int, env: int, case_list: List[int]):
+        # step1 新增测试报告数据
+        report_id = await TestReportDao.start(executor, env)
+
+        # step2 开始执行用例
+        result_data = dict()
+        await asyncio.gather(*(Executor.run_single(result_data, report_id, c) for c in case_list))
+        ok, fail, skip, error = 0, 0, 0, 0
+        for case_id, status in result_data.items():
+            if status == 0:
+                ok += 1
+            elif status == 1:
+                fail += 1
+            elif status == 2:
+                error += 1
+            else:
+                skip += 1
+        await TestReportDao.end(report_id, ok, fail, error, skip, 3)
+        return report_id

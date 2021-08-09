@@ -7,5 +7,7 @@ from app.models.testcase_asserts import TestCaseAsserts
 from app.models.environment import Environment
 from app.models.gconfig import GConfig
 from app.models.constructor import Constructor
+from app.models.report import PityReport
+from app.models.result import PityTestResult
 
 Base.metadata.create_all(engine)

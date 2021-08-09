@@ -59,6 +59,12 @@ async def execute_case(case_id: List[int], user_info=Depends(Permission())):
     return dict(code=0, data=data, msg="操作成功")
 
 
+@router.post("/run/multiple")
+async def execute_as_report(case_id: List[int], user_info=Depends(Permission())):
+    report_id = await Executor.run_multiple(user_info['id'], 1, case_id)
+    return dict(code=0, data=report_id, msg="操作成功")
+
+
 async def run_single(case_id: int, data: Dict[int, tuple]):
     executor = Executor()
     data[case_id] = await executor.run(case_id)
