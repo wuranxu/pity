@@ -1,0 +1,53 @@
+from datetime import datetime
+
+from sqlalchemy import INT, Column, DATETIME
+from sqlalchemy.dialects.mysql import SMALLINT
+
+from app.models import Base
+
+
+class PityReport(Base):
+    __tablename__ = 'pity_report'
+    id = Column(INT, primary_key=True)
+    # 执行人 0则为CPU
+    executor = Column(INT, index=True)
+
+    # 环境
+    env = Column(INT, nullable=False)
+
+    # 测试集合id，预留字段
+    plan_id = Column(INT, index=True, nullable=True)
+    # 开始时间
+    start_at = Column(DATETIME, nullable=False)
+    # 结束时间
+    finished_at = Column(DATETIME)
+    # 成功数量
+    success_count = Column(INT, nullable=False, default=0)
+    error_count = Column(INT, nullable=False, default=0)
+    failed_count = Column(INT, nullable=False, default=0)
+    skipped_count = Column(INT, nullable=False, default=0)
+
+    # 执行状态
+    status = Column(SMALLINT, nullable=False, comment="0: pending, 1: running, 2: stopped, 3: finished", index=True)
+
+    # case执行模式
+    mode = Column(SMALLINT, default=0, comment="0: 手动, 1: 自动, 2: 测试集, 3: pipeline, 4: 其他")
+
+    deleted_at = Column(DATETIME, index=True)
+
+    def __init__(self, executor: int, env: int, success_count: int = 0, failed_count: int = 0,
+                 error_count: int = 0, skipped_count: int = 0, status: int = 0, mode: int = 0,
+                 plan_id: int = None, finished_at: datetime = None):
+        self.executor = executor
+        self.env = env
+        self.start_at = datetime.now()
+        self.success_count = success_count
+        self.failed_count = failed_count
+        self.error_count = error_count
+        self.skipped_count = skipped_count
+        self.status = status
+        self.mode = mode
+        self.status = status
+        self.plan_id = plan_id
+        self.finished_at = finished_at
+        self.deleted_at = None
