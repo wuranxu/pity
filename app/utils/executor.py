@@ -126,21 +126,24 @@ class Executor(object):
 
     async def execute_constructor(self, logger, index, path, params, req_params, constructor: Constructor):
         if constructor.type == 0:
-            self.append(logger, f"当前路径: {path}, 第{index + 1}条构造方法")
-            # 说明是case
-            executor = Executor(logger)
             data = json.loads(constructor.constructor_json)
-            new_param = data.get("params")
-            if new_param:
-                temp = json.loads(new_param)
-                req_params.update(temp)
             case_id = data.get("case_id")
             testcase, _ = await TestCaseDao.async_query_test_case(case_id)
-            result, err = await executor.run(case_id, params, req_params, f"{path}->{testcase.name}")
-            if err:
-                raise Exception(f"{path}->{testcase.name} 第{index + 1}个构造方法执行失败: {err}")
-            params[constructor.value] = result
-            await self.parse_params(logger, testcase, params)
+            try:
+                self.append(logger, f"当前路径: {path}, 第{index + 1}条构造方法")
+                # 说明是case
+                executor = Executor(logger)
+                new_param = data.get("params")
+                if new_param:
+                    temp = json.loads(new_param)
+                    req_params.update(temp)
+                result, err = await executor.run(case_id, params, req_params, f"{path}->{testcase.name}")
+                if err:
+                    raise Exception(err)
+                params[constructor.value] = result
+                await self.parse_params(logger, testcase, params)
+            except Exception as e:
+                raise Exception(f"{path}->{testcase.name} 第{index + 1}个构造方法执行失败: {e}")
 
     @case_log
     async def run(self, case_id: int, params_pool: dict = None, request_param: dict = None, path="主case"):

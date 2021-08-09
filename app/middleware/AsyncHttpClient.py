@@ -38,6 +38,16 @@ class AsyncRequest(object):
         return data
 
     @staticmethod
+    def get_request_data(body):
+        request_body = body
+        if isinstance(body, bytes):
+            request_body = request_body.decode()
+        if isinstance(request_body, str) or request_body is None:
+            return request_body
+        return json.dumps(request_body, ensure_ascii=False)
+
+
+    @staticmethod
     async def collect(status, request_data, status_code=200, response=None, response_header=None,
                       request_header=None, cookies=None, elapsed=None, msg="success"):
         """
@@ -58,9 +68,7 @@ class AsyncRequest(object):
         cookies = {k: v for k, v in cookies.items()} if cookies is not None else {}
         return {
             "status": status, "response": response, "status_code": status_code,
-            "request_data": request_data if isinstance(request_data, str) or request_data is None else json.dumps(
-                request_data,
-                ensure_ascii=False),
+            "request_data": AsyncRequest.get_request_data(request_data),
             "response_header": response_header, "request_header": request_header,
             "msg": msg, "elapsed": elapsed, "cookies": cookies,
         }
