@@ -12,3 +12,5 @@ starlette~=0.13.6
 aiohttp=3.7.4
 aiofiles=0.7.0
 aiomysql
+Jinja2
+aiomysql
