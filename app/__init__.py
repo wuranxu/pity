@@ -1,11 +1,47 @@
+import json
+from typing import Any
+
 from fastapi import FastAPI, Request, status
 from fastapi.encoders import jsonable_encoder
-from fastapi.exceptions import RequestValidationError, HTTPException
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from app.excpetions.RequestException import PermissionException
+from starlette.exceptions import ExceptionMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
+
 from app.excpetions.RequestException import AuthException
+from app.excpetions.RequestException import PermissionException
 
 pity = FastAPI()
+
+
+class PityException(Exception):
+    def __init__(self, data: Any):
+        if isinstance(data, bytes):
+            self.data = data.decode()
+        elif isinstance(data, dict):
+            self.data = json.dumps(data, ensure_ascii=False)
+
+
+class PartnerAvailabilityMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        raise PityException(await request.body())
+        return await call_next(request)
+
+
+@pity.exception_handler(PityException)
+async def custom_exception_handler(request: Request, exc: PityException):
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content=jsonable_encoder({
+            "code": 110,
+            "request_data": exc.data,
+            "msg": "unknown error"
+        })
+    )
+
+
+pity.add_middleware(PartnerAvailabilityMiddleware)
+pity.add_middleware(ExceptionMiddleware, handlers=pity.exception_handlers)  # this is the change
 
 
 def error_map(error_type: str, field: str):
@@ -29,15 +65,16 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 
-# @pity.exception_handler(Exception)
-# async def unexpected_exception_error(request: Request, exc: Exception):
-#     return JSONResponse(
-#         status_code=status.HTTP_200_OK,
-#         content=jsonable_encoder({
-#             "code": 110,
-#             "msg": str(exc),
-#         })
-#     )
+@pity.exception_handler(Exception)
+async def unexpected_exception_error(request: Request, exc: Exception):
+    await request.body()
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content=jsonable_encoder({
+            "code": 110,
+            "request_data": str(exc),
+        })
+    )
 
 
 @pity.exception_handler(PermissionException)
