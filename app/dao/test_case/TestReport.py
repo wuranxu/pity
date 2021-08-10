@@ -2,6 +2,7 @@ from datetime import datetime
 
 from sqlalchemy import select
 
+from app.dao.test_case.TestResult import TestResultDao
 from app.models import async_session
 from app.models.report import PityReport
 from app.utils.logger import Log
@@ -48,3 +49,23 @@ class TestReportDao(object):
         except Exception as e:
             TestReportDao.log.error(f"更新报告失败, error: {e}")
             raise Exception("更新报告失败")
+
+    @staticmethod
+    async def query(report_id: int):
+        """
+        根据报告id查询报告
+        :param report_id:
+        :return:
+        """
+        try:
+            async with async_session() as session:
+                sql = select(PityReport).where(PityReport.id == report_id)
+                data = await session.execute(sql)
+                if data is None:
+                    raise Exception("报告不存在")
+                report = data.scalars().first()
+                test_data = await TestResultDao.list(report_id)
+                return report, test_data
+        except Exception as e:
+            TestReportDao.log.error(f"查询报告失败: {e}")
+            raise Exception(f"查询报告失败: {e}")

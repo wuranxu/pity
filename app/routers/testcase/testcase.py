@@ -4,6 +4,7 @@ from app.dao.project.ProjectDao import ProjectDao
 from app.dao.test_case.ConstructorDao import ConstructorDao
 from app.dao.test_case.TestCaseAssertsDao import TestCaseAssertsDao
 from app.dao.test_case.TestCaseDao import TestCaseDao
+from app.dao.test_case.TestReport import TestReportDao
 from app.handler.fatcory import ResponseFactory
 from app.models.schema.constructor import ConstructorForm
 from app.routers import Permission
@@ -77,5 +78,15 @@ async def get_constructor_tree(id: int, user_info=Depends(Permission())):
     try:
         result = ConstructorDao.get_constructor_data(id)
         return dict(code=0, msg="操作成功", data=result)
+    except Exception as e:
+        return dict(code=110, msg=str(e))
+
+
+@router.get("/report")
+async def query_report(id: int, user_info=Depends(Permission())):
+    try:
+        report, case_list = await TestReportDao.query(id)
+        return dict(code=0, data=dict(report=ResponseFactory.model_to_dict(report),
+                                      case_list=ResponseFactory.model_to_list(case_list)), msg="操作成功")
     except Exception as e:
         return dict(code=110, msg=str(e))
