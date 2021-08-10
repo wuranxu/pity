@@ -1,12 +1,9 @@
-import json
-from typing import Any
-
 from fastapi import FastAPI, Request, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import ExceptionMiddleware
-from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.types import Message
 
 from app.excpetions.RequestException import AuthException
 from app.excpetions.RequestException import PermissionException
@@ -14,34 +11,34 @@ from app.excpetions.RequestException import PermissionException
 pity = FastAPI()
 
 
-class PityException(Exception):
-    def __init__(self, data: Any):
-        if isinstance(data, bytes):
-            self.data = data.decode()
-        elif isinstance(data, dict):
-            self.data = json.dumps(data, ensure_ascii=False)
+async def set_body(request: Request, body: bytes):
+    async def receive() -> Message:
+        return {"type": "http.request", "body": body}
+
+    request._receive = receive
 
 
-class PartnerAvailabilityMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request, call_next):
-        raise PityException(await request.body())
+async def get_body(request: Request) -> bytes:
+    body = await request.body()
+    await set_body(request, body)
+    return body
+
+
+@pity.middleware("http")
+async def errors_handling(request: Request, call_next):
+    body = await request.body()
+    try:
+        await set_body(request, await request.body())
         return await call_next(request)
-
-
-@pity.exception_handler(PityException)
-async def custom_exception_handler(request: Request, exc: PityException):
-    return JSONResponse(
-        status_code=status.HTTP_200_OK,
-        content=jsonable_encoder({
-            "code": 110,
-            "request_data": exc.data,
-            "msg": "unknown error"
-        })
-    )
-
-
-pity.add_middleware(PartnerAvailabilityMiddleware)
-pity.add_middleware(ExceptionMiddleware, handlers=pity.exception_handlers)  # this is the change
+    except Exception as exc:
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=jsonable_encoder({
+                "code": 110,
+                "msg": str(exc),
+                "request_data": body,
+            })
+        )
 
 
 def error_map(error_type: str, field: str):
@@ -61,18 +58,6 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
             "code": 101,
             "msg": error_map(exc.errors()[0]["type"], exc.errors()[0].get("loc", ['unknown'])[-1]) if len(
                 exc.errors()) > 0 else "参数解析失败",
-        })
-    )
-
-
-@pity.exception_handler(Exception)
-async def unexpected_exception_error(request: Request, exc: Exception):
-    await request.body()
-    return JSONResponse(
-        status_code=status.HTTP_200_OK,
-        content=jsonable_encoder({
-            "code": 110,
-            "request_data": str(exc),
         })
     )
 
