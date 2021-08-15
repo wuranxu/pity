@@ -11,7 +11,7 @@ from config import Config
 # 同步engine
 engine = create_engine(Config.SQLALCHEMY_DATABASE_URI, pool_recycle=1500)
 # 异步engine
-async_engine = create_async_engine(Config.ASYNC_SQLALCHEMY_URI)
+async_engine = create_async_engine(Config.ASYNC_SQLALCHEMY_URI, pool_recycle=1500)
 Session = sessionmaker(engine)
 async_session = sessionmaker(async_engine, class_=AsyncSession)
 # 创建对象的基类:
