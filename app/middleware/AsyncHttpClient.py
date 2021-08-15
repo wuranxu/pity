@@ -31,11 +31,11 @@ class AsyncRequest(object):
 
     @staticmethod
     async def get_resp(resp):
-        try:
-            data = await resp.json(encoding='utf-8')
-        except:
-            data = await resp.text()
-        return data
+        # try:
+        #     data = await resp.json(encoding='utf-8')
+        # except:
+        #     data = await resp.text()
+        return await resp.text()
 
     @staticmethod
     def get_request_data(body):
@@ -47,27 +47,31 @@ class AsyncRequest(object):
         return json.dumps(request_body, ensure_ascii=False)
 
     @staticmethod
-    async def collect(status, request_data, status_code=200, response=None, response_header=None,
-                      request_header=None, cookies=None, elapsed=None, msg="success"):
+    async def collect(status, request_data, status_code=200, response=None, response_headers=None,
+                      request_headers=None, cookies=None, elapsed=None, msg="success"):
         """
         收集http返回数据
         :param status: 请求状态
         :param request_data: 请求入参
         :param status_code: 状态码
         :param response: 相应
-        :param response_header: 返回header
-        :param request_header:  请求header
+        :param response_headers: 返回header
+        :param request_headers:  请求header
         :param cookies:  cookie
         :param elapsed: 耗时
         :param msg: 报错信息
         :return:
         """
-        request_header = {k: v for k, v in request_header.items()} if request_header is not None else {}
-        response_header = {k: v for k, v in response_header.items()} if response_header is not None else {}
+        request_headers = json.dumps({k: v for k, v in request_headers.items()} if request_headers is not None else {},
+                                     ensure_ascii=False)
+        response_headers = json.dumps(
+            {k: v for k, v in response_headers.items()} if response_headers is not None else {},
+            ensure_ascii=False)
         cookies = {k: v for k, v in cookies.items()} if cookies is not None else {}
+        cookies = json.dumps(cookies, ensure_ascii=False)
         return {
             "status": status, "response": response, "status_code": status_code,
             "request_data": AsyncRequest.get_request_data(request_data),
-            "response_header": response_header, "request_header": request_header,
-            "msg": msg, "elapsed": elapsed, "cookies": cookies,
+            "response_headers": response_headers, "request_headers": request_headers,
+            "msg": msg, "cost": elapsed, "cookies": cookies,
         }

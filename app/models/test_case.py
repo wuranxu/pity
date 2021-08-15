@@ -12,7 +12,7 @@ class TestCase(Base):
     request_type = Column(INT, default=1, comment="请求类型 1: http 2: grpc 3: dubbo")
     url = Column(TEXT, nullable=False, comment="请求url")
     request_method = Column(String(12), nullable=True, comment="请求方式, 如果非http可为空")
-    request_header = Column(TEXT, comment="请求头，可为空")
+    request_headers = Column(TEXT, comment="请求头，可为空")
     # params = Column(TEXT, comment="请求params")
     body = Column(TEXT, comment="请求body")
     project_id = Column(INT, comment="所属项目")
@@ -28,7 +28,7 @@ class TestCase(Base):
     update_user = Column(INT, nullable=False)
 
     def __init__(self, name, request_type, url, project_id, status, priority, create_user,
-                 catalogue, tag=None, request_header=None, body=None, request_method=None, id=0):
+                 catalogue, tag=None, request_headers=None, body=None, request_method=None, id=0):
         self.id = id
         self.name = name
         self.request_type = request_type
@@ -42,7 +42,7 @@ class TestCase(Base):
         self.body = body
         self.create_user = create_user
         self.update_user = create_user
-        self.request_header = request_header
+        self.request_headers = request_headers
         self.request_method = request_method
         self.created_at = datetime.now()
         self.updated_at = datetime.now()

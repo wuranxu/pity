@@ -55,15 +55,15 @@ class Request(object):
             return response.text
 
     @staticmethod
-    def response(status, request_data, status_code=200, response=None, response_header=None,
-                 request_header=None, cookies=None, elapsed=None, msg="success"):
-        request_header = {k: v for k, v in request_header.items()} if request_header is not None else {}
-        response_header = {k: v for k, v in response_header.items()} if response_header is not None else {}
+    def response(status, request_data, status_code=200, response=None, response_headers=None,
+                 request_headers=None, cookies=None, elapsed=None, msg="success"):
+        request_headers = {k: v for k, v in request_headers.items()} if request_headers is not None else {}
+        response_headers = {k: v for k, v in response_headers.items()} if response_headers is not None else {}
         cookies = {k: v for k, v in cookies.items()} if cookies is not None else {}
         return {
             "status": status, "response": response, "status_code": status_code,
             "request_data": request_data if isinstance(request_data, str) else json.dumps(request_data,
                                                                                           ensure_ascii=False),
-            "response_header": response_header, "request_header": request_header,
-            "msg": msg, "elapsed": elapsed, "cookies": cookies,
+            "response_headers": response_headers, "request_headers": request_headers,
+            "msg": msg, "cost": elapsed, "cookies": cookies,
         }

@@ -24,6 +24,12 @@ class GConfigParser(object):
         result = data
         try:
             for branch in el_list[1:]:
+                if isinstance(result, str):
+                    # 说明需要反序列化
+                    try:
+                        result = json.loads(result)
+                    except Exception as e:
+                        raise Exception(f"反序列化失败, result: {result}\nERROR: {e}")
                 if isinstance(branch, int):
                     # 说明路径里面的是数组
                     result = result[int(branch)]

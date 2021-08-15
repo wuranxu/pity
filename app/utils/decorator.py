@@ -1,5 +1,6 @@
 from datetime import datetime
 from functools import wraps
+from typing import Coroutine
 
 
 class SingletonDecorator:
@@ -16,13 +17,18 @@ class SingletonDecorator:
 def case_log(func):
     @wraps(func)
     def wrapper(*args, **kw):
-        cls = args[0]
+        self = args[0]
         doc = func.__doc__
-        cls.logger.append("[{}]: 步骤开始 -> {} 参数: {}".format(datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                                                           doc.strip() if doc else func.__name__, get_str(args, kw)))
+        self.logger.o_append("[{}]: 步骤开始 -> {}".format(datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                                                              doc.strip() if doc else func.__name__, get_str(args, kw)))
         returns = func(*args, **kw)
-        cls.logger.append("[{}]: 步骤结束 -> {} {}".format(datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                                                       doc.strip() if doc else func.__name__, get_returns(returns)))
+        if not isinstance(returns, Coroutine):
+            self.logger.o_append("[{}]: 步骤结束 -> {} {}".format(datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                                                              doc.strip() if doc else func.__name__,
+                                                              get_returns(returns)))
+        else:
+            self.logger.o_append("[{}]: 步骤结束 -> {}".format(datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                                                           doc.strip() if doc else func.__name__))
         return returns
 
     return wrapper
@@ -31,14 +37,14 @@ def case_log(func):
 def get_str(args, kwargs):
     result = []
     # 这里从1索引开始，是因为args[0]是self, 也就注定了case_log只能在Executor方法下使用
-    for a in args[1:]:
+    for i, a in enumerate(args[1:], start=1):
         if type(a).__name__ == "function":
             result.append(a.__doc__ if a.__doc__ else a.__name__)
         else:
-            result.append(str(a))
+            result.append(f"\n参数{i}:\n{str(a)}")
     if kwargs:
         for k, v in kwargs:
-            result.append(f"{k}->{v}")
+            result.append(f"\n{k}->{v}")
     if len(result) == 0:
         return "无"
     return ", ".join(result)
