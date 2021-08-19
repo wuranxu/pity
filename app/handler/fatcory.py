@@ -1,7 +1,7 @@
 from datetime import datetime
 
 
-class ResponseFactory(object):
+class PityResponse(object):
 
     @staticmethod
     def model_to_dict(obj, *ignore: str):
@@ -19,4 +19,12 @@ class ResponseFactory(object):
 
     @staticmethod
     def model_to_list(data: list, *ignore: str):
-        return [ResponseFactory.model_to_dict(x, *ignore) for x in data]
+        return [PityResponse.model_to_dict(x, *ignore) for x in data]
+
+    @staticmethod
+    def success(data=None, code=0, msg="操作成功"):
+        return dict(code=code, msg=msg, data=data)
+
+    @staticmethod
+    def failed(msg, code=110):
+        return dict(code=code, msg=str(msg))

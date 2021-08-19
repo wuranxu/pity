@@ -20,12 +20,12 @@ class TestResultDao(object):
         try:
             async with async_session() as session:
                 async with session.begin():
-                    report = PityTestResult(report_id, case_id, case_name, status,
+                    result = PityTestResult(report_id, case_id, case_name, status,
                                             case_log, start_at, finished_at,
                                             url, body, request_method, request_headers, cost,
                                             asserts, response_headers, response,
                                             status_code, cookies, retry)
-                    session.add(report)
+                    session.add(result)
                     await session.flush()
         except Exception as e:
             TestResultDao.log.error(f"新增测试结果失败, error: {e}")

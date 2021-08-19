@@ -9,5 +9,6 @@ from app.models.gconfig import GConfig
 from app.models.constructor import Constructor
 from app.models.report import PityReport
 from app.models.result import PityTestResult
+from app.models.database import PityDatabase
 
 Base.metadata.create_all(engine)

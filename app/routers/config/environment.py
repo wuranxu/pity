@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 
 from app.dao.config.EnvironmentDao import EnvironmentDao
-from app.handler.fatcory import ResponseFactory
+from app.handler.fatcory import PityResponse
 from app.models.schema.environment import EnvironmentForm
 from app.routers import Permission
 from config import Config
@@ -14,7 +14,7 @@ async def list_environment(page: int = 1, size: int = 8, name: str = "", user_in
     data, total, err = EnvironmentDao.list_env(page, size, name)
     if err:
         return dict(code=110, msg=err)
-    return dict(code=0, data=ResponseFactory.model_to_list(data), total=total, msg="操作成功")
+    return dict(code=0, data=PityResponse.model_to_list(data), total=total, msg="操作成功")
 
 
 @router.post("/environment/insert")

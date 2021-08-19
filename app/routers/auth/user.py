@@ -2,7 +2,7 @@ import requests
 from fastapi import APIRouter, Depends
 
 from app.dao.auth.UserDao import UserDao
-from app.handler.fatcory import ResponseFactory
+from app.handler.fatcory import PityResponse
 from app.middleware.Jwt import UserToken
 from app.routers import Permission
 from app.routers.auth.user_schema import UserDto, UserForm
@@ -25,7 +25,7 @@ async def login(data: UserForm):
     user, err = UserDao.login(data.username, data.password)
     if err is not None:
         return dict(code=110, msg=err)
-    user = ResponseFactory.model_to_dict(user, "password")
+    user = PityResponse.model_to_dict(user, "password")
     token = UserToken.get_token(user)
     if err is not None:
         return dict(code=110, msg=err)
@@ -37,7 +37,7 @@ async def list_users(user_info=Depends(Permission())):
     users, err = UserDao.list_users()
     if err is not None:
         return dict(code=110, msg=err)
-    return dict(code=0, msg="操作成功", data=ResponseFactory.model_to_list(users))
+    return dict(code=0, msg="操作成功", data=PityResponse.model_to_list(users))
 
 
 @router.get("/github/login")
@@ -52,7 +52,7 @@ def login_with_github(code: str):
             user_info = res.json()
             user = UserDao.register_for_github(user_info.get("login"), user_info.get("name"), user_info.get("email"),
                                                user_info.get("avatar_url"))
-            user = ResponseFactory.model_to_dict(user, "password")
+            user = PityResponse.model_to_dict(user, "password")
             token = UserToken.get_token(user)
             return dict(code=0, msg="登录成功", data=dict(token=token, user=user))
     except:

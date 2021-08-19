@@ -1,7 +1,7 @@
 from fastapi import Depends
 
 from app.dao.config.GConfigDao import GConfigDao
-from app.handler.fatcory import ResponseFactory
+from app.handler.fatcory import PityResponse
 from app.models.schema.gconfig import GConfigForm
 from app.routers import Permission
 from app.routers.config.environment import router
@@ -13,7 +13,7 @@ async def list_gconfig(page: int = 1, size: int = 8, env: int = None, key: str =
     data, total, err = GConfigDao.list_gconfig(page, size, env, key)
     if err:
         return dict(code=110, msg=err)
-    return dict(code=0, data=ResponseFactory.model_to_list(data), total=total, msg="操作成功")
+    return dict(code=0, data=PityResponse.model_to_list(data), total=total, msg="操作成功")
 
 
 @router.post("/gconfig/insert")

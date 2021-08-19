@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 
 from app.dao.project.ProjectDao import ProjectDao
 from app.dao.project.ProjectRoleDao import ProjectRoleDao
-from app.handler.fatcory import ResponseFactory
+from app.handler.fatcory import PityResponse
 from app.routers import Permission
 from app.routers.project.project_schema import ProjectForm, ProjectEditForm
 from app.routers.project.project_schema import ProjectRoleForm, ProjectRoleEditForm, ProjectDelForm
@@ -27,7 +27,7 @@ async def list_project(page: int = 1, size: int = 8, name: str = "", user_info=D
     result, total, err = ProjectDao.list_project(user_id, user_role, page, size, name)
     if err is not None:
         return dict(code=110, data=result, msg=err)
-    return dict(code=0, data=ResponseFactory.model_to_list(result), total=total, msg="操作成功")
+    return dict(code=0, data=PityResponse.model_to_list(result), total=total, msg="操作成功")
 
 
 @router.post("/insert")
@@ -59,7 +59,7 @@ def query_project(projectId: int, user_info=Depends(Permission())):
     data, roles, tree, err = ProjectDao.query_project(projectId)
     if err is not None:
         return dict(code=110, data=result, msg=err)
-    result.update({"project": ResponseFactory.model_to_dict(data), "roles": ResponseFactory.model_to_list(roles),
+    result.update({"project": PityResponse.model_to_dict(data), "roles": PityResponse.model_to_list(roles),
                    "test_case": tree})
     return dict(code=0, data=result, msg="操作成功")
 

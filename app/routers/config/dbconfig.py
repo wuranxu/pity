@@ -1,0 +1,45 @@
+from fastapi import Depends
+
+from app.dao.config.DbConfigDao import DbConfigDao
+from app.handler.fatcory import PityResponse
+from app.models.schema.database import DatabaseForm
+from app.routers import Permission
+from app.routers.config.environment import router
+from config import Config
+
+
+@router.get("/dbconfig/list")
+async def list_dbconfig(name: str = '', database: str = '', env: int = None,
+                        user_info=Depends(Permission(Config.ADMIN))):
+    try:
+        data = await DbConfigDao.list_database(name, database, env)
+        return PityResponse.success(data=PityResponse.model_to_list(data))
+    except Exception as err:
+        return PityResponse.failed(err)
+
+
+@router.post("/dbconfig/insert")
+async def insert_dbconfig(form: DatabaseForm, user_info=Depends(Permission(Config.ADMIN))):
+    try:
+        await DbConfigDao.insert_database(form, user_info['id'])
+        return PityResponse.success()
+    except Exception as err:
+        return PityResponse.failed(err)
+
+
+@router.post("/dbconfig/update")
+async def update_dbconfig(form: DatabaseForm, user_info=Depends(Permission(Config.ADMIN))):
+    try:
+        await DbConfigDao.update_database(form, user_info['id'])
+        return PityResponse.success()
+    except Exception as err:
+        return PityResponse.failed(err)
+
+
+@router.get("/dbconfig/delete")
+async def delete_dbconfig(id: int, user_info=Depends(Permission(Config.ADMIN))):
+    try:
+        await DbConfigDao.delete_database(id, user_info['id'])
+        return PityResponse.success()
+    except Exception as err:
+        return PityResponse.failed(err)

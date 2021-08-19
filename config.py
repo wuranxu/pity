@@ -8,12 +8,12 @@ class Config(object):
     # JSON_AS_ASCII = False  # Flask jsonify编码问题
 
     # MySQL连接信息
-    # MYSQL_HOST = "47.112.32.195"
-    MYSQL_HOST = "127.0.0.1"
+    MYSQL_HOST = "47.112.32.195"
+    # MYSQL_HOST = "127.0.0.1"
     MYSQL_PORT = 3306
     MYSQL_USER = "root"
-    # MYSQL_PWD = "anrenear@33"
-    MYSQL_PWD = "wuranxu@33"
+    MYSQL_PWD = "anrenear@33"
+    # MYSQL_PWD = "wuranxu@33"
     DBNAME = "pity"
 
     # sqlalchemy

@@ -5,7 +5,7 @@ from app.dao.test_case.ConstructorDao import ConstructorDao
 from app.dao.test_case.TestCaseAssertsDao import TestCaseAssertsDao
 from app.dao.test_case.TestCaseDao import TestCaseDao
 from app.dao.test_case.TestReport import TestReportDao
-from app.handler.fatcory import ResponseFactory
+from app.handler.fatcory import PityResponse
 from app.models.schema.constructor import ConstructorForm
 from app.routers import Permission
 from app.routers.testcase.testcase_schema import TestCaseForm, TestCaseAssertsForm
@@ -34,7 +34,7 @@ async def query_testcase(caseId: int, user_info=Depends(Permission())):
     data, err = TestCaseDao.query_test_case(caseId)
     if err:
         return dict(code=110, msg=err)
-    return dict(code=0, data=ResponseFactory.model_to_dict(data), msg="操作成功")
+    return dict(code=0, data=PityResponse.model_to_dict(data), msg="操作成功")
 
 
 @router.get("/list")
@@ -88,8 +88,8 @@ async def get_constructor_tree(id: int, user_info=Depends(Permission())):
 async def query_report(id: int, user_info=Depends(Permission())):
     try:
         report, case_list = await TestReportDao.query(id)
-        return dict(code=0, data=dict(report=ResponseFactory.model_to_dict(report),
-                                      case_list=ResponseFactory.model_to_list(case_list)), msg="操作成功")
+        return dict(code=0, data=dict(report=PityResponse.model_to_dict(report),
+                                      case_list=PityResponse.model_to_list(case_list)), msg="操作成功")
     except Exception as e:
         return dict(code=110, msg=str(e))
 
@@ -100,7 +100,7 @@ async def list_report(page: int, size: int, start_time: str, end_time: str, exec
                       user_info=Depends(Permission())):
     try:
         report_list, total = await TestReportDao.list_report(page, size, start_time, end_time, executor)
-        return dict(code=0, data=ResponseFactory.model_to_list(report_list), msg="操作成功", total=total)
+        return dict(code=0, data=PityResponse.model_to_list(report_list), msg="操作成功", total=total)
     except Exception as e:
         return dict(code=110, msg=str(e))
 
