@@ -10,8 +10,8 @@ router = APIRouter(prefix="/config")
 
 
 @router.get("/environment/list")
-async def list_environment(page: int = 1, size: int = 8, name: str = "", user_info=Depends(Permission())):
-    data, total, err = EnvironmentDao.list_env(page, size, name)
+async def list_environment(page: int = 1, size: int = 8, name: str = "", exactly=False, user_info=Depends(Permission())):
+    data, total, err = EnvironmentDao.list_env(page, size, name, exactly)
     if err:
         return dict(code=110, msg=err)
     return dict(code=0, data=PityResponse.model_to_list(data), total=total, msg="操作成功")

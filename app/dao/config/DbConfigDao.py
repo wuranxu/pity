@@ -1,7 +1,9 @@
 from datetime import datetime
+from typing import List
 
-from sqlalchemy import select
+from sqlalchemy import select, MetaData
 
+from app.dao.config.EnvironmentDao import EnvironmentDao
 from app.models import async_session, DatabaseHelper, db_helper
 from app.models.database import PityDatabase
 from app.models.schema.database import DatabaseForm
@@ -92,6 +94,57 @@ class DbConfigDao(object):
         except Exception as e:
             DbConfigDao.log.error(f"获取数据库配置失败, error: {e}")
             raise Exception("获取数据库配置失败")
+
+    @staticmethod
+    async def query_database_and_tables():
+        """
+        方法会查询所有数据库表配置的信息
+        :return:
+        """
+        try:
+            # 返回树图, 最外层是环境
+            result = []
+            env_index = dict()
+            env_data = EnvironmentDao.list_env(1, 1, exactly=True)
+            env_map = {env.id: env.name for env in env_data}
+            # 获取数据库相关的信息
+            meta = MetaData()
+            async with async_session() as session:
+                query = await session.execute(select(PityDatabase).where(PityDatabase.deleted_at == None))
+                data = query.scalars().all()
+                for d in data:
+                    name = env_map[d.env]
+                    idx = env_index.get(name)
+                    if not idx:
+                        result.append(dict(title=name, key=f"env_{name}", children=list()))
+                        idx = len(result) - 1
+                        env_index[name] = idx
+                    DbConfigDao.get_tables(d, meta, result[idx]['children'])
+                return result
+        except Exception as err:
+            DbConfigDao.log.error(f"获取数据库配置详情失败, error: {err}")
+            raise Exception(f"获取数据库配置详情失败: {err}")
+
+    @staticmethod
+    def get_tables(data: PityDatabase, meta, children: List):
+        conn = db_helper.get_connection(data.sql_type, data.host, data.port, data.username, data.password,
+                                        data.database)
+        database_child = list()
+        dbs = dict(title=f"{data.database}（{data.host}:{data.port}）", key=f"database_{data.id}",
+                   children=database_child, sql_type=data.sql_type)
+        eng = conn.get('engine')
+        meta.reflect(bind=eng)
+        for t in meta.sorted_tables:
+            temp = []
+            database_child.append(dict(title=str(t), key=f"table_{data.id}_{t}", children=temp))
+            for k, v in t.c.items():
+                temp.append(dict(
+                    title=k,
+                    primary_key=v.primary_key,
+                    type={str(v.type)},
+                    key=f"column_{t}_{data.id}_{k}",
+                ))
+        children.append(dbs)
 
     @staticmethod
     async def online_sql(id: int, sql: str):

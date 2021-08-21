@@ -41,12 +41,14 @@ class EnvironmentDao(object):
         return None
 
     @staticmethod
-    def list_env(page, size, name=None):
+    def list_env(page, size, name=None, exactly=False):
         try:
             search = [Environment.deleted_at == None]
             with Session() as session:
                 if name:
                     search.append(Environment.name.ilike("%{}%".format(name)))
+                if exactly:
+                    return session.query(Environment).filter(*search).all()
                 data = session.query(Environment).filter(*search)
                 total = data.count()
                 return data.order_by(desc(Environment.created_at)).offset((page - 1) * size).limit(
