@@ -6,7 +6,7 @@ from sqlalchemy import desc
 from sqlalchemy.future import select
 
 from app.dao.test_case.TestCaseAssertsDao import TestCaseAssertsDao
-from app.models import Session, update_model, async_session
+from app.models import Session, DatabaseHelper, async_session
 from app.models.constructor import Constructor
 from app.models.test_case import TestCase
 from app.routers.testcase.testcase_schema import TestCaseForm
@@ -92,7 +92,7 @@ class TestCaseDao(object):
                 data = session.query(TestCase).filter_by(id=test_case.id, deleted_at=None).first()
                 if data is None:
                     return "用例不存在"
-                update_model(data, test_case, user)
+                DatabaseHelper.update_model(data, test_case, user)
                 session.commit()
         except Exception as e:
             TestCaseDao.log.error(f"编辑用例失败: {str(e)}")

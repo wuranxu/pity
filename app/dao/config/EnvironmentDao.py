@@ -2,7 +2,7 @@ from datetime import datetime
 
 from sqlalchemy import desc
 
-from app.models import Session, update_model
+from app.models import Session, DatabaseHelper
 from app.models.environment import Environment
 from app.models.schema.environment import EnvironmentForm
 from app.utils.logger import Log
@@ -33,7 +33,7 @@ class EnvironmentDao(object):
                 query = session.query(Environment).filter_by(id=data.id, deleted_at=None).first()
                 if query is None:
                     return f"环境{data.name}不存在"
-                update_model(query, data, user)
+                DatabaseHelper.update_model(query, data, user)
                 session.commit()
         except Exception as e:
             EnvironmentDao.log.error(f"编辑环境失败: {str(e)}")

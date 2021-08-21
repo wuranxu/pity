@@ -14,3 +14,4 @@ aiofiles=0.7.0
 aiomysql
 Jinja2
 aiofiles
+psycopg2

@@ -11,6 +11,7 @@ from starlette.templating import Jinja2Templates
 from app import pity
 from app.routers.auth import user
 from app.routers.config import router as config_router
+from app.routers.online import router as online_router
 from app.routers.project import project
 from app.routers.request import http
 from app.routers.testcase import testcase
@@ -20,6 +21,7 @@ pity.include_router(project.router)
 pity.include_router(http.router)
 pity.include_router(testcase.router)
 pity.include_router(config_router)
+pity.include_router(online_router)
 
 pity.add_middleware(
     CORSMiddleware,

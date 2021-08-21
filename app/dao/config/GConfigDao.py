@@ -2,7 +2,7 @@ from datetime import datetime
 
 from sqlalchemy import desc, select
 
-from app.models import Session, update_model, async_session
+from app.models import Session, DatabaseHelper, async_session
 from app.models.gconfig import GConfig
 from app.models.schema.gconfig import GConfigForm
 from app.utils.logger import Log
@@ -33,7 +33,7 @@ class GConfigDao(object):
                 query = session.query(GConfig).filter_by(id=data.id, deleted_at=None).first()
                 if query is None:
                     return f"变量{data.key}不存在"
-                update_model(query, data, user)
+                DatabaseHelper.update_model(query, data, user)
                 session.commit()
         except Exception as e:
             GConfigDao.log.error(f"编辑变量失败: {str(e)}")
