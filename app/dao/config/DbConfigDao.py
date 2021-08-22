@@ -1,7 +1,9 @@
+from collections import defaultdict
 from datetime import datetime
 from typing import List
 
 from sqlalchemy import select, MetaData
+from sqlalchemy.exc import ResourceClosedError
 
 from app.dao.config.EnvironmentDao import EnvironmentDao
 from app.models import async_session, DatabaseHelper, db_helper
@@ -108,36 +110,39 @@ class DbConfigDao(object):
             env_data = EnvironmentDao.list_env(1, 1, exactly=True)
             env_map = {env.id: env.name for env in env_data}
             # 获取数据库相关的信息
-            meta = MetaData()
+            table_map = defaultdict(set)
             async with async_session() as session:
                 query = await session.execute(select(PityDatabase).where(PityDatabase.deleted_at == None))
                 data = query.scalars().all()
                 for d in data:
                     name = env_map[d.env]
                     idx = env_index.get(name)
-                    if not idx:
+                    if idx is None:
                         result.append(dict(title=name, key=f"env_{name}", children=list()))
                         idx = len(result) - 1
                         env_index[name] = idx
-                    DbConfigDao.get_tables(d, meta, result[idx]['children'])
-                return result
+                    DbConfigDao.get_tables(table_map, d, result[idx]['children'])
+                return result, table_map
         except Exception as err:
             DbConfigDao.log.error(f"获取数据库配置详情失败, error: {err}")
             raise Exception(f"获取数据库配置详情失败: {err}")
 
     @staticmethod
-    def get_tables(data: PityDatabase, meta, children: List):
+    def get_tables(table_map: dict, data: PityDatabase, children: List):
         conn = db_helper.get_connection(data.sql_type, data.host, data.port, data.username, data.password,
                                         data.database)
         database_child = list()
         dbs = dict(title=f"{data.database}（{data.host}:{data.port}）", key=f"database_{data.id}",
                    children=database_child, sql_type=data.sql_type)
         eng = conn.get('engine')
+        meta = MetaData()
         meta.reflect(bind=eng)
         for t in meta.sorted_tables:
+            table_map[data.id].add(str(t))
             temp = []
             database_child.append(dict(title=str(t), key=f"table_{data.id}_{t}", children=temp))
             for k, v in t.c.items():
+                table_map[data.id].add(k)
                 temp.append(dict(
                     title=k,
                     primary_key=v.primary_key,
@@ -148,6 +153,7 @@ class DbConfigDao(object):
 
     @staticmethod
     async def online_sql(id: int, sql: str):
+        row_count = 0
         try:
             query = await DbConfigDao.query_database(id)
             if query is None:
@@ -157,8 +163,12 @@ class DbConfigDao(object):
             session = data.get("session")
             with session() as s:
                 result = s.execute(sql)
-                data = result.mappings().all()
-                return data
+                row_count = result.rowcount
+                ans = result.mappings().all()
+                return ans
+        except ResourceClosedError:
+            # 说明是update或其他语句
+            return [{"rowCount": row_count}]
         except Exception as e:
             DbConfigDao.log.error(f"查询数据库配置失败, error: {e}")
             raise e

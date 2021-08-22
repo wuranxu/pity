@@ -12,7 +12,8 @@ router = APIRouter(prefix="/online")
 async def execute_sql(data: OnlineSQLForm, user_info=Depends(Permission())):
     try:
         result = await DbConfigDao.online_sql(data.id, data.sql)
-        return PityResponse.success(data=result)
+        columns, result = PityResponse.parse_sql_result(result)
+        return PityResponse.success(data=dict(result=result, columns=columns))
     except Exception as err:
         return PityResponse.failed(err)
 
@@ -20,7 +21,7 @@ async def execute_sql(data: OnlineSQLForm, user_info=Depends(Permission())):
 @router.get("/tables")
 async def list_tables(user_info=Depends(Permission())):
     try:
-        result = await DbConfigDao.query_database_and_tables()
-        return PityResponse.success(result)
+        result, table_map = await DbConfigDao.query_database_and_tables()
+        return PityResponse.success(dict(database=result, tables=table_map))
     except Exception as err:
         return PityResponse.failed(err)

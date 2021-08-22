@@ -18,6 +18,17 @@ class PityResponse(object):
         return data
 
     @staticmethod
+    def json_serialize(obj):
+        return {k: v.strftime("%Y-%m-%d %H:%M:%S") if isinstance(v, datetime) else v for k, v in dict(obj).items()}
+
+    @staticmethod
+    def parse_sql_result(data: list):
+        columns = []
+        if len(data) > 0:
+            columns = list(data[0].keys())
+        return columns, [PityResponse.json_serialize(obj) for obj in data]
+
+    @staticmethod
     def model_to_list(data: list, *ignore: str):
         return [PityResponse.model_to_dict(x, *ignore) for x in data]
 

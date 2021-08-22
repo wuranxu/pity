@@ -43,7 +43,7 @@ class DatabaseHelper(object):
         # 创建异步引擎
         eg = create_engine(jdbc_url, pool_recycle=1500)
         # 拿到session方法
-        ss = sessionmaker(eg)
+        ss = sessionmaker(bind=eg, autocommit=True)
         # 将数据缓存起来
         data = dict(engine=eg, session=ss)
         self.connections[key] = data
