@@ -15,11 +15,11 @@ class TestCase(Base):
     request_headers = Column(TEXT, comment="请求头，可为空")
     # params = Column(TEXT, comment="请求params")
     body = Column(TEXT, comment="请求body")
-    project_id = Column(INT, comment="所属项目")
+    directory_id = Column(INT, comment="所属目录")
     tag = Column(String(64), comment="用例标签")
     status = Column(INT, comment="用例状态: 1: 调试中 2: 暂时关闭 3: 正常运作")
     priority = Column(String(3), comment="用例优先级: p0-p3")
-    catalogue = Column(String(12), comment="用例目录")
+    # catalogue = Column(String(12), comment="用例目录")
     # expected = Column(TEXT, comment="预期结果, 支持el表达式", nullable=False)
     created_at = Column(DATETIME, nullable=False)
     updated_at = Column(DATETIME, nullable=False)
@@ -27,16 +27,16 @@ class TestCase(Base):
     create_user = Column(INT, nullable=False)
     update_user = Column(INT, nullable=False)
 
-    def __init__(self, name, request_type, url, project_id, status, priority, create_user,
-                 catalogue, tag=None, request_headers=None, body=None, request_method=None, id=0):
+    def __init__(self, name, request_type, url, directory_id, status, priority, create_user,
+                 tag=None, request_headers=None, body=None, request_method=None, id=0):
         self.id = id
         self.name = name
         self.request_type = request_type
         self.url = url
         self.priority = priority
-        self.project_id = project_id
+        self.directory_id = directory_id
         self.tag = tag
-        self.catalogue = catalogue
+        # self.catalogue = catalogue
         self.status = status
         # self.expected = expected
         self.body = body

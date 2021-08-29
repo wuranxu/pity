@@ -1,50 +1,63 @@
 from fastapi import APIRouter, Depends
 
-from app.dao.project.ProjectDao import ProjectDao
 from app.dao.test_case.ConstructorDao import ConstructorDao
 from app.dao.test_case.TestCaseAssertsDao import TestCaseAssertsDao
 from app.dao.test_case.TestCaseDao import TestCaseDao
+from app.dao.test_case.TestCaseDirectory import PityTestcaseDirectoryDao
 from app.dao.test_case.TestReport import TestReportDao
 from app.handler.fatcory import PityResponse
 from app.models.schema.constructor import ConstructorForm
+from app.models.schema.testcase_directory import PityTestcaseDirectoryForm
 from app.routers import Permission
 from app.routers.testcase.testcase_schema import TestCaseForm, TestCaseAssertsForm
 
 router = APIRouter(prefix="/testcase")
 
 
+@router.get("/list")
+async def list_testcase(directory_id: int, name: str = "", create_user: str = ''):
+    try:
+        data = await TestCaseDao.list_test_case(directory_id, name, create_user)
+        return PityResponse.success(PityResponse.model_to_list(data))
+    except Exception as e:
+        return PityResponse.failed(str(e))
+
+
 @router.post("/insert")
 async def insert_testcase(data: TestCaseForm, user_info=Depends(Permission())):
-    err = TestCaseDao.insert_test_case(data.dict(), user_info['id'])
-    if err:
-        return dict(code=110, msg=err)
-    return dict(code=0, msg="操作成功")
+    try:
+        case_id = TestCaseDao.insert_test_case(data.dict(), user_info['id'])
+        return PityResponse.success(case_id)
+    except Exception as e:
+        return PityResponse.failed(e)
 
 
 @router.post("/update")
 async def update_testcase(data: TestCaseForm, user_info=Depends(Permission())):
-    err = TestCaseDao.update_test_case(data, user_info['id'])
-    if err:
-        return dict(code=110, msg=err)
-    return dict(code=0, msg="操作成功")
+    try:
+        data = TestCaseDao.update_test_case(data, user_info['id'])
+        return PityResponse.success(PityResponse.model_to_dict(data))
+    except Exception as e:
+        return PityResponse.failed(e)
 
 
 @router.get("/query")
 async def query_testcase(caseId: int, user_info=Depends(Permission())):
-    data, err = TestCaseDao.query_test_case(caseId)
-    if err:
-        return dict(code=110, msg=err)
-    return dict(code=0, data=PityResponse.model_to_dict(data), msg="操作成功")
-
-
-@router.get("/list")
-async def query_testcase(user_info=Depends(Permission())):
     try:
-        projects, _, _ = ProjectDao.list_project(user_info["role"], user_info["id"], 1, 2000)
-        data = TestCaseDao.list_testcase_tree(projects)
-        return dict(code=0, data=data, msg="操作成功")
+        data = await TestCaseDao.query_test_case(caseId)
+        return PityResponse.success(data)
     except Exception as e:
-        return dict(code=110, msg=str(e))
+        return PityResponse.failed(e)
+
+
+# @router.get("/list")
+# async def query_testcase(user_info=Depends(Permission())):
+#     try:
+#         projects, _, _ = ProjectDao.list_project(user_info["role"], user_info["id"], 1, 2000)
+#         data = TestCaseDao.list_testcase_tree(projects)
+#         return dict(code=0, data=data, msg="操作成功")
+#     except Exception as e:
+#         return dict(code=110, msg=str(e))
 
 
 @router.post("/asserts/insert")
@@ -107,9 +120,55 @@ async def list_report(page: int, size: int, start_time: str, end_time: str, exec
 
 # 获取脑图数据
 @router.get("/xmind")
-async def get_xmind_data(case_id: int):
+async def get_xmind_data(case_id: int, user_info=Depends(Permission())):
     try:
         tree_data = await TestCaseDao.get_xmind_data(case_id)
-        return dict(code=0, data=tree_data, msg="操作成功")
+        return PityResponse.success(tree_data)
     except Exception as e:
-        return dict(code=110, msg=str(e))
+        return PityResponse.failed(e)
+
+
+# 获取case目录
+@router.get("/directory")
+async def get_testcase_directory(project_id: int, user_info=Depends(Permission())):
+    try:
+        tree_data = await PityTestcaseDirectoryDao.get_directory_tree(project_id)
+        return PityResponse.success(tree_data)
+    except Exception as e:
+        return PityResponse.failed(e)
+
+
+@router.get("/directory/query")
+async def query_testcase_directory(directory_id: int, user_info=Depends(Permission())):
+    try:
+        data = await PityTestcaseDirectoryDao.query_directory(directory_id)
+        return PityResponse.success(data)
+    except Exception as e:
+        return PityResponse.failed(e)
+
+
+@router.post("/directory/insert")
+async def insert_testcase_directory(form: PityTestcaseDirectoryForm, user_info=Depends(Permission())):
+    try:
+        await PityTestcaseDirectoryDao.insert_directory(form, user_info['id'])
+        return PityResponse.success()
+    except Exception as e:
+        return PityResponse.failed(e)
+
+
+@router.post("/directory/update")
+async def insert_testcase_directory(form: PityTestcaseDirectoryForm, user_info=Depends(Permission())):
+    try:
+        await PityTestcaseDirectoryDao.update_directory(form, user_info['id'])
+        return PityResponse.success()
+    except Exception as e:
+        return PityResponse.failed(e)
+
+
+@router.get("/directory/delete")
+async def insert_testcase_directory(id: int, user_info=Depends(Permission())):
+    try:
+        await PityTestcaseDirectoryDao.delete_directory(id, user_info['id'])
+        return PityResponse.success()
+    except Exception as e:
+        return PityResponse.failed(e)

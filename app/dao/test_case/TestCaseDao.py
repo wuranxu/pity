@@ -5,7 +5,9 @@ from typing import List
 from sqlalchemy import desc
 from sqlalchemy.future import select
 
+from app.dao.test_case.ConstructorDao import ConstructorDao
 from app.dao.test_case.TestCaseAssertsDao import TestCaseAssertsDao
+from app.dao.test_case.TestCaseDirectory import PityTestcaseDirectoryDao
 from app.models import Session, DatabaseHelper, async_session
 from app.models.constructor import Constructor
 from app.models.test_case import TestCase
@@ -17,15 +19,21 @@ class TestCaseDao(object):
     log = Log("TestCaseDao")
 
     @staticmethod
-    def list_test_case(project_id):
+    async def list_test_case(directory_id: int, name: str = "", create_user: str = None):
         try:
-            with Session() as session:
-                case_list = session.query(TestCase).filter_by(project_id=project_id, deleted_at=None).order_by(
-                    TestCase.name.asc()).all()
-                return TestCaseDao.get_tree(case_list), None
+            parents = await PityTestcaseDirectoryDao.get_directory_son(directory_id)
+            filters = [TestCase.deleted_at == None, TestCase.directory_id.in_(parents)]
+            if name:
+                filters.append(TestCase.name.like(f"%{name}%"))
+            if create_user:
+                filters.append(TestCase.create_user == create_user)
+            async with async_session() as session:
+                sql = select(TestCase).where(*filters).order_by(TestCase.name.asc())
+                result = await session.execute(sql)
+                return result.scalars().all()
         except Exception as e:
             TestCaseDao.log.error(f"获取测试用例失败: {str(e)}")
-            return [], f"获取测试用例失败: {str(e)}"
+            raise Exception(f"获取测试用例失败: {str(e)}")
 
     @staticmethod
     def get_tree(case_list):
@@ -67,17 +75,18 @@ class TestCaseDao(object):
         try:
             with Session() as session:
                 data = session.query(TestCase).filter_by(name=test_case.get("name"),
-                                                         project_id=test_case.get("project_id"),
+                                                         directory_id=test_case.get("directory_id"),
                                                          deleted_at=None).first()
                 if data is not None:
-                    return "用例已存在"
+                    raise Exception("用例已存在")
                 cs = TestCase(**test_case, create_user=user)
                 session.add(cs)
                 session.commit()
+                session.refresh(cs)
+                return cs.id
         except Exception as e:
             TestCaseDao.log.error(f"添加用例失败: {str(e)}")
-            return f"添加用例失败: {str(e)}"
-        return None
+            raise Exception(f"添加用例失败: {str(e)}")
 
     @staticmethod
     def update_test_case(test_case: TestCaseForm, user):
@@ -91,25 +100,47 @@ class TestCaseDao(object):
             with Session() as session:
                 data = session.query(TestCase).filter_by(id=test_case.id, deleted_at=None).first()
                 if data is None:
-                    return "用例不存在"
+                    raise Exception("用例不存在")
                 DatabaseHelper.update_model(data, test_case, user)
                 session.commit()
+                session.refresh(data)
+                return data
         except Exception as e:
             TestCaseDao.log.error(f"编辑用例失败: {str(e)}")
-            return f"编辑用例失败: {str(e)}"
-        return None
+            raise Exception(f"编辑用例失败: {str(e)}")
 
     @staticmethod
-    def query_test_case(case_id) -> [TestCase, str]:
+    async def query_test_case(case_id: int) -> dict:
         try:
-            with Session() as session:
-                data = session.query(TestCase).filter_by(id=case_id, deleted_at=None).first()
+            async with async_session() as session:
+                sql = select(TestCase).where(TestCase.id == case_id, TestCase.deleted_at == None)
+                result = await session.execute(sql)
+                data = result.scalars().first()
                 if data is None:
-                    return None, "用例不存在"
-                return data, None
+                    raise Exception("用例不存在")
+                # 获取断言部分
+                asserts = await TestCaseAssertsDao.async_list_test_case_asserts(data.id)
+                # 获取数据构造器
+                constructors = await ConstructorDao.list_constructor(case_id)
+                constructors_case = await TestCaseDao.query_test_case_by_constructors(constructors)
+                return dict(asserts=asserts, constructors=constructors, case=data, constructors_case=constructors_case)
         except Exception as e:
             TestCaseDao.log.error(f"查询用例失败: {str(e)}")
-            return None, f"查询用例失败: {str(e)}"
+            raise Exception(f"查询用例失败: {str(e)}")
+
+    @staticmethod
+    async def query_test_case_by_constructors(constructors: List[Constructor]):
+        try:
+            # 找到所有用例名称为
+            constructors = [json.loads(x.constructor_json).get("case_id") for x in constructors if x.type == 0]
+            async with async_session() as session:
+                sql = select(TestCase).where(TestCase.id.in_(constructors), TestCase.deleted_at == None)
+                result = await session.execute(sql)
+                data = result.scalars().all()
+                return {x.id: x for x in data}
+        except Exception as e:
+            TestCaseDao.log.error(f"查询用例失败: {str(e)}")
+            raise Exception(f"查询用例失败: {str(e)}")
 
     @staticmethod
     async def async_query_test_case(case_id) -> [TestCase, str]:
@@ -233,11 +264,12 @@ class TestCaseDao(object):
     @staticmethod
     async def get_xmind_data(case_id: int):
         result = dict()
-        data, err = TestCaseDao.query_test_case(case_id)
+        data, err = await TestCaseDao.query_test_case(case_id)
         if err:
             raise Exception(err)
+        cs = data.get("case")
         # 开始解析测试数据
-        result.update(dict(id=f"case_{case_id}", label=f"{data.name}({data.id})"))
+        result.update(dict(id=f"case_{case_id}", label=f"{cs.name}({cs.id})"))
         children = list()
         await TestCaseDao.collect_data(case_id, children)
         result["children"] = children

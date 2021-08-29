@@ -56,11 +56,10 @@ async def update_project(data: ProjectEditForm, user_info=Depends(Permission()))
 @router.get("/query")
 def query_project(projectId: int, user_info=Depends(Permission())):
     result = dict()
-    data, roles, tree, err = ProjectDao.query_project(projectId)
+    data, roles, err = ProjectDao.query_project(projectId)
     if err is not None:
         return dict(code=110, data=result, msg=err)
-    result.update({"project": PityResponse.model_to_dict(data), "roles": PityResponse.model_to_list(roles),
-                   "test_case": tree})
+    result.update({"project": PityResponse.model_to_dict(data), "roles": PityResponse.model_to_list(roles)})
     return dict(code=0, data=result, msg="操作成功")
 
 

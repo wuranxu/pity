@@ -90,10 +90,10 @@ class ProjectDao(object):
                 roles, err = ProjectRoleDao.list_role(project_id)
                 if err is not None:
                     return None, [], [], err
-                tree, err = TestCaseDao.list_test_case(project_id)
-                if err is not None:
-                    return None, [], [], err
-                return data, roles, tree, None
+                # tree, err = TestCaseDao.list_test_case(project_id)
+                # if err is not None:
+                #     return None, [], [], err
+                return data, roles, None
         except Exception as e:
             ProjectDao.log.error(f"查询项目: {project_id}失败, {e}")
-            return None, [], [], f"查询项目: {project_id}失败, {e}"
+            return None, [], f"查询项目: {project_id}失败, {e}"
