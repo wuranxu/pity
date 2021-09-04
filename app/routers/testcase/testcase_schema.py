@@ -1,6 +1,7 @@
 from pydantic import BaseModel, validator
 
 from app.excpetions.ParamsException import ParamsError
+from app.models.schema.base import PityModel
 
 
 class TestCaseForm(BaseModel):
@@ -33,6 +34,4 @@ class TestCaseAssertsForm(BaseModel):
 
     @validator("name", "case_id", "assert_type", "expected", "actually")
     def name_not_empty(cls, v):
-        if isinstance(v, str) and len(v.strip()) == 0:
-            raise ParamsError("不能为空")
-        return v
+        return PityModel.not_empty(v)

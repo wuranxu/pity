@@ -1,6 +1,7 @@
 from pydantic import BaseModel, validator
 
 from app.excpetions.ParamsException import ParamsError
+from app.models.schema.base import PityModel
 
 
 class ConstructorForm(BaseModel):
@@ -21,3 +22,12 @@ class ConstructorForm(BaseModel):
             if not v:
                 raise ParamsError("不能为空")
         return v
+
+
+class ConstructorIndex(BaseModel):
+    id: int
+    index: int
+
+    @validator("id", "index")
+    def name_not_empty(cls, v):
+        return PityModel.not_empty(v)

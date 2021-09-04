@@ -1,3 +1,5 @@
+from typing import List
+
 from fastapi import APIRouter, Depends
 
 from app.dao.test_case.ConstructorDao import ConstructorDao
@@ -6,7 +8,7 @@ from app.dao.test_case.TestCaseDao import TestCaseDao
 from app.dao.test_case.TestCaseDirectory import PityTestcaseDirectoryDao
 from app.dao.test_case.TestReport import TestReportDao
 from app.handler.fatcory import PityResponse
-from app.models.schema.constructor import ConstructorForm
+from app.models.schema.constructor import ConstructorForm, ConstructorIndex
 from app.models.schema.testcase_directory import PityTestcaseDirectoryForm
 from app.routers import Permission
 from app.routers.testcase.testcase_schema import TestCaseForm, TestCaseAssertsForm
@@ -15,7 +17,7 @@ router = APIRouter(prefix="/testcase")
 
 
 @router.get("/list")
-async def list_testcase(directory_id: int, name: str = "", create_user: str = ''):
+async def list_testcase(directory_id: int = None, name: str = "", create_user: str = ''):
     try:
         data = await TestCaseDao.list_test_case(directory_id, name, create_user)
         return PityResponse.success(PityResponse.model_to_list(data))
@@ -45,7 +47,7 @@ async def update_testcase(data: TestCaseForm, user_info=Depends(Permission())):
 async def query_testcase(caseId: int, user_info=Depends(Permission())):
     try:
         data = await TestCaseDao.query_test_case(caseId)
-        return PityResponse.success(data)
+        return PityResponse.success(PityResponse.dict_model_to_dict(data))
     except Exception as e:
         return PityResponse.failed(e)
 
@@ -62,16 +64,62 @@ async def query_testcase(caseId: int, user_info=Depends(Permission())):
 
 @router.post("/asserts/insert")
 async def insert_testcase_asserts(data: TestCaseAssertsForm, user_info=Depends(Permission())):
-    err = TestCaseAssertsDao.insert_test_case_asserts(**data.dict(), user=user_info["id"])
-    if err:
-        return dict(code=110, msg=err)
-    return dict(code=0, msg="操作成功")
+    try:
+        new_assert = await TestCaseAssertsDao.insert_test_case_asserts(data, user=user_info["id"])
+        return PityResponse.success(PityResponse.model_to_dict(new_assert))
+    except Exception as e:
+        return PityResponse.failed(e)
+
+
+@router.post("/asserts/update")
+async def insert_testcase_asserts(data: TestCaseAssertsForm, user_info=Depends(Permission())):
+    try:
+        updated = await TestCaseAssertsDao.update_test_case_asserts(data, user=user_info["id"])
+        return PityResponse.success(PityResponse.model_to_dict(updated))
+    except Exception as e:
+        return PityResponse.failed(e)
+
+
+@router.get("/asserts/delete")
+async def insert_testcase_asserts(id: int, user_info=Depends(Permission())):
+    try:
+        await TestCaseAssertsDao.delete_test_case_asserts(id, user=user_info["id"])
+        return PityResponse.success()
+    except Exception as e:
+        return PityResponse.failed(e)
 
 
 @router.post("/constructor/insert")
 async def insert_constructor(data: ConstructorForm, user_info=Depends(Permission())):
     try:
-        ConstructorDao.insert_constructor(data, user=user_info["id"])
+        await ConstructorDao.insert_constructor(data, user=user_info["id"])
+        return PityResponse.success()
+    except Exception as e:
+        return PityResponse.failed(e)
+
+
+@router.post("/constructor/update")
+async def update_constructor(data: ConstructorForm, user_info=Depends(Permission())):
+    try:
+        await ConstructorDao.update_constructor(data, user=user_info["id"])
+        return PityResponse.success()
+    except Exception as e:
+        return PityResponse.failed(e)
+
+
+@router.get("/constructor/delete")
+async def update_constructor(id: int, user_info=Depends(Permission())):
+    try:
+        await ConstructorDao.delete_constructor(id, user=user_info["id"])
+        return PityResponse.success()
+    except Exception as e:
+        return PityResponse.failed(e)
+
+
+@router.post("/constructor/order")
+def update_constructor_index(data: List[ConstructorIndex], user_info=Depends(Permission())):
+    try:
+        ConstructorDao.update_constructor_index(data)
         return dict(code=0, msg="操作成功")
     except Exception as e:
         return dict(code=110, msg=str(e))

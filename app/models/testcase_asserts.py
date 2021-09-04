@@ -19,7 +19,7 @@ class TestCaseAsserts(Base):
     create_user = Column(INT, nullable=False)
     update_user = Column(INT, nullable=False)
 
-    def __init__(self, id, name, case_id, assert_type, expected, actually, user):
+    def __init__(self, name, case_id, assert_type, expected, actually, user, id=0):
         self.id = id
         self.name = name
         self.case_id = case_id

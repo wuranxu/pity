@@ -94,5 +94,11 @@ class DatabaseHelper(object):
                 setattr(dist, 'update_user', update_user)
             setattr(dist, 'updated_at', datetime.now())
 
+    @staticmethod
+    def delete_model(dist, update_user):
+        dist.deleted_at = datetime.now()
+        dist.updated_at = datetime.now()
+        dist.update_user = update_user
+
 
 db_helper = DatabaseHelper()

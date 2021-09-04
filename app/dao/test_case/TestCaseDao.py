@@ -19,14 +19,16 @@ class TestCaseDao(object):
     log = Log("TestCaseDao")
 
     @staticmethod
-    async def list_test_case(directory_id: int, name: str = "", create_user: str = None):
+    async def list_test_case(directory_id: int = None, name: str = "", create_user: str = None):
         try:
-            parents = await PityTestcaseDirectoryDao.get_directory_son(directory_id)
-            filters = [TestCase.deleted_at == None, TestCase.directory_id.in_(parents)]
-            if name:
-                filters.append(TestCase.name.like(f"%{name}%"))
-            if create_user:
-                filters.append(TestCase.create_user == create_user)
+            filters = [TestCase.deleted_at == None]
+            if directory_id:
+                parents = await PityTestcaseDirectoryDao.get_directory_son(directory_id)
+                filters = [TestCase.deleted_at == None, TestCase.directory_id.in_(parents)]
+                if name:
+                    filters.append(TestCase.name.like(f"%{name}%"))
+                if create_user:
+                    filters.append(TestCase.create_user == create_user)
             async with async_session() as session:
                 sql = select(TestCase).where(*filters).order_by(TestCase.name.asc())
                 result = await session.execute(sql)
@@ -119,7 +121,7 @@ class TestCaseDao(object):
                 if data is None:
                     raise Exception("用例不存在")
                 # 获取断言部分
-                asserts = await TestCaseAssertsDao.async_list_test_case_asserts(data.id)
+                asserts, _ = await TestCaseAssertsDao.async_list_test_case_asserts(data.id)
                 # 获取数据构造器
                 constructors = await ConstructorDao.list_constructor(case_id)
                 constructors_case = await TestCaseDao.query_test_case_by_constructors(constructors)

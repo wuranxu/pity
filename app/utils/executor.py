@@ -143,6 +143,9 @@ class Executor(object):
             await self.execute_constructor(i, path, params, req_params, c)
 
     async def execute_constructor(self, index, path, params, req_params, constructor: Constructor):
+        if not constructor.enable:
+            self.append(f"当前路径: {path}, 构造方法: {constructor.name} 已关闭, 不继续执行")
+            return
         if constructor.type == 0:
             data = json.loads(constructor.constructor_json)
             case_id = data.get("case_id")

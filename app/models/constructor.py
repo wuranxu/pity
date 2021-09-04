@@ -3,7 +3,7 @@
 """
 from datetime import datetime
 
-from sqlalchemy import Column, INT, DATETIME, String, BOOLEAN, UniqueConstraint, TEXT
+from sqlalchemy import Column, INT, DATETIME, String, BOOLEAN, UniqueConstraint, TEXT, select, desc
 
 from app.models import Base
 
@@ -27,6 +27,7 @@ class Constructor(Base):
     value = Column(String(16), comment="返回值")
     case_id = Column(INT, nullable=False, comment="所属用例id")
     public = Column(BOOLEAN, default=False, comment="是否共享")
+    index = Column(INT, comment="前置条件顺序")
 
     def __init__(self, type, name, enable, constructor_json, case_id, public, user, value="", id=0):
         self.id = id
@@ -41,6 +42,17 @@ class Constructor(Base):
         self.create_user = user
         self.created_at = datetime.now()
         self.updated_at = datetime.now()
+
+    @staticmethod
+    async def get_index(session, case_id):
+        sql = select(Constructor).where(Constructor.deleted_at == None, Constructor.case_id == case_id).order_by(
+            desc(Constructor.index))
+        data = await session.execute(sql)
+        query = data.scalars().first()
+        # 如果没有查出来前置条件，那么给他0
+        if query is None:
+            return 0
+        return query.index + 1
 
     def __str__(self):
         return f"[数据构造器: {self.name}]({self.id}))"

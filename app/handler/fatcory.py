@@ -18,6 +18,17 @@ class PityResponse(object):
         return data
 
     @staticmethod
+    def dict_model_to_dict(obj):
+        for k, v in obj.items():
+            if isinstance(v, dict):
+                PityResponse.dict_model_to_dict(v)
+            elif isinstance(v, list):
+                obj[k] = PityResponse.model_to_list(v)
+            else:
+                obj[k] = PityResponse.model_to_dict(v)
+        return obj
+
+    @staticmethod
     def json_serialize(obj):
         return {k: v.strftime("%Y-%m-%d %H:%M:%S") if isinstance(v, datetime) else v for k, v in dict(obj).items()}
 
