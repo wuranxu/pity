@@ -31,11 +31,12 @@ class AsyncRequest(object):
 
     @staticmethod
     async def get_resp(resp):
-        # try:
-        #     data = await resp.json(encoding='utf-8')
-        # except:
-        #     data = await resp.text()
-        return await resp.text()
+        try:
+            data = await resp.json(encoding='utf-8')
+            return json.dumps(data, ensure_ascii=False, indent=4)
+        except:
+            data = await resp.text()
+            return data
 
     @staticmethod
     def get_request_data(body):

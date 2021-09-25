@@ -16,7 +16,9 @@ class TestResultDao(object):
                      case_log: str, start_at: datetime, finished_at: datetime,
                      url: str, body: str, request_method: str, request_headers: str, cost: str,
                      asserts: str, response_headers: str, response: str,
-                     status_code: int, cookies: str, retry: int = None, ) -> None:
+                     status_code: int, cookies: str, retry: int = None,
+                     request_params: str = '', data_name: str = ''
+                     ) -> None:
         try:
             async with async_session() as session:
                 async with session.begin():
@@ -24,7 +26,7 @@ class TestResultDao(object):
                                             case_log, start_at, finished_at,
                                             url, body, request_method, request_headers, cost,
                                             asserts, response_headers, response,
-                                            status_code, cookies, retry)
+                                            status_code, cookies, retry, request_params, data_name)
                     session.add(result)
                     await session.flush()
         except Exception as e:
@@ -37,7 +39,7 @@ class TestResultDao(object):
             async with async_session() as session:
                 sql = select(PityTestResult).where(PityTestResult.report_id == report_id,
                                                    PityTestResult.deleted_at == None).order_by(
-                    asc(PityTestResult.start_at))
+                    asc(PityTestResult.case_id), asc(PityTestResult.start_at))
                 data = await session.execute(sql)
                 return data.scalars().all()
         except Exception as e:

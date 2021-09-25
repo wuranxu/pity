@@ -2,20 +2,25 @@ import asyncio
 import json
 import re
 import time
+from collections import defaultdict
 from datetime import datetime
-from typing import List
+from typing import List, Any
 
+from app.dao.config.DbConfigDao import DbConfigDao
 from app.dao.config.GConfigDao import GConfigDao
 from app.dao.test_case.TestCaseAssertsDao import TestCaseAssertsDao
 from app.dao.test_case.TestCaseDao import TestCaseDao
 from app.dao.test_case.TestReport import TestReportDao
 from app.dao.test_case.TestResult import TestResultDao
+from app.dao.test_case.TestcaseDataDao import PityTestcaseDataDao
 from app.middleware.AsyncHttpClient import AsyncRequest
 from app.models.constructor import Constructor
 from app.models.test_case import TestCase
+from app.models.testcase_asserts import TestCaseAsserts
 from app.utils.case_logger import CaseLog
 from app.utils.decorator import case_log
 from app.utils.gconfig_parser import StringGConfigParser, JSONGConfigParser, YamlGConfigParser
+from app.utils.json_compare import JsonCompare
 from app.utils.logger import Log
 
 
@@ -40,9 +45,9 @@ class Executor(object):
 
     def append(self, content, end=False):
         if end:
-            self.logger.append(content)
+            self.logger.append(content, end)
         else:
-            self.logger.append(content)
+            self.logger.append(content, end)
 
     @case_log
     async def parse_gconfig(self, data: TestCase, *fields):
@@ -87,45 +92,51 @@ class Executor(object):
             self.append("获取用例字段: [{}]中的el表达式".format(field), True)
         except Exception as e:
             Executor.log.error(f"查询全局变量失败, error: {str(e)}")
-            raise
+            raise Exception(f"查询全局变量失败, error: {str(e)}")
+
+    def replace_params(self, field_name, field_origin, params: dict):
+        new_data = dict()
+        if not isinstance(field_origin, str):
+            return new_data
+        variables = self.get_el_expression(field_origin)
+        for v in variables:
+            key = v.split(".")
+            if not params.get(key[0]):
+                continue
+            result = params
+            for branch in key:
+                if isinstance(result, str):
+                    # 说明需要反序列化
+                    try:
+                        result = json.loads(result)
+                    except Exception as e:
+                        self.append(f"反序列化失败, result: {result}\nERROR: {e}")
+                        break
+                if branch.isdigit():
+                    # 说明路径里面的是数组
+                    result = result[int(branch)]
+                else:
+                    result = result.get(branch)
+            if field_name != "request_headers" and not isinstance(result, str):
+                new_value = json.dumps(result, ensure_ascii=False)
+            else:
+                new_value = result
+                if new_value is None:
+                    self.append("替换变量失败, 找不到对应的数据")
+                    continue
+            new_data["${%s}" % v] = new_value
+        return new_data
 
     async def parse_params(self, data: TestCase, params: dict):
         self.append("正在替换变量")
         try:
             for c in data.__table__.columns:
                 field_origin = getattr(data, c.name)
-                if not isinstance(field_origin, str):
-                    continue
-                variables = self.get_el_expression(field_origin)
-                for v in variables:
-                    key = v.split(".")
-                    if not params.get(key[0]):
-                        continue
-                    result = params
-                    for branch in key:
-                        if isinstance(result, str):
-                            # 说明需要反序列化
-                            try:
-                                result = json.loads(result)
-                            except Exception as e:
-                                self.append(f"反序列化失败, result: {result}\nERROR: {e}")
-                                break
-                        if isinstance(branch, int):
-                            # 说明路径里面的是数组
-                            result = result[int(branch)]
-                        else:
-                            result = result.get(branch)
-                    if c.name != "request_headers":
-                        new_value = json.dumps(result, ensure_ascii=False)
-                    else:
-                        new_value = result
-                        if new_value is None:
-                            self.append("替换变量失败, 找不到对应的数据")
-                            continue
-                    new_field = field_origin.replace("${%s}" % v, new_value)
-                    self.append("替换流程变量成功，字段: [{}]: \n\n[{}] -> [{}]\n".format(c.name, "${%s}" % v, new_value))
+                replace_kv = self.replace_params(c.name, field_origin, params)
+                for k, v in replace_kv.items():
+                    new_field = field_origin.replace(k, v)
                     setattr(data, c.name, new_field)
-                    field_origin = new_field
+                    self.append("替换流程变量成功，字段: [{}]: \n\n[{}] -> [{}]\n".format(c.name, k, v))
         except Exception as e:
             Executor.log.error(f"替换变量失败, error: {str(e)}")
             raise Exception(f"替换变量失败, error: {str(e)}")
@@ -135,22 +146,24 @@ class Executor(object):
         """获取构造数据"""
         return await TestCaseDao.async_select_constructor(case_id)
 
-    async def execute_constructors(self, path, params, req_params, constructors: List[Constructor]):
+    async def execute_constructors(self, env: int, path, case_info, params, req_params, constructors: List[Constructor],
+                                   asserts):
         """开始构造数据"""
         if len(constructors) == 0:
             self.append("构造方法为空, 跳出构造环节")
         for i, c in enumerate(constructors):
-            await self.execute_constructor(i, path, params, req_params, c)
+            await self.execute_constructor(env, i, path, params, req_params, c)
+            self.replace_args(params, case_info, constructors, asserts)
 
-    async def execute_constructor(self, index, path, params, req_params, constructor: Constructor):
+    async def execute_constructor(self, env, index, path, params, req_params, constructor: Constructor):
         if not constructor.enable:
             self.append(f"当前路径: {path}, 构造方法: {constructor.name} 已关闭, 不继续执行")
             return
         if constructor.type == 0:
-            data = json.loads(constructor.constructor_json)
-            case_id = data.get("case_id")
-            testcase, _ = await TestCaseDao.async_query_test_case(case_id)
             try:
+                data = json.loads(constructor.constructor_json)
+                case_id = data.get("case_id")
+                testcase, _ = await TestCaseDao.async_query_test_case(case_id)
                 self.append(f"当前路径: {path}, 第{index + 1}条构造方法")
                 # 说明是case
                 executor = Executor(self.logger)
@@ -158,15 +171,30 @@ class Executor(object):
                 if new_param:
                     temp = json.loads(new_param)
                     req_params.update(temp)
-                result, err = await executor.run(case_id, params, req_params, f"{path}->{testcase.name}")
+                result, err = await executor.run(env, case_id, params, req_params, f"{path}->{testcase.name}")
                 if err:
                     raise Exception(err)
+                if not result["status"]:
+                    raise Exception(f"断言失败, 断言数据: {result.get('asserts', 'unknown')}")
                 params[constructor.value] = result
-                await self.parse_params(testcase, params)
+                # await self.parse_params(testcase, params)
             except Exception as e:
-                raise Exception(f"{path}->{testcase.name} 第{index + 1}个构造方法执行失败: {e}")
+                raise Exception(f"{path}->{constructor.name} 第{index + 1}个构造方法执行失败: {e}")
+        elif constructor.type == 1:
+            # 说明是sql语句
+            try:
+                self.append(f"当前路径: {path}, 第{index + 1}条构造方法")
+                data = json.loads(constructor.constructor_json)
+                database = data.get("database")
+                sql = data.get("sql")
+                self.append(f"当前构造方法类型为sql, 数据库名: {database}\nsql: {sql}\n")
+                sql_data = await DbConfigDao.execute_sql(env, database, sql)
+                params[constructor.value] = sql_data
+                self.append(f"当前构造方法返回变量: {constructor.value}\n返回值:\n {sql_data}\n")
+            except Exception as e:
+                raise Exception(f"{path}->{constructor.name} 第{index + 1}个构造方法执行失败: {e}")
 
-    async def run(self, case_id: int, params_pool: dict = None, request_param: dict = None, path="主case"):
+    async def run(self, env: int, case_id: int, params_pool: dict = None, request_param: dict = None, path="主case"):
         """
         开始执行测试用例
         """
@@ -198,21 +226,24 @@ class Executor(object):
             # Step2: 获取构造数据
             constructors = await self.get_constructor(case_id)
 
-            # Step3: 执行构造方法
-            await self.execute_constructors(path, case_params, req_params, constructors)
-
-            # Step4: 获取断言
+            # Step3: 获取断言
             asserts, err = await TestCaseAssertsDao.async_list_test_case_asserts(case_id)
-
-            response_info["url"] = case_info.url
 
             if err:
                 return response_info, err
 
-            # Step5: 获取后置操作
+            # Step4: 替换参数
+            self.replace_args(req_params, case_info, constructors, asserts)
+
+            # Step5: 执行构造方法
+            await self.execute_constructors(env, path, case_info, case_params, req_params, constructors, asserts)
+
+            response_info["url"] = case_info.url
+
+            # Step6: 获取后置操作
             # TODO
 
-            # Step6: 批量改写主方法参数
+            # Step7: 批量改写主方法参数
             await self.parse_params(case_info, case_params)
 
             if case_info.request_headers != "":
@@ -230,7 +261,6 @@ class Executor(object):
             body = self.replace_body(request_param, body)
 
             # Step6: 完成http请求
-
             if "form" not in headers['Content-Type']:
                 request_obj = AsyncRequest(case_info.url, headers=headers,
                                            data=body.encode() if body is not None else body)
@@ -239,23 +269,67 @@ class Executor(object):
                     body = json.loads(body)
                 request_obj = AsyncRequest(case_info.url, headers=headers, data=body)
             res = await request_obj.invoke(method)
+            self.append(f"http请求过程\n\nRequest Method: {case_info.request_method}\n\n"
+                        f"Request Headers:\n{headers}\n\nUrl: {case_info.url}"
+                        f"\n\nBody:\n{body}\n\nResponse:\n{res.get('response', '未获取到返回值')}")
             response_info.update(res)
             # 执行完成进行断言
-            response_info["asserts"] = self.my_assert(asserts, response_info)
+            asserts, ans = self.my_assert(asserts, response_info)
+            response_info["asserts"] = asserts
             # 日志输出, 如果不是开头用例则不记录
             if self._main:
                 response_info["logs"] = self.logger.join()
+            response_info["status"] = ans
             return response_info, None
         except Exception as e:
             Executor.log.error(f"执行用例失败: {str(e)}")
+            self.append(f"执行用例失败: {str(e)}")
+            if self._main:
+                response_info["logs"] = self.logger.join()
             return response_info, f"执行用例失败: {str(e)}"
 
     @staticmethod
-    async def run_single(data, report_id, case_id, params_pool: dict = None, request_param: dict = None,
-                         path="主case"):
+    def get_dict(json_data: str):
+        return json.loads(json_data)
+
+    def replace_cls(self, params: dict, cls, *fields: Any):
+        for k, v in params.items():
+            for f in fields:
+                fd = getattr(cls, f, '')
+                if fd is None:
+                    continue
+                if k in fd:
+                    data = self.replace_params(f, fd, params)
+                    for a, b in data.items():
+                        fd = fd.replace(a, b)
+                        setattr(cls, f, fd)
+
+    def replace_args(self, params, data: TestCase, constructors: List[Constructor], asserts: List[TestCaseAsserts]):
+        self.replace_testcase(params, data)
+        self.replace_constructors(params, constructors)
+        # TODO 替换后置条件变量
+        self.replace_asserts(params, asserts)
+
+    def replace_testcase(self, params: dict, data: TestCase):
+        """替换测试用例中的参数"""
+        self.replace_cls(params, data, "request_headers", "body", "url")
+
+    def replace_constructors(self, params: dict, constructors: List[Constructor]):
+        """替换数据构造器中的参数"""
+        for c in constructors:
+            self.replace_cls(params, c, "constructor_json")
+
+    def replace_asserts(self, params, asserts: List[TestCaseAsserts]):
+        """替换断言中的参数"""
+        for a in asserts:
+            self.replace_cls(params, a, "expected")
+
+    @staticmethod
+    async def run_with_test_data(env, data, report_id, case_id, params_pool: dict = None,
+                                 request_param: dict = None, path='主case', name: str = ""):
         start_at = datetime.now()
         executor = Executor()
-        result, err = await executor.run(case_id, params_pool, request_param, path)
+        result, err = await executor.run(env, case_id, params_pool, request_param, path)
         finished_at = datetime.now()
         cost = "{}s".format((finished_at - start_at).seconds)
         if err is not None:
@@ -276,12 +350,23 @@ class Executor(object):
         case_name = result.get("case_name")
         response_headers = result.get("response_headers")
         cookies = result.get("cookies")
-        data[case_id] = status
+        req = json.dumps(request_param, ensure_ascii=False)
+        data[case_id].append(status)
         await TestResultDao.insert(report_id, case_id, case_name, status,
                                    case_logs, start_at, finished_at,
                                    url, body, request_method, request_headers, cost,
                                    asserts, response_headers, response,
-                                   status_code, cookies, 0)
+                                   status_code, cookies, 0, req, name)
+
+    @staticmethod
+    async def run_single(env: int, data, report_id, case_id, params_pool: dict = None, path="主case"):
+
+        test_data = await PityTestcaseDataDao.list_testcase_data_by_env(env, case_id)
+        await asyncio.gather(
+            *(Executor.run_with_test_data(env, data, report_id, case_id, params_pool, Executor.get_dict(x.json_data),
+                                          path,
+                                          x.name)
+              for x in test_data))
 
     @case_log
     def replace_body(self, req_params, body):
@@ -303,30 +388,36 @@ class Executor(object):
         return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     @case_log
-    def my_assert(self, asserts: List, response_info) -> str:
+    def my_assert(self, asserts: List, response_info) -> [str, bool]:
         """
         断言验证
         """
         result = dict()
+        ans = True
         if len(asserts) == 0:
             self.append("未设置断言, 用例结束")
             return json.dumps(result, ensure_ascii=False)
         for item in asserts:
             a, err = self.parse_variable(response_info, item.expected)
             if err:
+                ans = False
                 result[item.id] = {"status": False, "msg": f"解析变量失败, {err}"}
                 continue
             b, err = self.parse_variable(response_info, item.actually)
             if err:
+                ans = False
                 result[item.id] = {"status": False, "msg": f"解析变量失败, {err}"}
                 continue
             try:
                 a, b = self.translate(a), self.translate(b)
                 status, err = self.ops(item.assert_type, a, b)
                 result[item.id] = {"status": status, "msg": err}
+                if not status:
+                    ans = False
             except Exception as e:
                 result[item.id] = {"status": False, "msg": str(e)}
-        return json.dumps(result, ensure_ascii=False)
+                raise Exception(f"断言取值失败: {e}, 请检查断言语句")
+        return json.dumps(result, ensure_ascii=False), ans
 
     @case_log
     def ops(self, assert_type: str, a, b) -> (bool, str):
@@ -335,21 +426,60 @@ class Executor(object):
         """
         if assert_type == "equal":
             if a == b:
-                return True, f"预期结果: {a} == 实际结果: {b}"
-            return False, f"预期结果: {a} != 实际结果: {b}"
+                return True, f"预期结果: {a} ✔ 等于 ✔ 实际结果: {b}"
+            return False, f"预期结果: {a} ❌ 不等于 ❌ 实际结果: {b}"
         if assert_type == "not_equal":
             if a != b:
-                return True, f"预期结果: {a} != 实际结果: {b}"
-            return False, f"预期结果: {a} == 实际结果: {b}"
+                return True, f"预期结果: {a} ✔ 不等于 ✔ 实际结果: {b}"
+            return False, f"预期结果: {a} ❌ 等于 ❌ 实际结果: {b}"
         if assert_type == "in":
             if a in b:
-                return True, f"预期结果: {a} in 实际结果: {b}"
-            return False, f"预期结果: {a} in 实际结果: {b}"
-        return False, "不支持的断言方式"
+                return True, f"预期结果: {a} ✔ 包含于 ✔ 实际结果: {b}"
+            return False, f"预期结果: {a} ❌ 不包含于 ❌ 实际结果: {b}"
+        if assert_type == "not_in":
+            if a not in b:
+                return True, f"预期结果: {a} ✔ 不包含于 ✔ 实际结果: {b}"
+            return False, f"预期结果: {a} ❌ 包含于 ❌ 实际结果: {b}"
+        if assert_type == "contain":
+            if b in a:
+                return True, f"预期结果: {a} ✔ 包含 ✔ 实际结果: {b}"
+            return False, f"预期结果: {a} ❌ 不包含 ❌ 实际结果: {b}"
+        if assert_type == "not_contain":
+            if b not in a:
+                return True, f"预期结果: {a} ✔ 不包含 ✔ 实际结果: {b}"
+            return False, f"预期结果: {a} ❌ 包含 ❌ 实际结果: {b}"
+        if assert_type == "length_eq":
+            if a == len(b):
+                return True, f"预期数量: {a} ✔ 等于 ✔ 实际数量: {len(b)}"
+            return False, f"预期数量: {a} ❌ 不等于 ❌ 实际数量: {len(b)}"
+        if assert_type == "length_gt":
+            if a > len(b):
+                return True, f"预期数量: {a} ✔ 大于 ✔ 实际数量: {len(b)}"
+            return False, f"预期数量: {a} ❌ 不大于 ❌ 实际数量: {len(b)}"
+        if assert_type == "length_ge":
+            if a >= len(b):
+                return True, f"预期数量: {a} ✔ 大于等于 ✔ 实际数量: {len(b)}"
+            return False, f"预期数量: {a} ❌ 小于 ❌ 实际数量: {len(b)}"
+        if assert_type == "length_le":
+            if a <= len(b):
+                return True, f"预期数量: {a} ✔ 小于等于 ✔ 实际数量: {len(b)}"
+            return False, f"预期数量: {a} ❌ 大于 ❌ 实际数量: {len(b)}"
+        if assert_type == "length_lt":
+            if a < len(b):
+                return True, f"预期数量: {a} ✔ 小于 ✔ 实际数量: {len(b)}"
+            return False, f"预期数量: {a} ❌ 不小于 ❌ 实际数量: {len(b)}"
+        if assert_type == "json_equal":
+            data = JsonCompare().compare(a, b)
+            if len(data) == 0:
+                return True, "预期JSON ✔ 等于 ✔ 实际JSON"
+            return False, data
+        return False, "不支持的断言方式💔"
 
     def get_el_expression(self, string: str):
         """获取字符串中的el表达式
         """
+        if string is None:
+            return []
         return re.findall(Executor.pattern, string)
 
     @case_log
@@ -387,6 +517,8 @@ class Executor(object):
                     result = result.get(branch)
         except Exception as e:
             return None, f"获取变量失败: {str(e)}"
+        if string == "${response}":
+            return result, None
         return json.dumps(result, ensure_ascii=False), None
 
     @staticmethod
@@ -395,21 +527,22 @@ class Executor(object):
         # step1: 新增测试报告数据
         report_id = await TestReportDao.start(executor, env)
         # step2: 开始执行用例
-        result_data = dict()
+        result_data = defaultdict(list)
         # step3: 将报告改为 running状态
         await TestReportDao.update(report_id, 1)
         # step4: 并发执行用例并搜集数据
-        await asyncio.gather(*(Executor.run_single(result_data, report_id, c) for c in case_list))
+        await asyncio.gather(*(Executor.run_single(env, result_data, report_id, c) for c in case_list))
         ok, fail, skip, error = 0, 0, 0, 0
         for case_id, status in result_data.items():
-            if status == 0:
-                ok += 1
-            elif status == 1:
-                fail += 1
-            elif status == 2:
-                error += 1
-            else:
-                skip += 1
+            for s in status:
+                if s == 0:
+                    ok += 1
+                elif s == 1:
+                    fail += 1
+                elif s == 2:
+                    error += 1
+                else:
+                    skip += 1
         cost = time.perf_counter() - st
         cost = "%.2f" % cost
         # step5: 回写数据到报告

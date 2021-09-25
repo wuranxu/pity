@@ -10,7 +10,7 @@ class TestCaseAsserts(Base):
     id = Column(INT, primary_key=True)
     name = Column(String(32), nullable=False)
     case_id = Column(INT, index=True)
-    assert_type = Column(String(8), comment="equal: 等于 not_equal: 不等于 in: 属于")
+    assert_type = Column(String(16), comment="equal: 等于 not_equal: 不等于 in: 属于")
     expected = Column(TEXT, nullable=False)
     actually = Column(TEXT, nullable=False)
     created_at = Column(DATETIME, nullable=False)

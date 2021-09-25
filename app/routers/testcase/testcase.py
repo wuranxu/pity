@@ -7,8 +7,10 @@ from app.dao.test_case.TestCaseAssertsDao import TestCaseAssertsDao
 from app.dao.test_case.TestCaseDao import TestCaseDao
 from app.dao.test_case.TestCaseDirectory import PityTestcaseDirectoryDao
 from app.dao.test_case.TestReport import TestReportDao
+from app.dao.test_case.TestcaseDataDao import PityTestcaseDataDao
 from app.handler.fatcory import PityResponse
 from app.models.schema.constructor import ConstructorForm, ConstructorIndex
+from app.models.schema.testcase_data import PityTestcaseDataForm
 from app.models.schema.testcase_directory import PityTestcaseDirectoryForm
 from app.routers import Permission
 from app.routers.testcase.testcase_schema import TestCaseForm, TestCaseAssertsForm
@@ -35,7 +37,7 @@ async def insert_testcase(data: TestCaseForm, user_info=Depends(Permission())):
 
 
 @router.post("/update")
-async def update_testcase(data: TestCaseForm, user_info=Depends(Permission())):
+def update_testcase(data: TestCaseForm, user_info=Depends(Permission())):
     try:
         data = TestCaseDao.update_test_case(data, user_info['id'])
         return PityResponse.success(PityResponse.model_to_dict(data))
@@ -217,6 +219,33 @@ async def insert_testcase_directory(form: PityTestcaseDirectoryForm, user_info=D
 async def insert_testcase_directory(id: int, user_info=Depends(Permission())):
     try:
         await PityTestcaseDirectoryDao.delete_directory(id, user_info['id'])
+        return PityResponse.success()
+    except Exception as e:
+        return PityResponse.failed(e)
+
+
+@router.post("/data/insert")
+async def insert_testcase_data(form: PityTestcaseDataForm, user_info=Depends(Permission())):
+    try:
+        data = await PityTestcaseDataDao.insert_testcase_data(form, user_info['id'])
+        return PityResponse.success(data)
+    except Exception as e:
+        return PityResponse.failed(e)
+
+
+@router.post("/data/update")
+async def insert_testcase_data(form: PityTestcaseDataForm, user_info=Depends(Permission())):
+    try:
+        data = await PityTestcaseDataDao.update_testcase_data(form, user_info['id'])
+        return PityResponse.success(data)
+    except Exception as e:
+        return PityResponse.failed(e)
+
+
+@router.get("/data/delete")
+async def insert_testcase_data(id: int, user_info=Depends(Permission())):
+    try:
+        await PityTestcaseDataDao.delete_testcase_data(id, user_info['id'])
         return PityResponse.success()
     except Exception as e:
         return PityResponse.failed(e)

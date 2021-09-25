@@ -9,6 +9,7 @@ class TestCaseForm(BaseModel):
     priority: str
     url: str
     name: str
+    case_type: int = 0
     tag: str = None
     body: str = None
     request_headers: str = None

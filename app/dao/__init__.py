@@ -10,6 +10,7 @@ from app.models.constructor import Constructor
 from app.models.report import PityReport
 from app.models.result import PityTestResult
 from app.models.database import PityDatabase
-from app.models.test_case_directory import PityTestcaseDirectory
+from app.models.testcase_directory import PityTestcaseDirectory
+from app.models.testcase_data import PityTestcaseData
 
 Base.metadata.create_all(engine)

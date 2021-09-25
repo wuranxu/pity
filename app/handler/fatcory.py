@@ -48,5 +48,5 @@ class PityResponse(object):
         return dict(code=code, msg=msg, data=data)
 
     @staticmethod
-    def failed(msg, code=110):
-        return dict(code=code, msg=str(msg))
+    def failed(msg, code=110, data=None):
+        return dict(code=code, msg=str(msg), data=data)

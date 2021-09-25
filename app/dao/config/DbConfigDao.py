@@ -1,3 +1,4 @@
+import json
 from collections import defaultdict
 from datetime import datetime
 from typing import List
@@ -6,6 +7,7 @@ from sqlalchemy import select, MetaData
 from sqlalchemy.exc import ResourceClosedError
 
 from app.dao.config.EnvironmentDao import EnvironmentDao
+from app.handler.fatcory import PityResponse
 from app.models import async_session, DatabaseHelper, db_helper
 from app.models.database import PityDatabase
 from app.models.schema.database import DatabaseForm
@@ -98,6 +100,18 @@ class DbConfigDao(object):
             raise Exception("获取数据库配置失败")
 
     @staticmethod
+    async def query_database_by_env_and_name(env: int, name: str):
+        try:
+            async with async_session() as session:
+                result = await session.execute(
+                    select(PityDatabase).where(PityDatabase.env == env, PityDatabase.name == name,
+                                               PityDatabase.deleted_at == None))
+                return result.scalars().first()
+        except Exception as e:
+            DbConfigDao.log.error(f"获取数据库配置失败, error: {e}")
+            raise Exception("获取数据库配置失败")
+
+    @staticmethod
     async def query_database_and_tables():
         """
         方法会查询所有数据库表配置的信息
@@ -107,7 +121,7 @@ class DbConfigDao(object):
             # 返回树图, 最外层是环境
             result = []
             env_index = dict()
-            env_data = EnvironmentDao.list_env(1, 1, exactly=True)
+            env_data, _, _ = EnvironmentDao.list_env(1, 1, exactly=True)
             env_map = {env.id: env.name for env in env_data}
             # 获取数据库相关的信息
             table_map = defaultdict(set)
@@ -153,14 +167,22 @@ class DbConfigDao(object):
 
     @staticmethod
     async def online_sql(id: int, sql: str):
-        row_count = 0
         try:
             query = await DbConfigDao.query_database(id)
             if query is None:
                 raise Exception("未找到对应的数据库配置")
             data = db_helper.get_connection(query.sql_type, query.host, query.port, query.username, query.password,
                                             query.database)
-            session = data.get("session")
+            return await DbConfigDao.execute(data, sql)
+        except Exception as e:
+            DbConfigDao.log.error(f"查询数据库配置失败, error: {e}")
+            raise Exception(f"执行SQL失败: {e}")
+
+    @staticmethod
+    async def execute(conn, sql):
+        row_count = 0
+        try:
+            session = conn.get("session")
             with session() as s:
                 result = s.execute(sql)
                 row_count = result.rowcount
@@ -172,3 +194,18 @@ class DbConfigDao(object):
         except Exception as e:
             DbConfigDao.log.error(f"查询数据库配置失败, error: {e}")
             raise e
+
+    @staticmethod
+    async def execute_sql(env: int, name: str, sql: str):
+        try:
+            query = await DbConfigDao.query_database_by_env_and_name(env, name)
+            if query is None:
+                raise Exception("未找到对应的数据库配置")
+            data = db_helper.get_connection(query.sql_type, query.host, query.port, query.username, query.password,
+                                            query.database)
+            result = await DbConfigDao.execute(data, sql)
+            _, result = PityResponse.parse_sql_result(result)
+            return json.dumps(result, ensure_ascii=False)
+        except Exception as e:
+            DbConfigDao.log.error(f"查询数据库配置失败, error: {e}")
+            raise Exception(f"执行SQL失败: {e}")

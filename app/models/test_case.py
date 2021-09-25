@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Column, String, INT, TEXT, DATETIME
+from sqlalchemy import Column, String, INT, TEXT, DATETIME, SMALLINT
 
 from app.models import Base
 
@@ -21,6 +21,7 @@ class TestCase(Base):
     priority = Column(String(3), comment="用例优先级: p0-p3")
     # catalogue = Column(String(12), comment="用例目录")
     # expected = Column(TEXT, comment="预期结果, 支持el表达式", nullable=False)
+    case_type = Column(SMALLINT, comment="0: 普通用例 1: 前置用例 2: 数据工厂")
     created_at = Column(DATETIME, nullable=False)
     updated_at = Column(DATETIME, nullable=False)
     deleted_at = Column(DATETIME)
@@ -28,7 +29,7 @@ class TestCase(Base):
     update_user = Column(INT, nullable=False)
 
     def __init__(self, name, request_type, url, directory_id, status, priority, create_user,
-                 tag=None, request_headers=None, body=None, request_method=None, id=0):
+                 tag=None, request_headers=None, case_type=0, body=None, request_method=None, id=0):
         self.id = id
         self.name = name
         self.request_type = request_type
@@ -39,6 +40,7 @@ class TestCase(Base):
         # self.catalogue = catalogue
         self.status = status
         # self.expected = expected
+        self.case_type = case_type
         self.body = body
         self.create_user = create_user
         self.update_user = create_user

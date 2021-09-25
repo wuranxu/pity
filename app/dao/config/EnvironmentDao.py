@@ -48,7 +48,8 @@ class EnvironmentDao(object):
                 if name:
                     search.append(Environment.name.ilike("%{}%".format(name)))
                 if exactly:
-                    return session.query(Environment).filter(*search).all()
+                    data = session.query(Environment).filter(*search).all()
+                    return data, len(data), None
                 data = session.query(Environment).filter(*search)
                 total = data.count()
                 return data.order_by(desc(Environment.created_at)).offset((page - 1) * size).limit(

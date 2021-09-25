@@ -8,6 +8,7 @@ from sqlalchemy.future import select
 from app.dao.test_case.ConstructorDao import ConstructorDao
 from app.dao.test_case.TestCaseAssertsDao import TestCaseAssertsDao
 from app.dao.test_case.TestCaseDirectory import PityTestcaseDirectoryDao
+from app.dao.test_case.TestcaseDataDao import PityTestcaseDataDao
 from app.models import Session, DatabaseHelper, async_session
 from app.models.constructor import Constructor
 from app.models.test_case import TestCase
@@ -125,7 +126,9 @@ class TestCaseDao(object):
                 # 获取数据构造器
                 constructors = await ConstructorDao.list_constructor(case_id)
                 constructors_case = await TestCaseDao.query_test_case_by_constructors(constructors)
-                return dict(asserts=asserts, constructors=constructors, case=data, constructors_case=constructors_case)
+                test_data = await PityTestcaseDataDao.list_testcase_data(case_id)
+                return dict(asserts=asserts, constructors=constructors, case=data, constructors_case=constructors_case,
+                            test_data=test_data)
         except Exception as e:
             TestCaseDao.log.error(f"查询用例失败: {str(e)}")
             raise Exception(f"查询用例失败: {str(e)}")
@@ -266,9 +269,7 @@ class TestCaseDao(object):
     @staticmethod
     async def get_xmind_data(case_id: int):
         result = dict()
-        data, err = await TestCaseDao.query_test_case(case_id)
-        if err:
-            raise Exception(err)
+        data = await TestCaseDao.query_test_case(case_id)
         cs = data.get("case")
         # 开始解析测试数据
         result.update(dict(id=f"case_{case_id}", label=f"{cs.name}({cs.id})"))

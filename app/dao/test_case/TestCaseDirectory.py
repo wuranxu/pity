@@ -5,7 +5,7 @@ from sqlalchemy import select, asc, or_
 
 from app.models import async_session
 from app.models.schema.testcase_directory import PityTestcaseDirectoryForm
-from app.models.test_case_directory import PityTestcaseDirectory
+from app.models.testcase_directory import PityTestcaseDirectory
 from app.utils.logger import Log
 
 
