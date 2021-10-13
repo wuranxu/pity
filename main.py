@@ -56,7 +56,7 @@ async def get_site(filename):
 
 
 @pity.get("/static/{filename}")
-async def get_site(filename):
+async def get_site_static(filename):
     filename = './statics/static/' + filename
 
     if not isfile(filename):
