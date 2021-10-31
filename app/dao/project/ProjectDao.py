@@ -2,9 +2,7 @@ from datetime import datetime
 
 from sqlalchemy import or_, desc
 
-from app import pity
 from app.dao.project.ProjectRoleDao import ProjectRoleDao
-from app.dao.test_case.TestCaseDao import TestCaseDao
 from app.models import Session
 from app.models.project import Project
 from app.utils.logger import Log

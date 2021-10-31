@@ -32,7 +32,7 @@ class PityReport(Base):
     status = Column(SMALLINT, nullable=False, comment="0: pending, 1: running, 2: stopped, 3: finished", index=True)
 
     # case执行模式
-    mode = Column(SMALLINT, default=0, comment="0: 手动, 1: 自动, 2: 测试集, 3: pipeline, 4: 其他")
+    mode = Column(SMALLINT, default=0, comment="0: 普通, 1: 测试集, 2: pipeline, 3: 其他")
 
     deleted_at = Column(DATETIME, index=True)
 

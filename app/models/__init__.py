@@ -1,5 +1,6 @@
 import time
 from datetime import datetime
+from typing import List
 
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -109,6 +110,30 @@ class DatabaseHelper(object):
             dist.deleted_at = time.time()
         dist.updated_at = datetime.now()
         dist.update_user = update_user
+
+    @classmethod
+    def where(cls, param, sentence, condition: List):
+        if param:
+            condition.append(sentence)
+        return cls
+
+    @staticmethod
+    async def pagination(page: int, size: int, session, sql):
+        """
+        分页查询
+        :param session:
+        :param page:
+        :param size:
+        :param sql:
+        :return:
+        """
+        data = await session.execute(sql)
+        total = data.raw.rowcount
+        if total == 0:
+            return [], 0
+        sql = sql.offset((page - 1) * size).limit(size)
+        data = await session.execute(sql)
+        return data.scalars().all(), total
 
 
 db_helper = DatabaseHelper()

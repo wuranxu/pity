@@ -10,6 +10,7 @@ from app.dao.config.DbConfigDao import DbConfigDao
 from app.dao.config.GConfigDao import GConfigDao
 from app.dao.test_case.TestCaseAssertsDao import TestCaseAssertsDao
 from app.dao.test_case.TestCaseDao import TestCaseDao
+from app.dao.test_case.TestPlan import PityTestPlanDao
 from app.dao.test_case.TestReport import TestReportDao
 from app.dao.test_case.TestResult import TestResultDao
 from app.dao.test_case.TestcaseDataDao import PityTestcaseDataDao
@@ -522,16 +523,43 @@ class Executor(object):
         return json.dumps(result, ensure_ascii=False), None
 
     @staticmethod
-    async def run_multiple(executor: int, env: int, case_list: List[int]):
+    async def run_test_plan(plan_id: int):
+        """
+        通过测试计划id执行测试计划
+        :param plan_id:
+        :return:
+        """
+        plan = await PityTestPlanDao.query_test_plan(plan_id)
+        if plan is None:
+            Executor.log.info(f"测试计划: [{plan_id}]不存在")
+            return
+        # if plan.disabled:
+        #     # 说明测试计划已禁用
+        #     Executor.log.info(f"测试计划: [{plan.name}]未开启")
+        #     return
+        env = list(map(int, plan.env.split(",")))
+        case_list = list(map(int, plan.case_list.split(",")))
+        await asyncio.gather(
+            *(Executor.run_multiple(0, int(e), case_list, mode=1,
+                                    plan_id=plan.id, ordered=plan.ordered) for e in env))
+        # TODO 后续通知部分
+
+    @staticmethod
+    async def run_multiple(executor: int, env: int, case_list: List[int], mode=0, plan_id: int = None, ordered=False):
         st = time.perf_counter()
         # step1: 新增测试报告数据
-        report_id = await TestReportDao.start(executor, env)
+        report_id = await TestReportDao.start(executor, env, mode, plan_id=plan_id)
         # step2: 开始执行用例
         result_data = defaultdict(list)
         # step3: 将报告改为 running状态
         await TestReportDao.update(report_id, 1)
-        # step4: 并发执行用例并搜集数据
-        await asyncio.gather(*(Executor.run_single(env, result_data, report_id, c) for c in case_list))
+        # step4: 执行用例并搜集数据
+        if not ordered:
+            await asyncio.gather(*(Executor.run_single(env, result_data, report_id, c) for c in case_list))
+        else:
+            # 顺序执行
+            for c in case_list:
+                await Executor.run_single(env, result_data, report_id, c)
         ok, fail, skip, error = 0, 0, 0, 0
         for case_id, status in result_data.items():
             for s in status:

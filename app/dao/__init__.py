@@ -12,5 +12,6 @@ from app.models.result import PityTestResult
 from app.models.database import PityDatabase
 from app.models.testcase_directory import PityTestcaseDirectory
 from app.models.testcase_data import PityTestcaseData
+from app.models.test_plan import PityTestPlan
 
 Base.metadata.create_all(engine)

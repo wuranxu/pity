@@ -11,8 +11,8 @@ from app.dao.test_case.TestCaseDirectory import PityTestcaseDirectoryDao
 from app.dao.test_case.TestcaseDataDao import PityTestcaseDataDao
 from app.models import Session, DatabaseHelper, async_session
 from app.models.constructor import Constructor
+from app.models.schema.testcase_schema import TestCaseForm
 from app.models.test_case import TestCase
-from app.routers.testcase.testcase_schema import TestCaseForm
 from app.utils.logger import Log
 
 

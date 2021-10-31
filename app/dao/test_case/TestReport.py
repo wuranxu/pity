@@ -12,7 +12,7 @@ class TestReportDao(object):
     log = Log("TestReportDao")
 
     @staticmethod
-    async def start(executor: int, env: int, mode: int = 0) -> int:
+    async def start(executor: int, env: int, mode: int = 0, plan_id: int = None) -> int:
         """
         生成buildId，开始执行任务，任务完成后通过回调方法更新报告
         :return: 返回report_id
@@ -20,7 +20,7 @@ class TestReportDao(object):
         try:
             async with async_session() as session:
                 async with session.begin():
-                    report = PityReport(executor, env, mode=mode)
+                    report = PityReport(executor, env, mode=mode, plan_id=plan_id)
                     session.add(report)
                     await session.flush()
                     return report.id

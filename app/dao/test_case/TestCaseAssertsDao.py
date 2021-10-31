@@ -1,8 +1,8 @@
 from sqlalchemy import asc, select
 
 from app.models import Session, async_session, DatabaseHelper
+from app.models.schema.testcase_schema import TestCaseAssertsForm
 from app.models.testcase_asserts import TestCaseAsserts
-from app.routers.testcase.testcase_schema import TestCaseAssertsForm
 from app.utils.logger import Log
 
 

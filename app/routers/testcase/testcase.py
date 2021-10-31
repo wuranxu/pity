@@ -12,8 +12,8 @@ from app.handler.fatcory import PityResponse
 from app.models.schema.constructor import ConstructorForm, ConstructorIndex
 from app.models.schema.testcase_data import PityTestcaseDataForm
 from app.models.schema.testcase_directory import PityTestcaseDirectoryForm
+from app.models.schema.testcase_schema import TestCaseAssertsForm, TestCaseForm
 from app.routers import Permission
-from app.routers.testcase.testcase_schema import TestCaseForm, TestCaseAssertsForm
 
 router = APIRouter(prefix="/testcase")
 

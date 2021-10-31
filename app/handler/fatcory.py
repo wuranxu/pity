@@ -48,5 +48,11 @@ class PityResponse(object):
         return dict(code=code, msg=msg, data=data)
 
     @staticmethod
+    def success_with_size(data=None, code=0, msg="操作成功", total=0):
+        if data is None:
+            return dict(code=code, msg=msg, data=list(), total=0)
+        return dict(code=code, msg=msg, data=data, total=total)
+
+    @staticmethod
     def failed(msg, code=110, data=None):
         return dict(code=code, msg=str(msg), data=data)

@@ -1,8 +1,6 @@
 import logbook
 
-from app import pity
 from config import Config
-from .decorator import SingletonDecorator
 
 
 # 注意这里
