@@ -91,10 +91,11 @@ class PityTestcaseDirectoryDao(object):
             raise Exception(f"删除目录失败: {e}")
 
     @staticmethod
-    async def get_directory_tree(project_id: int):
+    async def get_directory_tree(project_id: int, case_node=None):
         res = await PityTestcaseDirectoryDao.list_directory(project_id)
         ans = list()
         ans_map = dict()
+        case_map = dict()
         parent_map = defaultdict(list)
         for directory in res:
             if directory.parent is None:
@@ -109,23 +110,34 @@ class PityTestcaseDirectoryDao(object):
             ans_map[directory.id] = directory
         # 获取到所有数据信息
         for r in ans:
-            PityTestcaseDirectoryDao.get_directory(ans_map, parent_map, r.get('key'), r.get('children'))
-        return ans
+            await PityTestcaseDirectoryDao.get_directory(ans_map, parent_map, r.get('key'), r.get('children'), case_map,
+                                                         case_node)
+        return ans, case_map
 
     @staticmethod
-    def get_directory(ans_map: dict, parent_map, parent, children):
+    async def get_directory(ans_map: dict, parent_map, parent, children, case_map, case_node=None):
         current = parent_map.get(parent)
         if current is None:
+            if case_node is None:
+                return
+            nodes, cs = await case_node(parent)
+            children.extend(nodes)
+            case_map.update(cs)
             return
         for c in current:
             temp = ans_map.get(c)
-            child = list()
+            if case_node is None:
+                child = list()
+            else:
+                child, cs = await case_node(parent)
+                case_map.update(cs)
             children.append(dict(
                 title=temp.name,
                 key=temp.id,
                 children=child,
+                disabled=len(child) == 0
             ))
-            PityTestcaseDirectoryDao.get_directory(ans_map, parent_map, temp.id, child)
+            await PityTestcaseDirectoryDao.get_directory(ans_map, parent_map, temp.id, child, case_node)
 
     @staticmethod
     async def get_directory_son(directory_id: int):

@@ -39,6 +39,23 @@ class TestCaseDao(object):
             raise Exception(f"获取测试用例失败: {str(e)}")
 
     @staticmethod
+    async def get_test_case_by_directory_id(directory_id: int):
+        try:
+            async with async_session() as session:
+                sql = select(TestCase).where(TestCase.deleted_at == None,
+                                             TestCase.directory_id == directory_id).order_by(TestCase.name.asc())
+                result = await session.execute(sql)
+                ans = []
+                case_map = dict()
+                for item in result.scalars():
+                    ans.append({"title": item.name, "key": "testcase_{}".format(item.id), "children": []})
+                    case_map[item.id]=item.name
+                return ans, case_map
+        except Exception as e:
+            TestCaseDao.log.error(f"获取测试用例失败: {str(e)}")
+            raise Exception(f"获取测试用例失败: {str(e)}")
+
+    @staticmethod
     def get_tree(case_list):
         result = defaultdict(list)
         # 获取目录->用例的映射关系

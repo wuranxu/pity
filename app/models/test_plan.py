@@ -26,8 +26,8 @@ class PityTestPlan(PityBase):
     msg_type = Column(TINYTEXT)
     # 单次case失败重试间隔，默认2分钟
     retry_minutes = Column(SMALLINT, default=2)
-    # 测试计划是否被禁用
-    # disabled = Column(BOOLEAN, default=False)
+    # 测试计划是否正在执行中
+    state = Column(SMALLINT, default=0, comment="0: 未开始 1: 运行中")
 
     __table_args__ = (
         UniqueConstraint('project_id', 'name', 'deleted_at'),
@@ -36,7 +36,7 @@ class PityTestPlan(PityBase):
     __tablename__ = "pity_test_plan"
 
     def __init__(self, project_id, env, case_list, name, priority, cron, ordered, pass_rate, receiver, msg_type,
-                 retry_minutes, user, id=None):
+                 retry_minutes, user, state=0, id=None):
         super().__init__(user, id)
         self.env = ",".join(map(str, env))
         self.case_list = ",".join(map(str, case_list))
@@ -49,4 +49,4 @@ class PityTestPlan(PityBase):
         self.receiver = ",".join(map(str, receiver))
         self.msg_type = ",".join(map(str, msg_type))
         self.retry_minutes = retry_minutes
-        # self.disabled = disabled
+        self.state = state

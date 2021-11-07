@@ -182,8 +182,19 @@ async def get_xmind_data(case_id: int, user_info=Depends(Permission())):
 @router.get("/directory")
 async def get_testcase_directory(project_id: int, user_info=Depends(Permission())):
     try:
-        tree_data = await PityTestcaseDirectoryDao.get_directory_tree(project_id)
+        tree_data, _ = await PityTestcaseDirectoryDao.get_directory_tree(project_id)
         return PityResponse.success(tree_data)
+    except Exception as e:
+        return PityResponse.failed(e)
+
+
+# 获取case目录+case
+@router.get("/tree")
+async def get_directory_and_case(project_id: int, user_info=Depends(Permission())):
+    try:
+        tree_data, cs_map = await PityTestcaseDirectoryDao.get_directory_tree(project_id,
+                                                                              TestCaseDao.get_test_case_by_directory_id)
+        return PityResponse.success(dict(tree=tree_data, case_map=cs_map))
     except Exception as e:
         return PityResponse.failed(e)
 

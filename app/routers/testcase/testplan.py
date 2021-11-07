@@ -10,9 +10,10 @@ from config import Config
 
 
 @router.get("/plan/list")
-async def list_test_plan(page: int, size: int, project_id: int = None, name: str = "", user_info=Depends(Permission())):
+async def list_test_plan(page: int, size: int, project_id: int = None, name: str = "", priority: str = '',
+                         create_user: int = None, user_info=Depends(Permission())):
     try:
-        data, total = await PityTestPlanDao.list_test_plan(page, size, project_id, name)
+        data, total = await PityTestPlanDao.list_test_plan(page, size, project_id, name, priority, create_user)
         ans = PityResponse.model_to_list(data)
         Scheduler.list_test_plan(ans)
         return PityResponse.success_with_size(ans, total=total)

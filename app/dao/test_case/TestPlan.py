@@ -10,12 +10,15 @@ class PityTestPlanDao(object):
     log = Log("PityTestPlanDao")
 
     @staticmethod
-    async def list_test_plan(page: int, size: int, project_id: int = None, name: str = ''):
+    async def list_test_plan(page: int, size: int, project_id: int = None, name: str = '', priority: str = '',
+                             create_user: int = None):
         try:
             async with async_session() as session:
                 conditions = [PityTestPlan.deleted_at == 0]
                 DatabaseHelper.where(project_id, PityTestPlan.project_id == project_id, conditions) \
-                    .where(name, PityTestPlan.name.like(f"%{name}%"), conditions)
+                    .where(name, PityTestPlan.name.like(f"%{name}%"), conditions) \
+                    .where(priority, PityTestPlan.priority == priority, conditions) \
+                    .where(create_user, PityTestPlan.create_user == create_user, conditions)
                 sql = select(PityTestPlan).where(*conditions)
                 result, total = await DatabaseHelper.pagination(page, size, session, sql)
                 return result, total
@@ -56,7 +59,23 @@ class PityTestPlanDao(object):
                     plan.env = ",".join(map(str, plan.env))
                     plan.receiver = ",".join(map(str, plan.receiver))
                     plan.case_list = ",".join(map(str, plan.case_list))
+                    plan.msg_type = ",".join(map(str, plan.msg_type))
                     DatabaseHelper.update_model(data, plan, user)
+        except Exception as e:
+            PityTestPlanDao.log.error(f"编辑测试计划失败: {str(e)}")
+            raise Exception(f"编辑失败: {str(e)}")
+
+    @staticmethod
+    async def update_test_plan_state(id: int, state: int):
+        try:
+            async with async_session() as session:
+                async with session.begin():
+                    query = await session.execute(
+                        select(PityTestPlan).where(PityTestPlan.id == id, PityTestPlan.deleted_at == 0))
+                    data = query.scalars().first()
+                    if data is None:
+                        raise Exception("测试计划不存在")
+                    data.state = state
         except Exception as e:
             PityTestPlanDao.log.error(f"编辑测试计划失败: {str(e)}")
             raise Exception(f"编辑失败: {str(e)}")

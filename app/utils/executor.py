@@ -533,6 +533,8 @@ class Executor(object):
         if plan is None:
             Executor.log.info(f"测试计划: [{plan_id}]不存在")
             return
+        # 设置为running
+        await PityTestPlanDao.update_test_plan_state(plan.id, 1)
         # if plan.disabled:
         #     # 说明测试计划已禁用
         #     Executor.log.info(f"测试计划: [{plan.name}]未开启")
@@ -543,6 +545,8 @@ class Executor(object):
             *(Executor.run_multiple(0, int(e), case_list, mode=1,
                                     plan_id=plan.id, ordered=plan.ordered) for e in env))
         # TODO 后续通知部分
+        await PityTestPlanDao.update_test_plan_state(plan.id, 0)
+        await PityTestPlanDao.update_test_plan(plan, plan.update_user)
 
     @staticmethod
     async def run_multiple(executor: int, env: int, case_list: List[int], mode=0, plan_id: int = None, ordered=False):
