@@ -71,3 +71,18 @@ def get_returns(obj):
     if isinstance(obj, object):
         return str(obj)
     return f"返回值: {obj}"
+
+
+def dao(model, log):
+    def wrapper(cls):
+        """
+        # 测试过，不同dao包裹的cls，地址不一致，可放心使用，并非单例
+        :param cls:
+        :return:
+        """
+        # 设置model和log
+        setattr(cls, "model", model)
+        setattr(cls, "log", log)
+        return cls
+
+    return wrapper

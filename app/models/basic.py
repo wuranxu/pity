@@ -14,7 +14,7 @@ class PityBase(Base):
     update_user = Column(INT, nullable=False)
     __abstract__ = True
 
-    def __init__(self, user, id=0):
+    def __init__(self, user, id=None):
         self.created_at = datetime.now()
         self.updated_at = datetime.now()
         self.create_user = user

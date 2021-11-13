@@ -14,4 +14,4 @@ aiomysql
 Jinja2
 aiofiles
 psycopg2-binary
-APScheduler~=3.8.0
+APScheduler

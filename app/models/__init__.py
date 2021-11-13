@@ -113,6 +113,11 @@ class DatabaseHelper(object):
 
     @classmethod
     def where(cls, param, sentence, condition: List):
+        if param is None:
+            return cls
+        if isinstance(param, bool):
+            condition.append(sentence)
+            return cls
         if param:
             condition.append(sentence)
         return cls
@@ -134,6 +139,12 @@ class DatabaseHelper(object):
         sql = sql.offset((page - 1) * size).limit(size)
         data = await session.execute(sql)
         return data.scalars().all(), total
+
+    @staticmethod
+    def like(s: str):
+        if s:
+            return f"%{s}%"
+        return s
 
 
 db_helper = DatabaseHelper()
