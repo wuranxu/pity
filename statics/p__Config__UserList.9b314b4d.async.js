@@ -1,1 +1,0 @@
-(window.webpackJsonp=window.webpackJsonp||[]).push([[22],{YfhA:function(a,n,t){"use strict";t.r(n);var _=t("zR8a"),u=t("ikfJ"),E=t.n(u);n.default=function(){return Object(u.jsx)(_.a,{title:"\u7528\u6237\u5217\u8868"})}}}]);
