@@ -15,3 +15,5 @@ Jinja2
 aiofiles
 psycopg2-binary
 APScheduler
+aredis
+hiredis

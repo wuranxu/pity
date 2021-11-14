@@ -8,7 +8,7 @@ class RedisConfigForm(BaseModel):
     name: str
     addr: str
     db: int = 0
-    username: str = ''
+    # username: str = ''
     password: str = ''
     cluster: bool = False
     env: int

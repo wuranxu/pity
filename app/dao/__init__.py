@@ -105,6 +105,7 @@ class Mapper(object):
                     if original is None:
                         raise Exception("记录不存在")
                     DatabaseHelper.update_model(original, model, user, not_null)
+                    await session.flush()
                     session.expunge(original)
                     return original
         except Exception as e:

@@ -18,7 +18,7 @@ class PityRedis(PityBase):
     # 是否是集群，默认为false，集群可不输入用户密码
     cluster = Column(Boolean, default=False, nullable=False)
 
-    def __init__(self, env, name, addr, username, password, db, cluster, user, id=None):
+    def __init__(self, env, name, addr, cluster, user, username='', password='', db=0, id=None):
         super().__init__(user, id=id)
         self.env = env
         self.name = name

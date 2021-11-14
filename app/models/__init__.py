@@ -92,9 +92,9 @@ class DatabaseHelper(object):
                     setattr(dist, var, value)
             else:
                 setattr(dist, var, value)
-            if update_user:
-                setattr(dist, 'update_user', update_user)
-            setattr(dist, 'updated_at', datetime.now())
+        if update_user:
+            setattr(dist, 'update_user', update_user)
+        setattr(dist, 'updated_at', datetime.now())
 
     @staticmethod
     def delete_model(dist, update_user):

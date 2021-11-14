@@ -2,8 +2,10 @@ from fastapi import Depends
 
 from app.dao.config.RedisConfigDao import PityRedisConfigDao
 from app.handler.fatcory import PityResponse
+from app.middleware.RedisManager import PityRedisManager
 from app.models import DatabaseHelper
 from app.models.redis_config import PityRedis
+from app.models.schema.online_redis import OnlineRedisForm
 from app.models.schema.redis_config import RedisConfigForm
 from app.routers import Permission
 from app.routers.config.environment import router
@@ -54,5 +56,18 @@ async def delete_redis_config(id: int,
     try:
         await PityRedisConfigDao.delete_record_by_id(user_info['id'], id)
         return PityResponse.success()
+    except Exception as err:
+        return PityResponse.failed(err)
+
+
+@router.post("/redis/command")
+async def test_redis_command(form: OnlineRedisForm):
+    try:
+        redis_config = await PityRedisConfigDao.query_record(id=form.id)
+        client = PityRedisManager.get_single_node_client(redis_config.id, redis_config.addr,
+                                                         redis_config.password, redis_config.db)
+        res = await client.execute_command(form.command)
+        # res = await client.set("name", "李相赫")
+        return PityResponse.success(res)
     except Exception as err:
         return PityResponse.failed(err)
