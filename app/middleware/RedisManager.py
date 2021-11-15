@@ -1,7 +1,8 @@
 """
-redis客户端，基于aredis(支持集群，aioredis不支持集群)
+redis客户端Manager
 """
-from aredis import StrictRedisCluster, ClusterConnectionPool, ConnectionPool, StrictRedis
+from redis import ConnectionPool, StrictRedis
+from rediscluster import RedisCluster, ClusterConnectionPool
 
 from app.excpetions.RedisException import RedisException
 
@@ -11,6 +12,19 @@ class PityRedisManager(object):
     """
     _cluster_pool = dict()
     _pool = dict()
+
+    @staticmethod
+    def delete_client(redis_id: int, cluster: bool):
+        """
+        根据redis_id和是否是集群删除客户端
+        :param redis_id:
+        :param cluster:
+        :return:
+        """
+        if cluster:
+            PityRedisManager._cluster_pool.pop(redis_id)
+        else:
+            PityRedisManager._pool.pop(redis_id)
 
     @staticmethod
     def get_cluster_client(redis_id: int, addr: str):
@@ -28,7 +42,7 @@ class PityRedisManager(object):
         return client
 
     @staticmethod
-    def get_single_node_client(redis_id: int, addr: str, password: str, db: str):
+    def get_single_node_client(redis_id: int, addr: str, password: str, db: int):
         """
         获取redis单实例客户端
         :param redis_id:
@@ -37,14 +51,14 @@ class PityRedisManager(object):
         :param db:
         :return:
         """
-        node = PityRedisManager._cluster_pool.get(redis_id)
+        node = PityRedisManager._pool.get(redis_id)
         if node is not None:
             return node
         host, port = addr.split(":")
         pool = ConnectionPool(host=host, port=port, db=db, max_connections=100, password=password,
                               decode_responses=True)
         client = StrictRedis(connection_pool=pool)
-        PityRedisManager._pool[redis_id] = PityRedisManager.get_cluster(addr)
+        PityRedisManager._pool[redis_id] = client
         return client
 
     @staticmethod
@@ -78,7 +92,7 @@ class PityRedisManager(object):
             nodes = addr.split(',')
             startup_nodes = [{"host": n.split(":")[0], "port": n.split(":")[1]} for n in nodes]
             pool = ClusterConnectionPool(startup_nodes=startup_nodes, max_connections=100, decode_responses=True)
-            client = StrictRedisCluster(connection_pool=pool, decode_responses=True)
+            client = RedisCluster(connection_pool=pool, decode_responses=True)
             return client
         except Exception as e:
             raise RedisException(f"获取Redis连接失败, {e}")

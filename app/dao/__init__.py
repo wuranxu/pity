@@ -1,21 +1,6 @@
 from sqlalchemy import select
 
 from app.models import Base, engine, async_session, DatabaseHelper
-from app.models.user import User
-from app.models.project import Project
-from app.models.project_role import ProjectRole
-from app.models.test_case import TestCase
-from app.models.testcase_asserts import TestCaseAsserts
-from app.models.environment import Environment
-from app.models.gconfig import GConfig
-from app.models.constructor import Constructor
-from app.models.report import PityReport
-from app.models.result import PityTestResult
-from app.models.database import PityDatabase
-from app.models.testcase_directory import PityTestcaseDirectory
-from app.models.testcase_data import PityTestcaseData
-from app.models.test_plan import PityTestPlan
-from app.models.redis_config import PityRedis
 
 Base.metadata.create_all(engine)
 
@@ -129,6 +114,9 @@ class Mapper(object):
                     if original is None:
                         raise Exception("记录不存在")
                     DatabaseHelper.delete_model(original, user)
+                    await session.flush()
+                    session.expunge(original)
+                    return original
         except Exception as e:
             cls.log.error(f"删除{cls.model}记录失败, error: {e}")
             raise Exception(f"删除记录失败")

@@ -1,4 +1,5 @@
 from fastapi import Depends
+from starlette.background import BackgroundTasks
 
 from app.dao.config.RedisConfigDao import PityRedisConfigDao
 from app.handler.fatcory import PityResponse
@@ -42,19 +43,27 @@ async def insert_redis_config(form: RedisConfigForm,
 
 @router.post("/redis/update")
 async def update_redis_config(form: RedisConfigForm,
+                              background_tasks: BackgroundTasks,
                               user_info=Depends(Permission(Config.ADMIN))):
     try:
         result = await PityRedisConfigDao.update_record_by_id(user_info['id'], form)
+        if result.cluster:
+            background_tasks.add_task(PityRedisManager.refresh_redis_cluster, *(result.id, result.addr))
+        else:
+            background_tasks.add_task(PityRedisManager.refresh_redis_client,
+                                      *(result.id, result.addr, result.password, result.db))
         return PityResponse.success(data=PityResponse.model_to_dict(result))
     except Exception as err:
         return PityResponse.failed(err)
 
 
 @router.get("/redis/delete")
-async def delete_redis_config(id: int,
+async def delete_redis_config(id: int, background_tasks: BackgroundTasks,
                               user_info=Depends(Permission(Config.ADMIN))):
     try:
-        await PityRedisConfigDao.delete_record_by_id(user_info['id'], id)
+        ans = await PityRedisConfigDao.delete_record_by_id(user_info['id'], id)
+        # 更新缓存
+        background_tasks.add_task(PityRedisManager.delete_client, *(id, ans.cluster))
         return PityResponse.success()
     except Exception as err:
         return PityResponse.failed(err)
@@ -64,10 +73,12 @@ async def delete_redis_config(id: int,
 async def test_redis_command(form: OnlineRedisForm):
     try:
         redis_config = await PityRedisConfigDao.query_record(id=form.id)
-        client = PityRedisManager.get_single_node_client(redis_config.id, redis_config.addr,
-                                                         redis_config.password, redis_config.db)
-        res = await client.execute_command(form.command)
-        # res = await client.set("name", "李相赫")
+        if not redis_config.cluster:
+            client = PityRedisManager.get_single_node_client(redis_config.id, redis_config.addr,
+                                                             redis_config.password, redis_config.db)
+        else:
+            client = PityRedisManager.get_cluster_client(redis_config.id, redis_config.addr)
+        res = client.execute_command(form.command)
         return PityResponse.success(res)
     except Exception as err:
         return PityResponse.failed(err)
