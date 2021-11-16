@@ -19,7 +19,7 @@ from app.models.constructor import Constructor
 from app.models.test_case import TestCase
 from app.models.testcase_asserts import TestCaseAsserts
 from app.utils.case_logger import CaseLog
-from app.utils.decorator import case_log
+from app.utils.decorator import case_log, lock
 from app.utils.gconfig_parser import StringGConfigParser, JSONGConfigParser, YamlGConfigParser
 from app.utils.json_compare import JsonCompare
 from app.utils.logger import Log
@@ -523,6 +523,7 @@ class Executor(object):
         return json.dumps(result, ensure_ascii=False), None
 
     @staticmethod
+    @lock("test_plan")
     async def run_test_plan(plan_id: int):
         """
         通过测试计划id执行测试计划

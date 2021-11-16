@@ -16,6 +16,9 @@ class Config(object):
     MYSQL_PWD = "wuranxu@33"
     DBNAME = "pity"
 
+    # Redis连接信息
+    REDIS_NODES = [{"host": "121.5.2.74", "port": 7788, "db": 0, "password": "woodywu"}]
+
     # sqlalchemy
     SQLALCHEMY_DATABASE_URI = 'mysql+mysqlconnector://{}:{}@{}:{}/{}'.format(
         MYSQL_USER, MYSQL_PWD, MYSQL_HOST, MYSQL_PORT, DBNAME)

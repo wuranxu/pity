@@ -1,7 +1,13 @@
 import asyncio
+import functools
+import os
 from datetime import datetime
 from functools import wraps
 from typing import Coroutine
+
+from redlock import RedLock, RedLockError
+
+from config import Config
 
 
 class SingletonDecorator:
@@ -86,3 +92,25 @@ def dao(model, log):
         return cls
 
     return wrapper
+
+
+def lock(key):
+    """
+    redis分布式锁，基于redlock
+    :param key: 唯一key，确保所有任务一致，但不与其他任务冲突
+    :return:
+    """
+    def decorator(func):
+        @functools.wraps(func)
+        async def wrapper(*args, **kwargs):
+            try:
+                with RedLock(f"distributed_lock:{func.__name__}:{key}:{str(args)}",
+                             connection_details=Config.REDIS_NODES,
+                             ):
+                    return await func(*args, **kwargs)
+            except RedLockError:
+                print(f"进程: {os.getpid()}获取任务失败, 不用担心，还有其他哥们给你执行了")
+
+        return wrapper
+
+    return decorator
