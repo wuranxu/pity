@@ -72,13 +72,7 @@ async def delete_redis_config(id: int, background_tasks: BackgroundTasks,
 @router.post("/redis/command")
 async def test_redis_command(form: OnlineRedisForm):
     try:
-        redis_config = await PityRedisConfigDao.query_record(id=form.id)
-        if not redis_config.cluster:
-            client = PityRedisManager.get_single_node_client(redis_config.id, redis_config.addr,
-                                                             redis_config.password, redis_config.db)
-        else:
-            client = PityRedisManager.get_cluster_client(redis_config.id, redis_config.addr)
-        res = client.execute_command(form.command)
+        res = await PityRedisConfigDao.execute_command(form.command, id=form.id)
         return PityResponse.success(res)
     except Exception as err:
         return PityResponse.failed(err)

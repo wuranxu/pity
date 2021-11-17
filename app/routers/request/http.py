@@ -9,7 +9,7 @@ from app.handler.fatcory import PityResponse
 from app.middleware.AsyncHttpClient import AsyncRequest
 from app.routers import Permission
 from app.routers.request.http_schema import HttpRequestForm
-from app.utils.executor import Executor
+from app.core.executor import Executor
 
 router = APIRouter(prefix="/request")
 
