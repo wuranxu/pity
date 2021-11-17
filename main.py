@@ -45,6 +45,11 @@ async def serve_spa(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 
+@pity.get("/wx")
+async def wechat():
+    return "Hello Wechat"
+
+
 @pity.get("/{filename}")
 async def get_site(filename):
     filename = './statics/' + filename
