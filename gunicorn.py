@@ -16,7 +16,6 @@ daemon = True
 timeout = 60
 
 # 启动的进程数
-# workers = multiprocessing.cpu_count()
-workers = 8
+workers = multiprocessing.cpu_count()
 worker_class = 'gevent'
 x_forwarded_for_header = 'X-FORWARDED-FOR'

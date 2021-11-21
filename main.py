@@ -100,7 +100,8 @@ async def get_site_static(filename):
 def init_scheduler():
     # SQLAlchemyJobStore指定存储链接
     job_store = {
-        'default': SQLAlchemyJobStore(url=Config.SQLALCHEMY_DATABASE_URI, engine_options={"pool_recycle": 1500})
+        'default': SQLAlchemyJobStore(url=Config.SQLALCHEMY_DATABASE_URI, engine_options={"pool_recycle": 1500},
+                                      pickle_protocol=4)
     }
     scheduler = AsyncIOScheduler()
     Scheduler.init(scheduler)

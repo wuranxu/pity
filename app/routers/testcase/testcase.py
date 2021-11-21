@@ -146,6 +146,16 @@ async def get_constructor_tree(id: int, user_info=Depends(Permission())):
         return dict(code=110, msg=str(e))
 
 
+# 获取所有数据构造器
+@router.get("/constructor/list")
+async def list_case_and_constructor(constructor_type: int):
+    try:
+        ans = await ConstructorDao.get_case_and_constructor(constructor_type)
+        return PityResponse.success(ans)
+    except Exception as e:
+        return PityResponse.failed(str(e))
+
+
 # 根据id查询具体报告内容
 @router.get("/report")
 async def query_report(id: int, user_info=Depends(Permission())):

@@ -125,3 +125,41 @@ class ConstructorDao(object):
             if data is None:
                 raise Exception("构造数据不存在")
             return data
+
+    @staticmethod
+    async def get_case_and_constructor(constructor_type: int):
+        # 最终返回结果树
+        ans = list()
+        async with async_session() as session:
+            # 此处存放case_id => 前置条件的映射
+            constructors = defaultdict(list)
+            # 根据传入的前置条件类型，找出所有前置条件, 类型一致，共享开关打开，并未被删除
+            query = await session.execute(
+                select(Constructor).where(
+                    Constructor.type == constructor_type,
+                    Constructor.public == True,
+                    Constructor.deleted_at == None))
+            # 并把这些前置条件放到constructors里面
+            for q in query.scalars().all():
+                constructors[q.case_id].append({
+                    "title": q.name,
+                    "key": f"constructor_{q.id}",
+                    "isLeaf": True,
+                    # 这里是为了拿到具体的代码，因为树一般只有name和id，我们这还需要其他数据
+                    "constructor_json": q.constructor_json,
+                })
+            if len(constructors.keys()) == 0:
+                return []
+            # 二次查询，查出有前置条件的case
+            query = await session.execute(
+                select(TestCase).where(TestCase.id.in_(constructors.keys()), TestCase.deleted_at == None))
+            # 构造树，要知道children已经构建好了，就在constructors里面
+            for q in query.scalars().all():
+                # 把用例id放入cs_list，这里就不用原生join了
+                ans.append({
+                    "title": q.name,
+                    "key": f"caseId_{q.id}",
+                    "disabled": True,
+                    "children": constructors[q.id]
+                })
+        return ans
