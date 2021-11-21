@@ -1,10 +1,14 @@
 """
 redis客户端Manager
 """
+import functools
+import json
+
 from redis import ConnectionPool, StrictRedis
 from rediscluster import RedisCluster, ClusterConnectionPool
 
 from app.excpetions.RedisException import RedisException
+from config import Config
 
 
 class PityRedisManager(object):
@@ -12,6 +16,13 @@ class PityRedisManager(object):
     """
     _cluster_pool = dict()
     _pool = dict()
+
+    @property
+    def client(self):
+        pool = ConnectionPool(host=Config.REDIS_HOST, port=Config.REDIS_PORT, db=Config.REDIS_DB, max_connections=100,
+                              password=Config.REDIS_PASSWORD,
+                              decode_responses=True)
+        return StrictRedis(connection_pool=pool, decode_responses=True)
 
     @staticmethod
     def delete_client(redis_id: int, cluster: bool):
@@ -96,3 +107,61 @@ class PityRedisManager(object):
             return client
         except Exception as e:
             raise RedisException(f"获取Redis连接失败, {e}")
+
+
+class RedisHelper(object):
+    pity_prefix = "pity"
+    pity_redis_client = PityRedisManager().client
+
+    @staticmethod
+    def get_key(key: str):
+        return f"{RedisHelper.pity_prefix}:{key}"
+
+    @staticmethod
+    def cache(key: str, expired_time=3 * 60):
+        """
+        自动缓存装饰器
+        :param key: 被缓存的key
+        :param expired_time: 默认key过期时间
+        :return:
+        """
+
+        def decorator(func):
+            @functools.wraps(func)
+            def wrapper(*args, **kwargs):
+                redis_key = RedisHelper.get_key(key)
+                data = RedisHelper.pity_redis_client.get(redis_key)
+                # 缓存已存在
+                if data is not None:
+                    return json.loads(data)
+                # 获取最新数据
+                new_data = func(*args, **kwargs)
+                info = json.dumps(new_data)
+                RedisHelper.pity_redis_client.set(redis_key, info, ex=expired_time)
+                return new_data
+
+            return wrapper
+
+        return decorator
+
+    @staticmethod
+    def up_cache(key: str):
+        """
+        redis缓存key，套了此方法，会自动执行更新数据操作后删除缓存
+        :param key:
+        :return:
+        """
+
+        def decorator(func):
+            @functools.wraps(func)
+            def wrapper(*args, **kwargs):
+                redis_key = RedisHelper.get_key(key)
+                # 获取最新数据
+                new_data = func(*args, **kwargs)
+                # 更新数据，删除缓存
+                RedisHelper.pity_redis_client.delete(redis_key)
+                return new_data
+
+            return wrapper
+
+        return decorator

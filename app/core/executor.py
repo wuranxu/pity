@@ -7,8 +7,10 @@ from datetime import datetime
 from typing import List, Any
 
 from app.core.case_constructor import TestcaseConstructor
+from app.core.msg.email import Email
 from app.core.redis_constructor import RedisConstructor
 from app.core.sql_constructor import SqlConstructor
+from app.dao.auth.UserDao import UserDao
 from app.dao.config.GConfigDao import GConfigDao
 from app.dao.test_case.TestCaseAssertsDao import TestCaseAssertsDao
 from app.dao.test_case.TestCaseDao import TestCaseDao
@@ -558,18 +560,20 @@ class Executor(object):
             return
         # 设置为running
         await PityTestPlanDao.update_test_plan_state(plan.id, 1)
-        # if plan.disabled:
-        #     # 说明测试计划已禁用
-        #     Executor.log.info(f"测试计划: [{plan.name}]未开启")
-        #     return
         env = list(map(int, plan.env.split(",")))
         case_list = list(map(int, plan.case_list.split(",")))
         await asyncio.gather(
             *(Executor.run_multiple(0, int(e), case_list, mode=1,
                                     plan_id=plan.id, ordered=plan.ordered) for e in env))
-        # TODO 后续通知部分
         await PityTestPlanDao.update_test_plan_state(plan.id, 0)
         await PityTestPlanDao.update_test_plan(plan, plan.update_user)
+        # TODO 后续通知部分
+        msg_types = plan.msg_type.split(",")
+        for m in msg_types:
+            if int(m) == 0:
+                users = await UserDao.list_user_email(*plan.receiver.split(","))
+                Email.send_msg(f"测试计划: 【{plan.name}】执行失败!", "测试一下", None, *users)
+
 
     @staticmethod
     async def run_multiple(executor: int, env: int, case_list: List[int], mode=0, plan_id: int = None, ordered=False):

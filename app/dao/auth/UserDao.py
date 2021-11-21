@@ -1,10 +1,10 @@
 import random
 from datetime import datetime
 
-from sqlalchemy import or_
+from sqlalchemy import or_, select
 
 from app.middleware.Jwt import UserToken
-from app.models import engine, Session
+from app.models import Session, async_session
 from app.models.user import User
 from app.utils.logger import Log
 
@@ -85,3 +85,15 @@ class UserDao(object):
         except Exception as e:
             UserDao.log.error(f"获取用户列表失败: {str(e)}")
             return [], str(e)
+
+    @staticmethod
+    async def list_user_email(*user):
+        try:
+            if not user:
+                return []
+            async with async_session() as session:
+                query = await session.execute(select(User).where(User.id.in_(user), User.deleted_at == None))
+                return [q.email for q in query.scalars().all()]
+        except Exception as e:
+            UserDao.log.error(f"获取用户邮箱失败: {str(e)}")
+            raise Exception(f"获取用户邮箱失败: {e}")

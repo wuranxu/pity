@@ -1,0 +1,10 @@
+{
+  "email": {
+    "sender": "wuranxu1993@126.com",
+    "password": "",
+    "host": "smtp.126.com"
+  },
+  "yapi": {
+    "token": ""
+  }
+}

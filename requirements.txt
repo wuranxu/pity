@@ -18,3 +18,4 @@ APScheduler~=3.8.0
 redis~=3.5.3
 redis-py-cluster
 redlock~=1.2.0
+yagmail

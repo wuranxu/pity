@@ -1,4 +1,5 @@
 # 基础配置类
+import json
 import os
 
 
@@ -16,8 +17,13 @@ class Config(object):
     MYSQL_PWD = "wuranxu@33"
     DBNAME = "pity"
 
+    REDIS_HOST = "121.5.2.74"
+    REDIS_PORT = 7788
+    REDIS_DB = 0
+    REDIS_PASSWORD = "woodywu"
+
     # Redis连接信息
-    REDIS_NODES = [{"host": "121.5.2.74", "port": 7788, "db": 0, "password": "woodywu"}]
+    REDIS_NODES = [{"host": REDIS_HOST, "port": REDIS_PORT, "db": REDIS_DB, "password": REDIS_PASSWORD}]
 
     # sqlalchemy
     SQLALCHEMY_DATABASE_URI = 'mysql+mysqlconnector://{}:{}@{}:{}/{}'.format(
@@ -44,4 +50,5 @@ class Config(object):
 
     # SECRET
     SECRET_KEY = "a13c22377318291d5932bc5b62c1885b344355a0"
+
     # SECRET_KEY = "c79fafe58ff45f6b5b51ddde70d2d645209e38b9"
