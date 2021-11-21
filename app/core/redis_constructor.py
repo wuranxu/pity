@@ -15,7 +15,7 @@ class RedisConstructor(ConstructorAbstract):
             redis = data.get("redis")
             command = data.get("command")
             executor.append(f"当前构造方法类型为redis, 名称: {redis}\n命令: {command}\n")
-            command_result = await PityRedisConfigDao.execute_command(command=command, name=redis)
+            command_result = await PityRedisConfigDao.execute_command(command=command, name=redis, env=env)
             params[constructor.value] = command_result
             executor.append(f"当前构造方法返回变量: {constructor.value}\n返回值:\n {command_result}\n")
         except Exception as e:

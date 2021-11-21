@@ -15,12 +15,12 @@ class TestcaseConstructor(ConstructorAbstract):
             testcase, _ = await TestCaseDao.async_query_test_case(case_id)
             executor.append(f"当前路径: {path}, 第{index + 1}条构造方法")
             # 说明是case
-            executor = kwargs.get('executor_class')(executor.logger)
+            executor_class = kwargs.get('executor_class')(executor.logger)
             new_param = data.get("params")
             if new_param:
                 temp = json.loads(new_param)
                 req_params.update(temp)
-            result, err = await executor.run(env, case_id, params, req_params, f"{path}->{testcase.name}")
+            result, err = await executor_class.run(env, case_id, params, req_params, f"{path}->{testcase.name}")
             if err:
                 raise Exception(err)
             if not result["status"]:
