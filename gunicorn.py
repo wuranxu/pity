@@ -1,8 +1,4 @@
 # gunicorn的配置
-import os
-import gevent.monkey
-
-gevent.monkey.patch_all()
 
 import multiprocessing
 
