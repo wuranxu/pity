@@ -46,7 +46,7 @@ class TestReportDao(object):
 
     @staticmethod
     async def end(report_id: int, success_count: int, failed_count: int,
-                  error_count: int, skipped_count: int, status: int, cost: str) -> None:
+                  error_count: int, skipped_count: int, status: int, cost: str) -> PityReport:
         try:
             async with async_session() as session:
                 async with session.begin():
@@ -63,6 +63,8 @@ class TestReportDao(object):
                     report.cost = cost
                     report.finished_at = datetime.now()
                     await session.flush()
+                    session.expunge(report)
+                    return report
         except Exception as e:
             TestReportDao.log.error(f"更新报告失败, error: {e}")
             raise Exception("更新报告失败")

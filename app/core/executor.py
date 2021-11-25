@@ -7,10 +7,11 @@ from datetime import datetime
 from typing import List, Any
 
 from app.core.case_constructor import TestcaseConstructor
-from app.core.msg.email import Email
+from app.core.msg.mail import Email
 from app.core.redis_constructor import RedisConstructor
 from app.core.sql_constructor import SqlConstructor
 from app.dao.auth.UserDao import UserDao
+from app.dao.config.EnvironmentDao import EnvironmentDao
 from app.dao.config.GConfigDao import GConfigDao
 from app.dao.test_case.TestCaseAssertsDao import TestCaseAssertsDao
 from app.dao.test_case.TestCaseDao import TestCaseDao
@@ -27,6 +28,7 @@ from app.utils.decorator import case_log, lock
 from app.utils.gconfig_parser import StringGConfigParser, JSONGConfigParser, YamlGConfigParser
 from app.utils.json_compare import JsonCompare
 from app.utils.logger import Log
+from config import Config
 
 
 class Executor(object):
@@ -548,35 +550,53 @@ class Executor(object):
 
     @staticmethod
     @lock("test_plan")
-    async def run_test_plan(plan_id: int):
+    async def run_test_plan(plan_id: int, executor: int = 0):
         """
         通过测试计划id执行测试计划
         :param plan_id:
+        :param executor:
         :return:
         """
         plan = await PityTestPlanDao.query_test_plan(plan_id)
         if plan is None:
             Executor.log.info(f"测试计划: [{plan_id}]不存在")
             return
-        # 设置为running
-        await PityTestPlanDao.update_test_plan_state(plan.id, 1)
-        env = list(map(int, plan.env.split(",")))
-        case_list = list(map(int, plan.case_list.split(",")))
-        await asyncio.gather(
-            *(Executor.run_multiple(0, int(e), case_list, mode=1,
-                                    plan_id=plan.id, ordered=plan.ordered) for e in env))
-        await PityTestPlanDao.update_test_plan_state(plan.id, 0)
-        await PityTestPlanDao.update_test_plan(plan, plan.update_user)
-        # TODO 后续通知部分
-        msg_types = plan.msg_type.split(",")
-        for m in msg_types:
-            if int(m) == 0:
-                users = await UserDao.list_user_email(*plan.receiver.split(","))
-                Email.send_msg(f"测试计划: 【{plan.name}】执行失败!", "测试一下", None, *users)
-
+        try:
+            # 设置为running
+            await PityTestPlanDao.update_test_plan_state(plan.id, 1)
+            env = list(map(int, plan.env.split(",")))
+            case_list = list(map(int, plan.case_list.split(",")))
+            # 聚合报告dict
+            report_dict = dict()
+            await asyncio.gather(
+                *(Executor.run_multiple(executor, int(e), case_list, mode=1,
+                                        plan_id=plan.id, ordered=plan.ordered, report_dict=report_dict) for e in env))
+            await PityTestPlanDao.update_test_plan_state(plan.id, 0)
+            await PityTestPlanDao.update_test_plan(plan, plan.update_user)
+            # TODO 后续通知部分
+            for e in env:
+                msg_types = plan.msg_type.split(",")
+                for m in msg_types:
+                    if int(m) == 0:
+                        users = await UserDao.list_user_email(*plan.receiver.split(","))
+                        render_html = Email.render_html(plan_name=plan.name, **report_dict[e])
+                        Email.send_msg(
+                            f"【{report_dict[e].get('env')}】测试计划【{plan.name}】执行完毕（{report_dict[e].get('plan_result')}）",
+                            render_html, None, *users)
+        except Exception as e:
+            Executor.log.error(f"执行测试计划: 【{plan.name}】失败: {str(e)}")
 
     @staticmethod
-    async def run_multiple(executor: int, env: int, case_list: List[int], mode=0, plan_id: int = None, ordered=False):
+    async def run_multiple(executor: int, env: int, case_list: List[int], mode=0, plan_id: int = None, ordered=False,
+                           report_dict: dict = None):
+        current_env = await EnvironmentDao.query_env(env)
+        if current_env.deleted_at:
+            return
+        if executor != 0:
+            # 说明不是系统执行
+            name = await UserDao.query_user(executor)
+        else:
+            name = "CPU"
         st = time.perf_counter()
         # step1: 新增测试报告数据
         report_id = await TestReportDao.start(executor, env, mode, plan_id=plan_id)
@@ -605,5 +625,19 @@ class Executor(object):
         cost = time.perf_counter() - st
         cost = "%.2f" % cost
         # step5: 回写数据到报告
-        await TestReportDao.end(report_id, ok, fail, error, skip, 3, cost)
+        report = await TestReportDao.end(report_id, ok, fail, error, skip, 3, cost)
+        if report_dict is not None:
+            report_dict[env] = {
+                "report_url": f"{Config.SERVER_REPORT}{report_id}",
+                "start_time": report.start_at.strftime("%Y-%m-%d %H:%M:%S"),
+                "success": ok,
+                "failed": fail,
+                "total": ok + fail + error + skip,
+                "error": error,
+                "skip": skip,
+                "executor": name,
+                "cost": cost,
+                "plan_result": "通过" if ok + fail + error + skip > 0 and fail + error == 0 else '未通过',
+                "env": current_env.name,
+            }
         return report_id

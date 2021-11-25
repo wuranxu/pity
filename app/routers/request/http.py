@@ -4,12 +4,12 @@ from typing import List, Dict
 
 from fastapi import Depends, APIRouter
 
+from app.core.executor import Executor
 from app.dao.test_case.TestcaseDataDao import PityTestcaseDataDao
 from app.handler.fatcory import PityResponse
 from app.middleware.AsyncHttpClient import AsyncRequest
 from app.routers import Permission
 from app.routers.request.http_schema import HttpRequestForm
-from app.core.executor import Executor
 
 router = APIRouter(prefix="/request")
 
@@ -66,13 +66,13 @@ async def execute_case(env: int, case_id: List[int], user_info=Depends(Permissio
         data[c] = await executor.run(env, c)
     # elapsed = time.perf_counter() - s
     # print(f"sync executed in {elapsed:0.2f} seconds.")
-    return dict(code=0, data=data, msg="操作成功")
+    return PityResponse.success(data)
 
 
 @router.post("/run/multiple")
 async def execute_as_report(case_id: List[int], user_info=Depends(Permission())):
     report_id = await Executor.run_multiple(user_info['id'], 1, case_id)
-    return dict(code=0, data=report_id, msg="操作成功")
+    return PityResponse.success(report_id)
 
 
 async def run_single(env: int, case_id: int, data: Dict[int, tuple]):

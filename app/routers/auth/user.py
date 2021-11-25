@@ -34,10 +34,11 @@ async def login(data: UserForm):
 
 @router.get("/listUser")
 async def list_users(user_info=Depends(Permission())):
-    users, err = UserDao.list_users()
-    if err is not None:
-        return dict(code=110, msg=err)
-    return dict(code=0, msg="操作成功", data=PityResponse.model_to_list(users))
+    try:
+        users = UserDao.list_users()
+        return PityResponse.success(PityResponse.model_to_list(users))
+    except Exception as e:
+        return PityResponse.failed(str(e))
 
 
 @router.get("/github/login")

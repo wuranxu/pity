@@ -1,8 +1,8 @@
 from datetime import datetime
 
-from sqlalchemy import desc
+from sqlalchemy import desc, select
 
-from app.models import Session, DatabaseHelper
+from app.models import Session, DatabaseHelper, async_session
 from app.models.environment import Environment
 from app.models.schema.environment import EnvironmentForm
 from app.utils.logger import Log
@@ -10,6 +10,19 @@ from app.utils.logger import Log
 
 class EnvironmentDao(object):
     log = Log("EnvironmentDao")
+
+    @staticmethod
+    async def query_env(id: int):
+        """
+        环境id
+        :param id:
+        :return:
+        """
+        async with async_session() as session:
+            ans = await session.execute(select(Environment).where(Environment.id == id))
+            if ans is None:
+                raise Exception(f"环境: {id}不存在")
+            return ans.scalars().first()
 
     @staticmethod
     def insert_env(data: EnvironmentForm, user):

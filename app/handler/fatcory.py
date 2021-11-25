@@ -5,6 +5,8 @@ class PityResponse(object):
 
     @staticmethod
     def model_to_dict(obj, *ignore: str):
+        if getattr(obj, '__table__', None) is None:
+            return obj
         data = dict()
         for c in obj.__table__.columns:
             if c.name in ignore:

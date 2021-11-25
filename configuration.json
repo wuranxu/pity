@@ -2,7 +2,8 @@
   "email": {
     "sender": "wuranxu1993@126.com",
     "password": "",
-    "host": "smtp.126.com"
+    "host": "smtp.126.com",
+    "to": "测试报告收件人"
   },
   "yapi": {
     "token": ""

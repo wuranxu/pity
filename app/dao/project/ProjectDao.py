@@ -3,6 +3,7 @@ from datetime import datetime
 from sqlalchemy import or_, desc
 
 from app.dao.project.ProjectRoleDao import ProjectRoleDao
+from app.middleware.RedisManager import RedisHelper
 from app.models import Session
 from app.models.project import Project
 from app.utils.logger import Log

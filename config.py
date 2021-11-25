@@ -52,3 +52,8 @@ class Config(object):
     SECRET_KEY = "a13c22377318291d5932bc5b62c1885b344355a0"
 
     # SECRET_KEY = "c79fafe58ff45f6b5b51ddde70d2d645209e38b9"
+
+    # 测试报告路径
+    REPORT_PATH = os.path.join(ROOT, "templates", "report.html")
+
+    SERVER_REPORT = "http://test.pity.fun/#/record/report/"

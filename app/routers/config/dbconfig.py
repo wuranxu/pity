@@ -11,7 +11,7 @@ from config import Config
 
 @router.get("/dbconfig/list")
 async def list_dbconfig(name: str = '', database: str = '', env: int = None,
-                        user_info=Depends(Permission(Config.ADMIN))):
+                        user_info=Depends(Permission(Config.GUEST))):
     try:
         data = await DbConfigDao.list_database(name, database, env)
         return PityResponse.success(data=PityResponse.model_to_list(data))

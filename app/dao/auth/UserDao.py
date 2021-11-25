@@ -4,6 +4,7 @@ from datetime import datetime
 from sqlalchemy import or_, select
 
 from app.middleware.Jwt import UserToken
+from app.middleware.RedisManager import RedisHelper
 from app.models import Session, async_session
 from app.models.user import User
 from app.utils.logger import Log
@@ -77,16 +78,27 @@ class UserDao(object):
             return None, str(e)
 
     @staticmethod
+    @RedisHelper.cache("user_list", 3 * 3600, True)
     def list_users():
         try:
             with Session() as session:
-                users = session.query(User).filter_by(deleted_at=None).all()
-                return users, None
+                return session.query(User).filter_by(deleted_at=None).all()
         except Exception as e:
             UserDao.log.error(f"获取用户列表失败: {str(e)}")
-            return [], str(e)
+            raise Exception("获取用户列表失败")
 
     @staticmethod
+    @RedisHelper.cache("query_user", 72 * 3600)
+    async def query_user(id: int):
+        async with async_session() as session:
+            query = await session.execute(select(User).where(User.id == id))
+            result = query.scalars().first()
+            if result is None:
+                return "unknown"
+            return result.name
+
+    @staticmethod
+    @RedisHelper.cache("user_email", 3600)
     async def list_user_email(*user):
         try:
             if not user:

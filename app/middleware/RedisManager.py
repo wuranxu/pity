@@ -8,6 +8,7 @@ from redis import ConnectionPool, StrictRedis
 from rediscluster import RedisCluster, ClusterConnectionPool
 
 from app.excpetions.RedisException import RedisException
+from app.handler.fatcory import PityResponse
 from config import Config
 
 
@@ -114,13 +115,14 @@ class RedisHelper(object):
     pity_redis_client = PityRedisManager().client
 
     @staticmethod
-    def get_key(key: str):
-        return f"{RedisHelper.pity_prefix}:{key}"
+    def get_key(key: str, *args):
+        return f"{RedisHelper.pity_prefix}:{key}{':'.join(str(a) for a in args)}"
 
     @staticmethod
-    def cache(key: str, expired_time=3 * 60):
+    def cache(key: str, expired_time=3 * 60, model=False):
         """
         自动缓存装饰器
+        :param model:
         :param key: 被缓存的key
         :param expired_time: 默认key过期时间
         :return:
@@ -133,10 +135,17 @@ class RedisHelper(object):
                 data = RedisHelper.pity_redis_client.get(redis_key)
                 # 缓存已存在
                 if data is not None:
+                    print(f"{redis_key}走缓存")
                     return json.loads(data)
                 # 获取最新数据
                 new_data = func(*args, **kwargs)
-                info = json.dumps(new_data)
+                if model:
+                    if isinstance(new_data, list):
+                        info = json.dumps(PityResponse.model_to_list(new_data))
+                    else:
+                        info = json.dumps(PityResponse.model_to_dict(new_data))
+                else:
+                    info = json.dumps(new_data)
                 RedisHelper.pity_redis_client.set(redis_key, info, ex=expired_time)
                 return new_data
 

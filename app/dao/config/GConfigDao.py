@@ -2,6 +2,8 @@ from datetime import datetime
 
 from sqlalchemy import desc, select
 
+from app.middleware import RedisManager
+from app.middleware.RedisManager import RedisHelper
 from app.models import Session, DatabaseHelper, async_session
 from app.models.gconfig import GConfig
 from app.models.schema.gconfig import GConfigForm
@@ -84,6 +86,7 @@ class GConfigDao(object):
             raise Exception(f"查询全局变量失败: {str(e)}")
 
     @staticmethod
+    @RedisHelper.cache("gconfig", 1800)
     async def async_get_gconfig_by_key(key: str, env: int = None) -> GConfig:
         try:
             filters = [GConfig.key == key, GConfig.deleted_at == None, GConfig.enable == True]
