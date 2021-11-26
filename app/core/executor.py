@@ -100,8 +100,8 @@ class Executor(object):
                 cf = await GConfigDao.async_get_gconfig_by_key(key)
                 if cf is not None:
                     # 解析变量
-                    parse = self.get_parser(cf.key_type)
-                    new_value = parse(cf.value, v)
+                    parse = self.get_parser(cf.get("key_type"))
+                    new_value = parse(cf.get("value"), v)
                     new_field = field_origin.replace("${%s}" % v, new_value)
                     setattr(data, field, new_field)
                     self.append("替换全局变量成功, 字段: [{}]:\n\n[{}] -> [{}]\n".format(field, "${%s}" % v, new_value))

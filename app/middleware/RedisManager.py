@@ -138,7 +138,6 @@ class RedisHelper(object):
                 async def wrapper(*args, **kwargs):
                     # 缓存已存在
                     if data is not None:
-                        print(f"{redis_key}走缓存")
                         return json.loads(data)
                     # 获取最新数据
                     new_data = await func(*args, **kwargs)
