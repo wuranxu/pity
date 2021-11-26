@@ -86,7 +86,7 @@ class GConfigDao(object):
             raise Exception(f"查询全局变量失败: {str(e)}")
 
     @staticmethod
-    @RedisHelper.cache("gconfig", 1800)
+    @RedisHelper.cache("gconfig", 1800, True)
     async def async_get_gconfig_by_key(key: str, env: int = None) -> GConfig:
         try:
             filters = [GConfig.key == key, GConfig.deleted_at == None, GConfig.enable == True]

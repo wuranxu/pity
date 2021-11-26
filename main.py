@@ -101,7 +101,7 @@ def init_scheduler():
     # SQLAlchemyJobStore指定存储链接
     job_store = {
         'default': SQLAlchemyJobStore(url=Config.SQLALCHEMY_DATABASE_URI, engine_options={"pool_recycle": 1500},
-                                      pickle_protocol=4)
+                                      pickle_protocol=3)
     }
     scheduler = AsyncIOScheduler()
     Scheduler.init(scheduler)

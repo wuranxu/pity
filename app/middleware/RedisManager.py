@@ -133,7 +133,7 @@ class RedisHelper(object):
             redis_key = RedisHelper.get_key(key)
             data = RedisHelper.pity_redis_client.get(redis_key)
             # 缓存已存在
-            if asyncio.iscoroutine(func):
+            if asyncio.iscoroutinefunction(func):
                 @functools.wraps(func)
                 async def wrapper(*args, **kwargs):
                     # 缓存已存在
@@ -182,7 +182,7 @@ class RedisHelper(object):
 
         def decorator(func):
             redis_key = RedisHelper.get_key(key)
-            if asyncio.iscoroutine(func):
+            if asyncio.iscoroutinefunction(func):
                 @functools.wraps(func)
                 async def wrapper(*args, **kwargs):
                     new_data = await func(*args, **kwargs)
