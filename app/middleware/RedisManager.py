@@ -135,7 +135,7 @@ class RedisHelper(object):
             # 缓存已存在
             if asyncio.iscoroutine(func):
                 @functools.wraps(func)
-                def wrapper(*args, **kwargs):
+                async def wrapper(*args, **kwargs):
                     # 缓存已存在
                     if data is not None:
                         print(f"{redis_key}走缓存")
@@ -184,7 +184,7 @@ class RedisHelper(object):
             redis_key = RedisHelper.get_key(key)
             if asyncio.iscoroutine(func):
                 @functools.wraps(func)
-                def wrapper(*args, **kwargs):
+                async def wrapper(*args, **kwargs):
                     new_data = await func(*args, **kwargs)
                     # 更新数据，删除缓存
                     RedisHelper.pity_redis_client.delete(redis_key)
