@@ -155,7 +155,7 @@ class RedisHelper(object):
                 @functools.wraps(func)
                 def wrapper(*args, **kwargs):
                     # 获取最新数据
-                    new_data = await func(*args, **kwargs)
+                    new_data = func(*args, **kwargs)
                     if model:
                         if isinstance(new_data, list):
                             new_data = PityResponse.model_to_list(new_data)
