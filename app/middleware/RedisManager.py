@@ -130,30 +130,45 @@ class RedisHelper(object):
         """
 
         def decorator(func):
-            @functools.wraps(func)
-            def wrapper(*args, **kwargs):
-                redis_key = RedisHelper.get_key(key)
-                data = RedisHelper.pity_redis_client.get(redis_key)
-                # 缓存已存在
-                if data is not None:
-                    print(f"{redis_key}走缓存")
-                    return json.loads(data)
-                # 获取最新数据
-                if asyncio.iscoroutine(func):
+            redis_key = RedisHelper.get_key(key)
+            data = RedisHelper.pity_redis_client.get(redis_key)
+            # 缓存已存在
+            if asyncio.iscoroutine(func):
+                @functools.wraps(func)
+                def wrapper(*args, **kwargs):
+                    # 缓存已存在
+                    if data is not None:
+                        print(f"{redis_key}走缓存")
+                        return json.loads(data)
+                    # 获取最新数据
                     new_data = await func(*args, **kwargs)
-                else:
-                    new_data = func(*args, **kwargs)
-                if model:
-                    if isinstance(new_data, list):
-                        info = json.dumps(PityResponse.model_to_list(new_data))
+                    if model:
+                        if isinstance(new_data, list):
+                            info = json.dumps(PityResponse.model_to_list(new_data))
+                        else:
+                            info = json.dumps(PityResponse.model_to_dict(new_data))
                     else:
-                        info = json.dumps(PityResponse.model_to_dict(new_data))
-                else:
-                    info = json.dumps(new_data)
-                RedisHelper.pity_redis_client.set(redis_key, info, ex=expired_time)
-                return new_data
+                        info = json.dumps(new_data)
+                    RedisHelper.pity_redis_client.set(redis_key, info, ex=expired_time)
+                    return new_data
 
-            return wrapper
+                return wrapper
+            else:
+                @functools.wraps(func)
+                def wrapper(*args, **kwargs):
+                    # 获取最新数据
+                    new_data = func(*args, **kwargs)
+                    if model:
+                        if isinstance(new_data, list):
+                            info = json.dumps(PityResponse.model_to_list(new_data))
+                        else:
+                            info = json.dumps(PityResponse.model_to_dict(new_data))
+                    else:
+                        info = json.dumps(new_data)
+                    RedisHelper.pity_redis_client.set(redis_key, info, ex=expired_time)
+                    return new_data
+
+                return wrapper
 
         return decorator
 
@@ -166,18 +181,24 @@ class RedisHelper(object):
         """
 
         def decorator(func):
-            @functools.wraps(func)
-            def wrapper(*args, **kwargs):
-                redis_key = RedisHelper.get_key(key)
-                # 获取最新数据
-                if asyncio.iscoroutine(func):
+            redis_key = RedisHelper.get_key(key)
+            if asyncio.iscoroutine(func):
+                @functools.wraps(func)
+                def wrapper(*args, **kwargs):
                     new_data = await func(*args, **kwargs)
-                else:
-                    new_data = func(*args, **kwargs)
-                # 更新数据，删除缓存
-                RedisHelper.pity_redis_client.delete(redis_key)
-                return new_data
+                    # 更新数据，删除缓存
+                    RedisHelper.pity_redis_client.delete(redis_key)
+                    return new_data
 
-            return wrapper
+                return wrapper
+            else:
+
+                @functools.wraps(func)
+                def wrapper(*args, **kwargs):
+                    new_data = func(*args, **kwargs)
+                    RedisHelper.pity_redis_client.delete(redis_key)
+                    return new_data
+
+                return wrapper
 
         return decorator
