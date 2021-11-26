@@ -32,7 +32,6 @@ class Email(Notification):
         message = MIMEText(content, 'html', 'utf-8')
         message['From'] = sender
         # 抄送给自己一份
-        message['CC'] = sender
         message['To'] = Header(to, 'utf-8')
         message['Subject'] = Header(subject, 'utf-8')
         message['Message-ID'] = make_msgid()
@@ -43,7 +42,7 @@ class Email(Notification):
             # 我们用set_debuglevel(1)就可以打印出和SMTP服务器交互的所有信息。
             smtp.set_debuglevel(1)
             smtp.login(sender, data.get("password"))
-            smtp.sendmail(sender, list(receiver), message.as_string())
+            smtp.sendmail(sender, [sender, *receiver], message.as_string())
         except Exception as e:
             raise Exception(f"发送测试报告邮件失败: {e}")
 
