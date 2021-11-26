@@ -143,11 +143,10 @@ class RedisHelper(object):
                     new_data = await func(*args, **kwargs)
                     if model:
                         if isinstance(new_data, list):
-                            info = json.dumps(PityResponse.model_to_list(new_data))
+                            new_data = PityResponse.model_to_list(new_data)
                         else:
-                            info = json.dumps(PityResponse.model_to_dict(new_data))
-                    else:
-                        info = json.dumps(new_data)
+                            new_data = PityResponse.model_to_dict(new_data)
+                    info = json.dumps(new_data)
                     RedisHelper.pity_redis_client.set(redis_key, info, ex=expired_time)
                     return new_data
 
@@ -156,14 +155,13 @@ class RedisHelper(object):
                 @functools.wraps(func)
                 def wrapper(*args, **kwargs):
                     # 获取最新数据
-                    new_data = func(*args, **kwargs)
+                    new_data = await func(*args, **kwargs)
                     if model:
                         if isinstance(new_data, list):
-                            info = json.dumps(PityResponse.model_to_list(new_data))
+                            new_data = PityResponse.model_to_list(new_data)
                         else:
-                            info = json.dumps(PityResponse.model_to_dict(new_data))
-                    else:
-                        info = json.dumps(new_data)
+                            new_data = PityResponse.model_to_dict(new_data)
+                    info = json.dumps(new_data)
                     RedisHelper.pity_redis_client.set(redis_key, info, ex=expired_time)
                     return new_data
 
