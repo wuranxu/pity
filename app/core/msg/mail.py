@@ -1,6 +1,7 @@
 import smtplib
 from email.header import Header
 from email.mime.text import MIMEText
+from email.utils import make_msgid
 
 from jinja2.environment import Template
 
@@ -34,6 +35,7 @@ class Email(Notification):
         message['CC'] = sender
         message['To'] = Header(to, 'utf-8')
         message['Subject'] = Header(subject, 'utf-8')
+        message['Message-ID'] = make_msgid()
 
         try:
             smtp = smtplib.SMTP()
