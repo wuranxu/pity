@@ -1,6 +1,7 @@
 """
 redis客户端Manager
 """
+import asyncio
 import functools
 import json
 
@@ -138,7 +139,10 @@ class RedisHelper(object):
                     print(f"{redis_key}走缓存")
                     return json.loads(data)
                 # 获取最新数据
-                new_data = func(*args, **kwargs)
+                if asyncio.iscoroutine(func):
+                    new_data = await func(*args, **kwargs)
+                else:
+                    new_data = func(*args, **kwargs)
                 if model:
                     if isinstance(new_data, list):
                         info = json.dumps(PityResponse.model_to_list(new_data))
@@ -166,7 +170,10 @@ class RedisHelper(object):
             def wrapper(*args, **kwargs):
                 redis_key = RedisHelper.get_key(key)
                 # 获取最新数据
-                new_data = func(*args, **kwargs)
+                if asyncio.iscoroutine(func):
+                    new_data = await func(*args, **kwargs)
+                else:
+                    new_data = func(*args, **kwargs)
                 # 更新数据，删除缓存
                 RedisHelper.pity_redis_client.delete(redis_key)
                 return new_data
