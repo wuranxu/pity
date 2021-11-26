@@ -30,6 +30,8 @@ class Email(Notification):
         to = data.get("to")
         message = MIMEText(content, 'html', 'utf-8')
         message['From'] = sender
+        # 抄送给自己一份
+        message['CC'] = sender
         message['To'] = Header(to, 'utf-8')
         message['Subject'] = Header(subject, 'utf-8')
 

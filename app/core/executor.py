@@ -96,7 +96,6 @@ class Executor(object):
             variables = self.get_el_expression(field_origin)
             for v in variables:
                 key = v.split(".")[0]
-                # TODO 注意此处实时查询数据库，后续需要改成Redis
                 cf = await GConfigDao.async_get_gconfig_by_key(key)
                 if cf is not None:
                     # 解析变量
