@@ -16,7 +16,7 @@ from config import Config
 @router.get("/redis/list")
 async def list_redis_config(name: str = '', addr: str = '', env: int = None,
                             cluster: bool = None,
-                            user_info=Depends(Permission(Config.GUEST))):
+                            user_info=Depends(Permission(Config.MEMBER))):
     try:
         data = await PityRedisConfigDao.list_record(
             name=DatabaseHelper.like(name), addr=DatabaseHelper.like(addr),

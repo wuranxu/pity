@@ -1,5 +1,4 @@
 # 基础配置类
-import json
 import os
 
 
@@ -34,7 +33,7 @@ class Config(object):
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # 权限 0 普通用户 1 组长 2 管理员
-    GUEST = 0
+    MEMBER = 0
     MANAGER = 1
     ADMIN = 2
 

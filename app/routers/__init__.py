@@ -9,7 +9,7 @@ FORBIDDEN = "对不起, 你没有足够的权限"
 
 
 class Permission:
-    def __init__(self, role: int = Config.GUEST):
+    def __init__(self, role: int = Config.MEMBER):
         self.role = role
 
     def __call__(self, token: str = Header(...)):

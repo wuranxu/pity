@@ -1,5 +1,6 @@
 from fastapi import Depends
 
+from app.core.executor import Executor
 from app.dao.test_case.TestPlan import PityTestPlanDao
 from app.handler.fatcory import PityResponse
 from app.models.schema.test_plan import PityTestPlanForm
@@ -56,6 +57,15 @@ async def delete_test_plan(id: int, user_info=Depends(Permission(Config.MANAGER)
 async def switch_test_plan(id: int, status: bool, user_info=Depends(Permission(Config.MANAGER))):
     try:
         Scheduler.pause_resume_test_plan(id, status)
+        return PityResponse.success()
+    except Exception as e:
+        return PityResponse.failed(str(e))
+
+
+@router.get("/plan/execute")
+async def run_test_plan(id: int, user_info=Depends(Permission(Config.MEMBER))):
+    try:
+        await Executor.run_test_plan(id, user_info['id'])
         return PityResponse.success()
     except Exception as e:
         return PityResponse.failed(str(e))
