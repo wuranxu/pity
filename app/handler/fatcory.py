@@ -1,4 +1,8 @@
+import os
 from datetime import datetime
+
+from starlette.background import BackgroundTask
+from starlette.responses import FileResponse
 
 
 class PityResponse(object):
@@ -58,3 +62,7 @@ class PityResponse(object):
     @staticmethod
     def failed(msg, code=110, data=None):
         return dict(code=code, msg=str(msg), data=data)
+
+    @staticmethod
+    def file(filepath, filename):
+        return FileResponse(filepath, filename=filename, background=BackgroundTask(lambda: os.remove(filepath)))

@@ -1,4 +1,3 @@
-import hashlib
 from mimetypes import guess_type
 from os.path import isfile
 
@@ -12,10 +11,10 @@ from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 
 from app import pity
-from app.models.schema.wechat import WechatForm
 from app.routers.auth import user
 from app.routers.config import router as config_router
 from app.routers.online import router as online_router
+from app.routers.oss import router as oss_router
 from app.routers.project import project
 from app.routers.request import http
 from app.routers.testcase import router as testcase_router
@@ -28,6 +27,7 @@ pity.include_router(http.router)
 pity.include_router(testcase_router)
 pity.include_router(config_router)
 pity.include_router(online_router)
+pity.include_router(oss_router)
 
 pity.add_middleware(
     CORSMiddleware,
@@ -45,27 +45,6 @@ templates = Jinja2Templates(directory="statics")
 @pity.get("/")
 async def serve_spa(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
-
-
-@pity.get("/wx")
-async def wechat(data: WechatForm):
-    try:
-        signature = data.signature
-        timestamp = data.timestamp
-        nonce = data.nonce
-        echostr = data.echostr
-        token = "pitywoodytestplatform619434176"  # 请按照公众平台官网\基本配置中信息填写
-        ls = [token, timestamp, nonce]
-        ls.sort()
-        sha1 = hashlib.sha1()
-        map(sha1.update, list)
-        hashcode = sha1.hexdigest()
-        if hashcode == signature:
-            return echostr
-        else:
-            return ""
-    except Exception:
-        return ''
 
 
 @pity.get("/{filename}")
