@@ -1,13 +1,15 @@
-from fastapi import APIRouter, File, UploadFile
+from fastapi import APIRouter, File, UploadFile, Depends
 
 from app.handler.fatcory import PityResponse
 from app.middleware.oss import OssClient
+from app.routers import Permission
+from config import Config
 
 router = APIRouter(prefix="/oss")
 
 
 @router.post("/upload")
-async def create_oss_file(filepath: str, file: UploadFile = File(...)):
+async def create_oss_file(filepath: str, file: UploadFile = File(...), user_info=Depends(Permission(Config.MEMBER))):
     try:
         file_content = await file.read()
         # 获取oss客户端
@@ -19,7 +21,7 @@ async def create_oss_file(filepath: str, file: UploadFile = File(...)):
 
 
 @router.get("/list")
-async def list_oss_file():
+async def list_oss_file(user_info=Depends(Permission(Config.MEMBER))):
     try:
         client = OssClient.get_oss_client()
         files = client.list_file()
@@ -29,7 +31,7 @@ async def list_oss_file():
 
 
 @router.get("/delete")
-async def delete_oss_file(filepath: str):
+async def delete_oss_file(filepath: str, user_info=Depends(Permission(Config.MANAGER))):
     try:
         client = OssClient.get_oss_client()
         client.delete_file(filepath)
@@ -39,9 +41,10 @@ async def delete_oss_file(filepath: str):
 
 
 @router.post("/update")
-async def update_oss_file(filepath: str, file: UploadFile = File(...)):
+async def update_oss_file(filepath: str, file: UploadFile = File(...), user_info=Depends(Permission(Config.MEMBER))):
     """
     更新oss文件，路径不能变化
+    :param user_info:
     :param filepath:
     :param file:
     :return:
@@ -64,8 +67,9 @@ async def download_oss_file(filepath: str):
     """
     try:
         client = OssClient.get_oss_client()
+        # 切割获取文件名
         filename = filepath.split("/")[-1]
         path = client.download_file(filepath, filename)
         return PityResponse.file(path, filename)
     except Exception as e:
-        return PityResponse.failed(f"删除失败: {e}")
+        return PityResponse.failed(f"下载失败: {e}")

@@ -100,12 +100,14 @@ def lock(key):
     :param key: 唯一key，确保所有任务一致，但不与其他任务冲突
     :return:
     """
+
     def decorator(func):
         @functools.wraps(func)
         async def wrapper(*args, **kwargs):
             try:
                 with RedLock(f"distributed_lock:{func.__name__}:{key}:{str(args)}",
                              connection_details=Config.REDIS_NODES,
+                             ttl=30000,  # 锁释放时间为30s
                              ):
                     return await func(*args, **kwargs)
             except RedLockError:

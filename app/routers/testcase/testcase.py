@@ -28,7 +28,7 @@ async def list_testcase(directory_id: int = None, name: str = "", create_user: s
 
 
 @router.post("/insert")
-async def insert_testcase(data: TestCaseForm, user_info=Depends(Permission())):
+def insert_testcase(data: TestCaseForm, user_info=Depends(Permission())):
     try:
         case_id = TestCaseDao.insert_test_case(data.dict(), user_info['id'])
         return PityResponse.success(case_id)

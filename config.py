@@ -56,3 +56,12 @@ class Config(object):
     REPORT_PATH = os.path.join(ROOT, "templates", "report.html")
 
     SERVER_REPORT = "http://test.pity.fun/#/record/report/"
+
+    # 请求类型
+    class BodyType:
+        none = 0
+        json = 1
+        form = 2
+        x_form = 3
+        binary = 4
+        graphQL = 5

@@ -28,11 +28,9 @@ class Email(Notification):
         configuration = SystemConfiguration.get_config()
         data = configuration.get("email")
         sender = data.get("sender")
-        to = data.get("to")
         message = MIMEText(content, 'html', 'utf-8')
         message['From'] = sender
         # 抄送给自己一份
-        message['To'] = Header(to, 'utf-8')
         message['Subject'] = Header(subject, 'utf-8')
         message['Message-ID'] = make_msgid()
 

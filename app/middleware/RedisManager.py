@@ -130,12 +130,12 @@ class RedisHelper(object):
         """
 
         def decorator(func):
-            redis_key = RedisHelper.get_key(key)
-            data = RedisHelper.pity_redis_client.get(redis_key)
             # 缓存已存在
             if asyncio.iscoroutinefunction(func):
                 @functools.wraps(func)
                 async def wrapper(*args, **kwargs):
+                    redis_key = RedisHelper.get_key(key, *args)
+                    data = RedisHelper.pity_redis_client.get(redis_key)
                     # 缓存已存在
                     if data is not None:
                         return json.loads(data)
@@ -154,6 +154,7 @@ class RedisHelper(object):
             else:
                 @functools.wraps(func)
                 def wrapper(*args, **kwargs):
+                    redis_key = RedisHelper.get_key(key, *args)
                     # 获取最新数据
                     new_data = func(*args, **kwargs)
                     if model:

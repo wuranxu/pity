@@ -15,6 +15,7 @@ class TestCase(Base):
     request_headers = Column(TEXT, comment="请求头，可为空")
     # params = Column(TEXT, comment="请求params")
     body = Column(TEXT, comment="请求body")
+    body_type = Column(INT, comment="请求类型, 0: none 1: json 2: form 3: x-form 4: binary 5: GraphQL")
     directory_id = Column(INT, comment="所属目录")
     tag = Column(String(64), comment="用例标签")
     status = Column(INT, comment="用例状态: 1: 调试中 2: 暂时关闭 3: 正常运作")
@@ -29,6 +30,7 @@ class TestCase(Base):
     update_user = Column(INT, nullable=False)
 
     def __init__(self, name, request_type, url, directory_id, status, priority, create_user,
+                 body_type=1,
                  tag=None, request_headers=None, case_type=0, body=None, request_method=None, id=0):
         self.id = id
         self.name = name
@@ -40,6 +42,7 @@ class TestCase(Base):
         # self.catalogue = catalogue
         self.status = status
         # self.expected = expected
+        self.body_type = body_type
         self.case_type = case_type
         self.body = body
         self.create_user = create_user

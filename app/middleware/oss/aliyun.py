@@ -35,3 +35,8 @@ class AliyunOss(OssFile):
         path = rf'./{self.get_random_filename(filename)}'
         self.bucket.get_object_to_file(filepath, path)
         return path
+
+    def get_file_object(self, filepath):
+        if not self.bucket.object_exists(filepath):
+            raise Exception(f"oss文件: {filepath}不存在")
+        return self.bucket.get_object(filepath)

@@ -26,6 +26,10 @@ class OssFile(ABC):
     def download_file(self, filepath, filename):
         pass
 
+    @abstractmethod
+    def get_file_object(self, filepath):
+        pass
+
     @staticmethod
     def get_random_filename(filename):
         random_str = list("pity")
