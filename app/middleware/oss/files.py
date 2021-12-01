@@ -7,11 +7,11 @@ from typing import ByteString
 class OssFile(ABC):
 
     @abstractmethod
-    def create_file(self, filepath: str, content: ByteString):
+    def create_file(self, filepath: str, content: bytes):
         pass
 
     @abstractmethod
-    def update_file(self, filepath: str, content: ByteString):
+    def update_file(self, filepath: str, content: bytes):
         pass
 
     @abstractmethod

@@ -57,6 +57,9 @@ class Config(object):
 
     SERVER_REPORT = "http://test.pity.fun/#/record/report/"
 
+    ALIYUN = "aliyun"
+    GITEE = "gitee"
+
     # 请求类型
     class BodyType:
         none = 0
