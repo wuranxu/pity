@@ -33,7 +33,7 @@ class AsyncRequest(object):
                                           cookies=cookie)
 
     @staticmethod
-    def client(url: str, body_type: int, timeout=15, **kwargs):
+    async def client(url: str, body_type: int, timeout=15, **kwargs):
         headers = kwargs.get("headers", {})
         if body_type == Config.BodyType.json:
             if "Content-Type" not in headers:
@@ -53,8 +53,8 @@ class AsyncRequest(object):
                             form_data.add_field(item.get("key"), item.get("value"))
                         else:
                             client = OssClient.get_oss_client()
-                            file_object = client.get_file_object(item.get("value"))
-                            form_data.add_field(item.get("key"), file_object.resp.response.content)
+                            file_object = await client.get_file_object(item.get("value"))
+                            form_data.add_field(item.get("key"), file_object)
                 else:
                     form_data = None
                 r = AsyncRequest(url, headers=headers, data=form_data, timeout=timeout)

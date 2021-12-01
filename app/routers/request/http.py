@@ -17,7 +17,7 @@ router = APIRouter(prefix="/request")
 @router.post("/http")
 async def http_request(data: HttpRequestForm, user_info=Depends(Permission())):
     try:
-        r = AsyncRequest.client(data.url, data.body_type, headers=data.headers, body=data.body)
+        r = await AsyncRequest.client(data.url, data.body_type, headers=data.headers, body=data.body)
         # if data.body_type == 1:
         #     if "Content-Type" not in data.headers:
         #         data.headers['Content-Type'] = "application/json; charset=UTF-8"

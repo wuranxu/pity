@@ -293,8 +293,8 @@ class Executor(object):
             body = self.replace_body(request_param, body, case_info.body_type)
 
             # Step6: 完成http请求
-            request_obj = AsyncRequest.client(url=case_info.url, body_type=case_info.body_type, headers=headers,
-                                              body=body)
+            request_obj = await AsyncRequest.client(url=case_info.url, body_type=case_info.body_type, headers=headers,
+                                                    body=body)
             res = await request_obj.invoke(method)
             self.append(f"http请求过程\n\nRequest Method: {case_info.request_method}\n\n"
                         f"Request Headers:\n{headers}\n\nUrl: {case_info.url}"

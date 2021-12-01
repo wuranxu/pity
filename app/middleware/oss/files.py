@@ -7,27 +7,27 @@ from typing import ByteString
 class OssFile(ABC):
 
     @abstractmethod
-    def create_file(self, filepath: str, content: bytes):
+    async def create_file(self, filepath: str, content: bytes):
         pass
 
     @abstractmethod
-    def update_file(self, filepath: str, content: bytes):
+    async def update_file(self, filepath: str, content: bytes):
         pass
 
     @abstractmethod
-    def delete_file(self, filepath: str):
+    async def delete_file(self, filepath: str):
         pass
 
     @abstractmethod
-    def list_file(self):
+    async def list_file(self):
         pass
 
     @abstractmethod
-    def download_file(self, filepath, filename):
+    async def download_file(self, filepath, filename):
         pass
 
     @abstractmethod
-    def get_file_object(self, filepath):
+    async def get_file_object(self, filepath):
         pass
 
     @staticmethod

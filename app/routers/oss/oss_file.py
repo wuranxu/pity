@@ -14,7 +14,7 @@ async def create_oss_file(filepath: str, file: UploadFile = File(...), user_info
         file_content = await file.read()
         # 获取oss客户端
         client = OssClient.get_oss_client()
-        client.create_file(filepath, file_content)
+        await client.create_file(filepath, file_content)
         return PityResponse.success()
     except Exception as e:
         return PityResponse.failed(f"上传失败: {e}")
@@ -24,7 +24,7 @@ async def create_oss_file(filepath: str, file: UploadFile = File(...), user_info
 async def list_oss_file(user_info=Depends(Permission(Config.MEMBER))):
     try:
         client = OssClient.get_oss_client()
-        files = client.list_file()
+        files = await client.list_file()
         return PityResponse.success(files)
     except Exception as e:
         return PityResponse.failed(f"获取失败: {e}")
@@ -34,7 +34,7 @@ async def list_oss_file(user_info=Depends(Permission(Config.MEMBER))):
 async def delete_oss_file(filepath: str, user_info=Depends(Permission(Config.MANAGER))):
     try:
         client = OssClient.get_oss_client()
-        client.delete_file(filepath)
+        await client.delete_file(filepath)
         return PityResponse.success()
     except Exception as e:
         return PityResponse.failed(f"删除失败: {e}")
@@ -52,7 +52,7 @@ async def update_oss_file(filepath: str, file: UploadFile = File(...), user_info
     try:
         client = OssClient.get_oss_client()
         file_content = await file.read()
-        client.update_file(filepath, file_content)
+        await client.update_file(filepath, file_content)
         return PityResponse.success()
     except Exception as e:
         return PityResponse.failed(f"删除失败: {e}")
@@ -69,7 +69,7 @@ async def download_oss_file(filepath: str):
         client = OssClient.get_oss_client()
         # 切割获取文件名
         filename = filepath.split("/")[-1]
-        path = client.download_file(filepath, filename)
+        path = await client.download_file(filepath, filename)
         return PityResponse.file(path, filename)
     except Exception as e:
         return PityResponse.failed(f"下载失败: {e}")
