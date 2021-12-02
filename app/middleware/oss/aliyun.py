@@ -33,12 +33,13 @@ class AliyunOss(OssFile):
         return ans
 
     @aioify
-    async def download_file(self, filepath, filename):
+    async def download_file(self, filepath):
+        filename = filepath.split("/")[-1]
         if not self.bucket.object_exists(filepath):
             raise Exception(f"oss文件: {filepath}不存在")
         path = rf'./{self.get_random_filename(filename)}'
         self.bucket.get_object_to_file(filepath, path)
-        return path
+        return path, filename
 
     @aioify
     async def get_file_object(self, filepath):

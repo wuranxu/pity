@@ -68,8 +68,7 @@ async def download_oss_file(filepath: str):
     try:
         client = OssClient.get_oss_client()
         # 切割获取文件名
-        filename = filepath.split("/")[-1]
-        path = await client.download_file(filepath, filename)
+        path, filename = await client.download_file(filepath)
         return PityResponse.file(path, filename)
     except Exception as e:
         return PityResponse.failed(f"下载失败: {e}")

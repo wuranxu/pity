@@ -23,7 +23,7 @@ class OssFile(ABC):
         pass
 
     @abstractmethod
-    async def download_file(self, filepath, filename):
+    async def download_file(self, filepath):
         pass
 
     @abstractmethod

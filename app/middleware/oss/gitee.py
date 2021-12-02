@@ -10,12 +10,8 @@ from app.middleware.oss import OssFile
 
 class GiteeOss(OssFile):
     _base_url = "https://gitee.com/api/v5/repos/{}/{}/contents/{}/{}"
+    _download_url = "https://gitee.com/api/v5/repos/{}/{}/git/blobs/{}"
     _base_path = "pity"
-    _download_header = {
-        "Host": "gitee.com",
-        'Cookie': 'gitee_user=true;',
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.63 Safari/537.36"
-    }
 
     def __init__(self, user, repo, token):
         self.user = user
@@ -69,16 +65,22 @@ class GiteeOss(OssFile):
         return ans
 
     @aioify
-    async def download_file(self, filepath, filename):
-        path = rf'./{self.get_random_filename(filename)}'
-        data = await self.get_file_object(filepath)
+    async def download_file(self, filepath):
+        real_path, sha = filepath.split("$")
+        real_filename = real_path.split("/")[-1]
+        path = rf'./{self.get_random_filename(real_filename)}'
+        data = await self.get_file_object(sha)
         with open(path, 'wb') as f:
             f.write(data)
-        return path
+        return path, real_filename
 
     @aioify
-    async def get_file_object(self, filepath):
-        gitee_url = self._base_url.format(self.user, self.repo, self._base_path, filepath)
+    async def get_file_object(self, sha):
+        """
+        :param sha: 文件下载需要的sha值
+        :return:
+        """
+        gitee_url = self._download_url.format(self.user, self.repo, sha)
         r = requests.get(gitee_url)
         data = json.loads(r.content.decode())
         return base64.b64decode(data.get("content").encode())
