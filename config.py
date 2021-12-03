@@ -9,11 +9,9 @@ class Config(object):
 
     # MySQL连接信息
     MYSQL_HOST = "121.5.2.74"
-    # MYSQL_HOST = "127.0.0.1"
     MYSQL_PORT = 3306
     MYSQL_USER = "root"
-    # MYSQL_PWD = "anrenear@33"
-    MYSQL_PWD = "wuranxu@33"
+    MYSQL_PWD = "anrenear@33"
     DBNAME = "pity"
 
     REDIS_HOST = "121.5.2.74"
@@ -55,6 +53,12 @@ class Config(object):
     # 测试报告路径
     REPORT_PATH = os.path.join(ROOT, "templates", "report.html")
 
+    # APP 路径
+    APP_PATH = os.path.join(ROOT, "app")
+
+    # dao路径
+    DAO_PATH = os.path.join(APP_PATH, 'dao')
+
     SERVER_REPORT = "http://test.pity.fun/#/record/report/"
 
     ALIYUN = "aliyun"
@@ -68,3 +72,4 @@ class Config(object):
         x_form = 3
         binary = 4
         graphQL = 5
+
