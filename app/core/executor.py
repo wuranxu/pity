@@ -220,6 +220,13 @@ class Executor(object):
     #         except Exception as e:
     #             raise Exception(f"{path}->{constructor.name} 第{index + 1}个构造方法执行失败: {e}")
 
+    def add_header(self, case_info, headers):
+        if case_info.body_type == Config.BodyType.none:
+            return
+        if case_info.body_type == Config.BodyType.json:
+            if "Content-Type" not in headers:
+                headers['Content-Type'] = "application/json; charset=UTF-8"
+
     async def run(self, env: int, case_id: int, params_pool: dict = None, request_param: dict = None, path="主case"):
         """
         开始执行测试用例
@@ -276,24 +283,18 @@ class Executor(object):
                 headers = json.loads(case_info.request_headers)
             else:
                 headers = dict()
-            if "Content-Type" not in headers:
-                headers['Content-Type'] = "application/json; charset=UTF-8"
+
             if case_info.body != '':
                 body = case_info.body
             else:
                 body = None
 
             # Step5: 替换请求参数
-            body = self.replace_body(request_param, body)
+            body = self.replace_body(request_param, body, case_info.body_type)
 
             # Step6: 完成http请求
-            if "form" not in headers['Content-Type']:
-                request_obj = AsyncRequest(case_info.url, headers=headers,
-                                           data=body.encode() if body is not None else body)
-            else:
-                if body is not None:
-                    body = json.loads(body)
-                request_obj = AsyncRequest(case_info.url, headers=headers, data=body)
+            request_obj = await AsyncRequest.client(url=case_info.url, body_type=case_info.body_type, headers=headers,
+                                                    body=body)
             res = await request_obj.invoke(method)
             self.append(f"http请求过程\n\nRequest Method: {case_info.request_method}\n\n"
                         f"Request Headers:\n{headers}\n\nUrl: {case_info.url}"
@@ -395,8 +396,11 @@ class Executor(object):
               for x in test_data))
 
     @case_log
-    def replace_body(self, req_params, body):
+    def replace_body(self, req_params, body, body_type=1):
         """根据传入的构造参数进行参数替换"""
+        if body_type != Config.BodyType.json:
+            self.append("当前请求数据不为json, 跳过替换")
+            return body
         try:
             if body:
                 data = json.loads(body)
@@ -422,7 +426,7 @@ class Executor(object):
         ans = True
         if len(asserts) == 0:
             self.append("未设置断言, 用例结束")
-            return json.dumps(result, ensure_ascii=False)
+            return json.dumps(result, ensure_ascii=False), ans
         for item in asserts:
             a, err = self.parse_variable(response_info, item.expected)
             if err:
@@ -565,6 +569,7 @@ class Executor(object):
             await PityTestPlanDao.update_test_plan_state(plan.id, 1)
             env = list(map(int, plan.env.split(",")))
             case_list = list(map(int, plan.case_list.split(",")))
+            receiver = list(map(int, plan.receiver.split(",")))
             # 聚合报告dict
             report_dict = dict()
             await asyncio.gather(
@@ -573,11 +578,11 @@ class Executor(object):
             await PityTestPlanDao.update_test_plan_state(plan.id, 0)
             await PityTestPlanDao.update_test_plan(plan, plan.update_user)
             # TODO 后续通知部分
+            users = await UserDao.list_user_email(*receiver)
             for e in env:
                 msg_types = plan.msg_type.split(",")
                 for m in msg_types:
                     if int(m) == 0:
-                        users = await UserDao.list_user_email(*plan.receiver.split(","))
                         render_html = Email.render_html(plan_name=plan.name, **report_dict[e])
                         Email.send_msg(
                             f"【{report_dict[e].get('env')}】测试计划【{plan.name}】执行完毕（{report_dict[e].get('plan_result')}）",

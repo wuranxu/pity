@@ -9,10 +9,10 @@
     "token": ""
   },
   "oss": {
-    "type": "aliyun",
-    "access_key_id": "",
-    "access_key_secret": "",
-    "bucket": "",
+    "type": "gitee",
+    "access_key_id": "56a5797a2fb4a3cdfca439082da7dee1",
+    "access_key_secret": "woodywrx",
+    "bucket": "oss",
     "endpoint": ""
   }
 }

@@ -2,6 +2,10 @@ import json
 import time
 
 import aiohttp
+from aiohttp import FormData
+
+from app.middleware.oss import OssClient
+from config import Config
 
 
 class AsyncRequest(object):
@@ -26,8 +30,44 @@ class AsyncRequest(object):
                 cookie = self.get_cookie(session)
                 return await self.collect(True, self.kwargs.get("data"), resp.status, response,
                                           resp.headers, resp.request_info.headers, elapsed=cost,
-                                          cookies=cookie
-                                          )
+                                          cookies=cookie)
+
+    @staticmethod
+    async def client(url: str, body_type: int, timeout=15, **kwargs):
+        headers = kwargs.get("headers", {})
+        if body_type == Config.BodyType.json:
+            if "Content-Type" not in headers:
+                headers['Content-Type'] = "application/json; charset=UTF-8"
+            r = AsyncRequest(url, headers=headers, timeout=timeout,
+                             json=kwargs.get("body"))
+        elif body_type == Config.BodyType.form:
+            try:
+                body = kwargs.get("body")
+                if body:
+                    form_data = FormData()
+                    # 因为存储的是字符串，所以需要反序列化
+                    items = json.loads(body)
+                    for item in items:
+                        # 如果是文本类型，直接添加key-value
+                        if item.get("type") == 'TEXT':
+                            form_data.add_field(item.get("key"), item.get("value"))
+                        else:
+                            client = OssClient.get_oss_client()
+                            file_object = await client.get_file_object(item.get("value"))
+                            form_data.add_field(item.get("key"), file_object)
+                else:
+                    form_data = None
+                r = AsyncRequest(url, headers=headers, data=form_data, timeout=timeout)
+            except Exception as e:
+                raise Exception(f"解析form-data失败: {str(e)}")
+        elif body_type == Config.BodyType.x_form:
+            body = kwargs.get("body", "{}")
+            body = json.loads(body)
+            r = AsyncRequest(url, headers=headers, data=body, timeout=timeout)
+        else:
+            # 暂时未支持其他类型
+            r = AsyncRequest(url, headers=headers, timeout=timeout, data=kwargs.get("body"))
+        return r
 
     @staticmethod
     async def get_resp(resp):
@@ -43,6 +83,8 @@ class AsyncRequest(object):
         request_body = body
         if isinstance(body, bytes):
             request_body = request_body.decode()
+        if isinstance(body, FormData):
+            request_body = str(body)
         if isinstance(request_body, str) or request_body is None:
             return request_body
         return json.dumps(request_body, ensure_ascii=False)

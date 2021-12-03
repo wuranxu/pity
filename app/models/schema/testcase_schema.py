@@ -12,6 +12,7 @@ class TestCaseForm(BaseModel):
     case_type: int = 0
     tag: str = None
     body: str = None
+    body_type: int = 0
     request_headers: str = None
     request_method: str = None
     status: int

@@ -61,3 +61,15 @@ class Config(object):
 
     SERVER_REPORT = "http://test.pity.fun/#/record/report/"
 
+    ALIYUN = "aliyun"
+    GITEE = "gitee"
+
+    # 请求类型
+    class BodyType:
+        none = 0
+        json = 1
+        form = 2
+        x_form = 3
+        binary = 4
+        graphQL = 5
+

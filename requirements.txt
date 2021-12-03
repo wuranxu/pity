@@ -21,3 +21,4 @@ redlock~=1.2.0
 yagmail
 oss2
 python-multipart
+aioify

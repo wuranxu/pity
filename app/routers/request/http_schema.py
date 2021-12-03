@@ -7,6 +7,7 @@ class HttpRequestForm(BaseModel):
     method: str
     url: str
     body: str = None
+    body_type: int = 0
     headers: dict = {}
 
     @validator('method', 'url')
