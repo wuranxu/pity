@@ -1,14 +1,11 @@
-import json
+import importlib
+import os
+import sys
 
 from sqlalchemy import select
 
 from app.models import Base, engine, async_session, DatabaseHelper
-
 from config import Config
-
-import os, importlib
-
-import sys
 
 
 class Mapper(object):
@@ -148,8 +145,6 @@ class Mapper(object):
             raise Exception(f"删除记录失败")
 
 
-
-
 def get_dao_path():
     """获取dao目录下所有的xxxDao.py"""
     dao_path_list = []
@@ -167,9 +162,10 @@ def get_dao_path():
             dao_path_list.append(path_dict)
     return dao_path_list
 
+
 dao_path_list = get_dao_path()
 for path in dao_path_list:
-    for file_path,pys in path.items():
+    for file_path, pys in path.items():
         # 拼接对应的dao目录
         son_dao_path = os.path.join(Config.DAO_PATH, file_path)
         # 导包时, 默认在这个路径下查找

@@ -10,8 +10,8 @@ class Config(object):
     # MySQL连接信息
     MYSQL_HOST = "121.5.2.74"
     MYSQL_PORT = 3306
-    MYSQL_USER = "root"
-    MYSQL_PWD = "anrenear@33"
+    MYSQL_USER = "local"
+    MYSQL_PWD = "wuranxu@33"
     DBNAME = "pity"
 
     REDIS_HOST = "121.5.2.74"
@@ -73,3 +73,10 @@ class Config(object):
         binary = 4
         graphQL = 5
 
+    # 前置条件类型
+    class ConstructorType:
+        testcase = 0
+        sql = 1
+        redis = 2
+        py_script = 3
+        http = 4

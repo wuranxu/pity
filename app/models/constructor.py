@@ -20,7 +20,7 @@ class Constructor(Base):
     updated_at = Column(DATETIME, nullable=False)
     create_user = Column(INT, nullable=True)
     update_user = Column(INT, nullable=True)
-    type = Column(INT, default=0, comment="0: testcase 1: sql 2: redis 3: 待完善")
+    type = Column(INT, default=0, comment="0: testcase 1: sql 2: redis 3: py脚本 4: 其它")
     name = Column(String(64), comment="数据初始化描述")
     enable = Column(BOOLEAN, default=True, nullable=False)
     constructor_json = Column(TEXT, nullable=False)

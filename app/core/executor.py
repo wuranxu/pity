@@ -6,10 +6,11 @@ from collections import defaultdict
 from datetime import datetime
 from typing import List, Any
 
-from app.core.case_constructor import TestcaseConstructor
+from app.core.constructor.case_constructor import TestcaseConstructor
+from app.core.constructor.python_constructor import PythonConstructor
+from app.core.constructor.redis_constructor import RedisConstructor
+from app.core.constructor.sql_constructor import SqlConstructor
 from app.core.msg.mail import Email
-from app.core.redis_constructor import RedisConstructor
-from app.core.sql_constructor import SqlConstructor
 from app.dao.auth.UserDao import UserDao
 from app.dao.config.EnvironmentDao import EnvironmentDao
 from app.dao.config.GConfigDao import GConfigDao
@@ -52,12 +53,14 @@ class Executor(object):
 
     @staticmethod
     def get_constructor_type(c: Constructor):
-        if c.type == 0:
+        if c.type == Config.ConstructorType.testcase:
             return TestcaseConstructor
-        if c.type == 1:
+        if c.type == Config.ConstructorType.sql:
             return SqlConstructor
-        if c.type == 2:
+        if c.type == Config.ConstructorType.redis:
             return RedisConstructor
+        if c.type == Config.ConstructorType.py_script:
+            return PythonConstructor
         return None
 
     def append(self, content, end=False):
