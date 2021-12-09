@@ -18,31 +18,6 @@ router = APIRouter(prefix="/request")
 async def http_request(data: HttpRequestForm, user_info=Depends(Permission())):
     try:
         r = await AsyncRequest.client(data.url, data.body_type, headers=data.headers, body=data.body)
-        # if data.body_type == 1:
-        #     if "Content-Type" not in data.headers:
-        #         data.headers['Content-Type'] = "application/json; charset=UTF-8"
-        #     r = AsyncRequest(data.url, headers=data.headers,
-        #                      json=data.body if data.body is not None else data.body)
-        # elif data.body_type == 2:
-        #     try:
-        #         if data.body:
-        #             form_data = FormData()
-        #             items = json.loads(data.body)
-        #             for item in items:
-        #                 if item.get("type") == 'TEXT':
-        #                     form_data.add_field(item.get("key"), item.get("value"))
-        #                 else:
-        #                     client = OssClient.get_oss_client()
-        #                     file_object = client.get_file_object(item.get("value"))
-        #                     form_data.add_field(item.get("key"), file_object)
-        #         else:
-        #             form_data = None
-        #         r = AsyncRequest(data.url, headers=data.headers, data=form_data)
-        #     except Exception as e:
-        #         raise Exception(f"解析form-data失败: {str(e)}")
-        # else:
-        #     body = json.loads(data.body)
-        #     r = AsyncRequest(data.url, headers=data.headers, data=body if body is not None else body)
         response = await r.invoke(data.method)
         if response.get("status"):
             return PityResponse.success(response)

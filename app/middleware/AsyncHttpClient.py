@@ -34,6 +34,8 @@ class AsyncRequest(object):
 
     @staticmethod
     async def client(url: str, body_type: int, timeout=15, **kwargs):
+        if not url.startswith(("http://", "https://")):
+            raise Exception("请输入正确的url, 记得带上http哦")
         headers = kwargs.get("headers", {})
         if body_type == Config.BodyType.json:
             if "Content-Type" not in headers:

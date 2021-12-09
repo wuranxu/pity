@@ -29,7 +29,7 @@ class SystemConfiguration(object):
             filepath = os.path.join(Config.ROOT, "configuration.json")
             if not os.path.exists(filepath):
                 raise Exception("没找到配置文件，请检查configuration文件是否已经被删除")
-            with open(filepath, mode="r", encoding='utf-8') as f:
+            with open(filepath, mode="w", encoding='utf-8') as f:
                 json.dump(config, f)
         except Exception as e:
             raise Exception(f"更新系统设置失败, {e}")

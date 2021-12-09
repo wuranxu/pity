@@ -10,7 +10,7 @@ class Config(object):
     # MySQL连接信息
     MYSQL_HOST = "121.5.2.74"
     MYSQL_PORT = 3306
-    MYSQL_USER = "local"
+    MYSQL_USER = "root"
     MYSQL_PWD = "wuranxu@33"
     DBNAME = "pity"
 
