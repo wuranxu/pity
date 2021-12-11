@@ -1,6 +1,6 @@
 from fastapi import Depends
 
-from app.dao.config.DbConfigDao import DbConfigDao
+from app.crud.config.DbConfigDao import DbConfigDao
 from app.handler.fatcory import PityResponse
 from app.models import DatabaseHelper, db_helper
 from app.models.schema.database import DatabaseForm

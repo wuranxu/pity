@@ -1,7 +1,7 @@
 import json
 
 from app.core.constructor.constructor import ConstructorAbstract
-from app.dao.config.DbConfigDao import DbConfigDao
+from app.crud.config.DbConfigDao import DbConfigDao
 from app.models.constructor import Constructor
 
 

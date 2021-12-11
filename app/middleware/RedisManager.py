@@ -5,6 +5,7 @@ import asyncio
 import functools
 import json
 
+from awaits.awaitable import awaitable
 from redis import ConnectionPool, StrictRedis
 from rediscluster import RedisCluster, ClusterConnectionPool
 
@@ -116,6 +117,11 @@ class RedisHelper(object):
     pity_redis_client = PityRedisManager().client
 
     @staticmethod
+    @awaitable
+    def execute_command(client, command, *args, **kwargs):
+        return client.execute_command(command, *args, **kwargs)
+
+    @staticmethod
     def get_key(key: str, *args):
         return f"{RedisHelper.pity_prefix}:{key}{':'.join(str(a) for a in args)}"
 
@@ -146,7 +152,7 @@ class RedisHelper(object):
                             new_data = PityResponse.model_to_list(new_data)
                         else:
                             new_data = PityResponse.model_to_dict(new_data)
-                    info = json.dumps(new_data)
+                    info = json.dumps(new_data, ensure_ascii=False)
                     RedisHelper.pity_redis_client.set(redis_key, info, ex=expired_time)
                     return new_data
 
@@ -155,6 +161,10 @@ class RedisHelper(object):
                 @functools.wraps(func)
                 def wrapper(*args, **kwargs):
                     redis_key = RedisHelper.get_key(key, *args)
+                    data = RedisHelper.pity_redis_client.get(redis_key)
+                    # 缓存已存在
+                    if data is not None:
+                        return json.loads(data)
                     # 获取最新数据
                     new_data = func(*args, **kwargs)
                     if model:
@@ -162,7 +172,7 @@ class RedisHelper(object):
                             new_data = PityResponse.model_to_list(new_data)
                         else:
                             new_data = PityResponse.model_to_dict(new_data)
-                    info = json.dumps(new_data)
+                    info = json.dumps(new_data, ensure_ascii=False)
                     RedisHelper.pity_redis_client.set(redis_key, info, ex=expired_time)
                     return new_data
 

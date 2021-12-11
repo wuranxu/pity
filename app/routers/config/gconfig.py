@@ -1,6 +1,6 @@
 from fastapi import Depends
 
-from app.dao.config.GConfigDao import GConfigDao
+from app.crud.config.GConfigDao import GConfigDao
 from app.handler.fatcory import PityResponse
 from app.models.schema.gconfig import GConfigForm
 from app.routers import Permission

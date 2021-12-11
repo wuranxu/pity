@@ -57,7 +57,7 @@ class Config(object):
     APP_PATH = os.path.join(ROOT, "app")
 
     # dao路径
-    DAO_PATH = os.path.join(APP_PATH, 'dao')
+    DAO_PATH = os.path.join(APP_PATH, 'crud')
 
     SERVER_REPORT = "http://test.pity.fun/#/record/report/"
 

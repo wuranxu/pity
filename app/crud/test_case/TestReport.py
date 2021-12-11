@@ -2,7 +2,7 @@ from datetime import datetime
 
 from sqlalchemy import select, desc
 
-from app.dao.test_case.TestResult import TestResultDao
+from app.crud.test_case.TestResult import TestResultDao
 from app.models import async_session
 from app.models.report import PityReport
 from app.utils.logger import Log

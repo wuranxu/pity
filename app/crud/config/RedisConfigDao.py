@@ -1,5 +1,5 @@
-from app.dao import Mapper
-from app.middleware.RedisManager import PityRedisManager
+from app.crud import Mapper
+from app.middleware.RedisManager import PityRedisManager, RedisHelper
 from app.models.redis_config import PityRedis
 from app.utils.decorator import dao
 from app.utils.logger import Log
@@ -19,6 +19,8 @@ class PityRedisConfigDao(Mapper):
                                                                  redis_config.password, redis_config.db)
             else:
                 client = PityRedisManager.get_cluster_client(redis_config.id, redis_config.addr)
-            return client.execute_command(command)
+            return RedisHelper.execute_command(client, command)
         except Exception as e:
             raise Exception(f"执行redis命令出错: {e}")
+
+

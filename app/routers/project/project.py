@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 
-from app.dao.project.ProjectDao import ProjectDao
-from app.dao.project.ProjectRoleDao import ProjectRoleDao
+from app.crud.project.ProjectDao import ProjectDao
+from app.crud.project.ProjectRoleDao import ProjectRoleDao
 from app.handler.fatcory import PityResponse
 from app.routers import Permission
 from app.routers.project.project_schema import ProjectForm, ProjectEditForm

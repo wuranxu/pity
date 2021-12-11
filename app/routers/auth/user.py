@@ -1,7 +1,7 @@
 import requests
 from fastapi import APIRouter, Depends
 
-from app.dao.auth.UserDao import UserDao
+from app.crud.auth.UserDao import UserDao
 from app.handler.fatcory import PityResponse
 from app.middleware.Jwt import UserToken
 from app.routers import Permission

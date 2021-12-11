@@ -1,7 +1,9 @@
 import json
 
+from awaits.awaitable import awaitable
+
 from app.core.constructor.constructor import ConstructorAbstract
-from app.dao.config.RedisConfigDao import PityRedisConfigDao
+from app.crud.config.RedisConfigDao import PityRedisConfigDao
 from app.models.constructor import Constructor
 
 

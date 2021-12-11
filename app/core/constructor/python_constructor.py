@@ -1,5 +1,7 @@
 import json
 
+from awaits.awaitable import awaitable
+
 from app.core.constructor.constructor import ConstructorAbstract
 from app.models.constructor import Constructor
 
@@ -7,7 +9,8 @@ from app.models.constructor import Constructor
 class PythonConstructor(ConstructorAbstract):
 
     @staticmethod
-    async def run(executor, env, index, path, params, req_params, constructor: Constructor, **kwargs):
+    @awaitable
+    def run(executor, env, index, path, params, req_params, constructor: Constructor, **kwargs):
         try:
             executor.append(f"当前路径: {path}, 第{index + 1}条构造方法")
             script = json.loads(constructor.constructor_json)

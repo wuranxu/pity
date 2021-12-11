@@ -1,7 +1,7 @@
 from fastapi import Depends
 from starlette.background import BackgroundTasks
 
-from app.dao.config.RedisConfigDao import PityRedisConfigDao
+from app.crud.config.RedisConfigDao import PityRedisConfigDao
 from app.handler.fatcory import PityResponse
 from app.middleware.RedisManager import PityRedisManager
 from app.models import DatabaseHelper

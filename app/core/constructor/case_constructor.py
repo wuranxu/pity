@@ -1,7 +1,7 @@
 import json
 
 from app.core.constructor.constructor import ConstructorAbstract
-from app.dao.test_case.TestCaseDao import TestCaseDao
+from app.crud.test_case.TestCaseDao import TestCaseDao
 from app.models.constructor import Constructor
 
 

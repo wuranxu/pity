@@ -6,7 +6,7 @@ from typing import List
 from sqlalchemy import select, MetaData
 from sqlalchemy.exc import ResourceClosedError
 
-from app.dao.config.EnvironmentDao import EnvironmentDao
+from app.crud.config.EnvironmentDao import EnvironmentDao
 from app.handler.fatcory import PityResponse
 from app.models import async_session, DatabaseHelper, db_helper
 from app.models.database import PityDatabase

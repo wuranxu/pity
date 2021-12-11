@@ -1,11 +1,12 @@
 import asyncio
 import json
+import uuid
 from typing import List, Dict
 
 from fastapi import Depends, APIRouter
 
 from app.core.executor import Executor
-from app.dao.test_case.TestcaseDataDao import PityTestcaseDataDao
+from app.crud.test_case.TestcaseDataDao import PityTestcaseDataDao
 from app.handler.fatcory import PityResponse
 from app.middleware.AsyncHttpClient import AsyncRequest
 from app.routers import Permission
@@ -56,6 +57,8 @@ async def execute_case(env: int, case_id: List[int], user_info=Depends(Permissio
 @router.post("/run/sync")
 async def execute_case(env: int, case_id: List[int], user_info=Depends(Permission())):
     data = dict()
+    task_id = uuid.uuid5(uuid.NAMESPACE_URL, "task")
+
     # s = time.perf_counter()
     for c in case_id:
         executor = Executor()
@@ -66,8 +69,8 @@ async def execute_case(env: int, case_id: List[int], user_info=Depends(Permissio
 
 
 @router.post("/run/multiple")
-async def execute_as_report(case_id: List[int], user_info=Depends(Permission())):
-    report_id = await Executor.run_multiple(user_info['id'], 1, case_id)
+async def execute_as_report(env: int, case_id: List[int], user_info=Depends(Permission())):
+    report_id = await Executor.run_multiple(user_info['id'], env, case_id)
     return PityResponse.success(report_id)
 
 

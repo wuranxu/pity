@@ -1,7 +1,7 @@
 from fastapi import Depends
 
 from app.core.executor import Executor
-from app.dao.test_case.TestPlan import PityTestPlanDao
+from app.crud.test_case.TestPlan import PityTestPlanDao
 from app.handler.fatcory import PityResponse
 from app.models.schema.test_plan import PityTestPlanForm
 from app.routers import Permission

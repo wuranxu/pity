@@ -11,15 +11,15 @@ from app.core.constructor.python_constructor import PythonConstructor
 from app.core.constructor.redis_constructor import RedisConstructor
 from app.core.constructor.sql_constructor import SqlConstructor
 from app.core.msg.mail import Email
-from app.dao.auth.UserDao import UserDao
-from app.dao.config.EnvironmentDao import EnvironmentDao
-from app.dao.config.GConfigDao import GConfigDao
-from app.dao.test_case.TestCaseAssertsDao import TestCaseAssertsDao
-from app.dao.test_case.TestCaseDao import TestCaseDao
-from app.dao.test_case.TestPlan import PityTestPlanDao
-from app.dao.test_case.TestReport import TestReportDao
-from app.dao.test_case.TestResult import TestResultDao
-from app.dao.test_case.TestcaseDataDao import PityTestcaseDataDao
+from app.crud.auth.UserDao import UserDao
+from app.crud.config.EnvironmentDao import EnvironmentDao
+from app.crud.config.GConfigDao import GConfigDao
+from app.crud.test_case.TestCaseAssertsDao import TestCaseAssertsDao
+from app.crud.test_case.TestCaseDao import TestCaseDao
+from app.crud.test_case.TestPlan import PityTestPlanDao
+from app.crud.test_case.TestReport import TestReportDao
+from app.crud.test_case.TestResult import TestResultDao
+from app.crud.test_case.TestcaseDataDao import PityTestcaseDataDao
 from app.middleware.AsyncHttpClient import AsyncRequest
 from app.models.constructor import Constructor
 from app.models.test_case import TestCase
@@ -224,6 +224,12 @@ class Executor(object):
     #             raise Exception(f"{path}->{constructor.name} 第{index + 1}个构造方法执行失败: {e}")
 
     def add_header(self, case_info, headers):
+        """
+        @ desperate
+        :param case_info:
+        :param headers:
+        :return:
+        """
         if case_info.body_type == Config.BodyType.none:
             return
         if case_info.body_type == Config.BodyType.json:

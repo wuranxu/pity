@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 
-from app.dao.config.EnvironmentDao import EnvironmentDao
+from app.crud.config.EnvironmentDao import EnvironmentDao
 from app.handler.fatcory import PityResponse
 from app.models.schema.environment import EnvironmentForm
 from app.routers import Permission

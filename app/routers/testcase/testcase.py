@@ -2,12 +2,12 @@ from typing import List
 
 from fastapi import APIRouter, Depends
 
-from app.dao.test_case.ConstructorDao import ConstructorDao
-from app.dao.test_case.TestCaseAssertsDao import TestCaseAssertsDao
-from app.dao.test_case.TestCaseDao import TestCaseDao
-from app.dao.test_case.TestCaseDirectory import PityTestcaseDirectoryDao
-from app.dao.test_case.TestReport import TestReportDao
-from app.dao.test_case.TestcaseDataDao import PityTestcaseDataDao
+from app.crud.test_case.ConstructorDao import ConstructorDao
+from app.crud.test_case.TestCaseAssertsDao import TestCaseAssertsDao
+from app.crud.test_case.TestCaseDao import TestCaseDao
+from app.crud.test_case.TestCaseDirectory import PityTestcaseDirectoryDao
+from app.crud.test_case.TestReport import TestReportDao
+from app.crud.test_case.TestcaseDataDao import PityTestcaseDataDao
 from app.handler.fatcory import PityResponse
 from app.models.schema.constructor import ConstructorForm, ConstructorIndex
 from app.models.schema.testcase_data import PityTestcaseDataForm
