@@ -255,7 +255,7 @@ class Executor(object):
             case_info, err = await TestCaseDao.async_query_test_case(case_id)
             if err:
                 return response_info, err
-
+            response_info['case_id'] = case_info.id
             response_info["case_name"] = case_info.name
             method = case_info.request_method.upper()
             response_info["request_method"] = method

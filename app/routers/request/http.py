@@ -32,13 +32,13 @@ async def execute_case(env: int, case_id: int, user_info=Depends(Permission())):
     try:
         executor = Executor()
         test_data = await PityTestcaseDataDao.list_testcase_data_by_env(env, case_id)
-        ans = []
+        ans = dict()
         for data in test_data:
             params = json.loads(data.json_data)
             result, err = await executor.run(env, case_id, request_param=params)
-            if err:
-                return PityResponse.failed(data=result, msg=err)
-            ans.append(result)
+            # if err:
+            #     return PityResponse.failed(data=result, msg=err)
+            ans[data.name] = result
         return PityResponse.success(ans)
     except Exception as e:
         return PityResponse.failed(e)
