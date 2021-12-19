@@ -14,6 +14,7 @@ from app.models.constructor import Constructor
 from app.models.schema.testcase_schema import TestCaseForm
 from app.models.test_case import TestCase
 from app.utils.logger import Log
+from config import Config
 
 
 class TestCaseDao(object):
@@ -49,7 +50,7 @@ class TestCaseDao(object):
                 case_map = dict()
                 for item in result.scalars():
                     ans.append({"title": item.name, "key": "testcase_{}".format(item.id), "children": []})
-                    case_map[item.id]=item.name
+                    case_map[item.id] = item.name
                 return ans, case_map
         except Exception as e:
             TestCaseDao.log.error(f"获取测试用例失败: {str(e)}")
@@ -156,7 +157,7 @@ class TestCaseDao(object):
             # 找到所有用例名称为
             constructors = [json.loads(x.constructor_json).get("case_id") for x in constructors if x.type == 0]
             async with async_session() as session:
-                sql = select(TestCase).where(TestCase.id.in_(constructors), TestCase.deleted_at == None)
+                sql = select(TestCase).where(TestCase.id.in_(constructors), TestCase.deleted_at == 0)
                 result = await session.execute(sql)
                 data = result.scalars().all()
                 return {x.id: x for x in data}
@@ -217,7 +218,7 @@ class TestCaseDao(object):
         """
         try:
             with Session() as session:
-                data = session.query(Constructor).filter_by(case_id=case_id, deleted_at=None).order_by(
+                data = session.query(Constructor).filter_by(case_id=case_id, deleted_at=0).order_by(
                     desc(Constructor.created_at)).all()
                 return data
         except Exception as e:
@@ -233,7 +234,7 @@ class TestCaseDao(object):
         try:
             async with async_session() as session:
                 sql = select(Constructor).where(Constructor.case_id == case_id,
-                                                Constructor.deleted_at == None).order_by(Constructor.created_at)
+                                                Constructor.deleted_at == 0).order_by(Constructor.created_at)
                 data = await session.execute(sql)
                 return data.scalars().all()
         except Exception as e:
@@ -249,30 +250,37 @@ class TestCaseDao(object):
         """
         # 先获取数据构造器（前置条件）
         pre = dict(id=f"pre_{case_id}", label="前置条件", children=list())
-        await TestCaseDao.collect_constructor(case_id, pre)
+        suffix = dict(id=f"suffix_{case_id}", label="后置条件", children=list())
+        await TestCaseDao.collect_constructor(case_id, pre, suffix)
         data.append(pre)
 
         # 获取断言
         asserts = dict(id=f"asserts_{case_id}", label="断言", children=list())
         await TestCaseDao.collect_asserts(case_id, asserts)
         data.append(asserts)
+        data.append(suffix)
 
     @staticmethod
-    async def collect_constructor(case_id, parent):
+    async def collect_constructor(case_id, parent, suffix):
         constructors = await TestCaseDao.async_select_constructor(case_id)
         for c in constructors:
             temp = dict(id=f"constructor_{c.id}", label=f"{c.name}", children=list())
-            if c.type == 0:
+            if c.type == Config.ConstructorType.testcase:
                 # 说明是用例，继续递归
                 temp["label"] = "[CASE]: " + temp["label"]
                 json_data = json.loads(c.constructor_json)
                 await TestCaseDao.collect_data(json_data.get("case_id"), temp.get("children"))
-            elif c.type == 1:
+            elif c.type == Config.ConstructorType.sql:
                 temp["label"] = "[SQL]: " + temp["label"]
-            elif c.type == 2:
+            elif c.type == Config.ConstructorType.redis:
                 temp["label"] = "[REDIS]: " + temp["label"]
+            elif c.type == Config.ConstructorType.py_script:
+                temp["label"] = "[PyScript]: " + temp["label"]
             # 否则正常添加数据
-            parent.get("children").append(temp)
+            if c.suffix:
+                suffix.get("children").append(temp)
+            else:
+                parent.get("children").append(temp)
 
     @staticmethod
     async def collect_asserts(case_id, parent):

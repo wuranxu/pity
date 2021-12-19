@@ -166,13 +166,16 @@ class Executor(object):
         return await TestCaseDao.async_select_constructor(case_id)
 
     async def execute_constructors(self, env: int, path, case_info, params, req_params, constructors: List[Constructor],
-                                   asserts):
+                                   asserts, suffix=False):
         """开始构造数据"""
         if len(constructors) == 0:
-            self.append("构造方法为空, 跳出构造环节")
+            self.append("前后置条件为空, 跳出该环节")
+        current = 0
         for i, c in enumerate(constructors):
-            await self.execute_constructor(env, i, path, params, req_params, c)
-            self.replace_args(params, case_info, constructors, asserts)
+            if c.suffix == suffix:
+                await self.execute_constructor(env, current, path, params, req_params, c)
+                self.replace_args(params, case_info, constructors, asserts)
+                current += 1
 
     async def execute_constructor(self, env, index, path, params, req_params, constructor: Constructor):
         if not constructor.enable:
@@ -277,13 +280,10 @@ class Executor(object):
             # Step4: 替换参数
             self.replace_args(req_params, case_info, constructors, asserts)
 
-            # Step5: 执行构造方法
+            # Step5: 执行前置条件
             await self.execute_constructors(env, path, case_info, case_params, req_params, constructors, asserts)
 
             response_info["url"] = case_info.url
-
-            # Step6: 获取后置操作
-            # TODO
 
             # Step7: 批量改写主方法参数
             await self.parse_params(case_info, case_params)
@@ -311,6 +311,10 @@ class Executor(object):
             response_info.update(res)
             # 执行完成进行断言
             asserts, ans = self.my_assert(asserts, response_info)
+
+            # Step7: 执行后置条件
+            await self.execute_constructors(env, path, case_info, case_params, req_params, constructors, asserts, True)
+
             response_info["asserts"] = asserts
             # 日志输出, 如果不是开头用例则不记录
             if self._main:

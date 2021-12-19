@@ -15,8 +15,11 @@ from app.routers.request.http_schema import HttpRequestForm
 router = APIRouter(prefix="/request")
 
 
+# random_dict = dict()
+
+
 @router.post("/http")
-async def http_request(data: HttpRequestForm, user_info=Depends(Permission())):
+async def http_request(data: HttpRequestForm, _=Depends(Permission())):
     try:
         r = await AsyncRequest.client(data.url, data.body_type, headers=data.headers, body=data.body)
         response = await r.invoke(data.method)
@@ -28,16 +31,17 @@ async def http_request(data: HttpRequestForm, user_info=Depends(Permission())):
 
 
 @router.get("/run")
-async def execute_case(env: int, case_id: int, user_info=Depends(Permission())):
+async def execute_case(env: int, case_id: int, _=Depends(Permission())):
     try:
         executor = Executor()
         test_data = await PityTestcaseDataDao.list_testcase_data_by_env(env, case_id)
+        if not test_data:
+            # 说明该环境下没有测试数据
+            return PityResponse.failed("此环境无测试数据, 请进入用例添加🎨")
         ans = dict()
         for data in test_data:
             params = json.loads(data.json_data)
-            result, err = await executor.run(env, case_id, request_param=params)
-            # if err:
-            #     return PityResponse.failed(data=result, msg=err)
+            result, _ = await executor.run(env, case_id, request_param=params)
             ans[data.name] = result
         return PityResponse.success(ans)
     except Exception as e:
@@ -72,6 +76,20 @@ async def execute_case(env: int, case_id: List[int], user_info=Depends(Permissio
 async def execute_as_report(env: int, case_id: List[int], user_info=Depends(Permission())):
     report_id = await Executor.run_multiple(user_info['id'], env, case_id)
     return PityResponse.success(report_id)
+    # task = asyncio.create_task(Executor.run_multiple(user_info['id'], env, case_id))
+    # random_id = uuid.uuid5(uuid.NAMESPACE_URL, "task")
+    # random_dict[random_id] = task
+    # return PityResponse.success(data=random_id, msg="任务正在后台运行中, 请静静等待🎉")
+
+
+@router.post("/cancel")
+async def execute_as_report(random_id: str, user_info=Depends(Permission())):
+    if not random_dict.get(random_id):
+        return PityResponse.failed("未找到该任务, 可能已结束")
+    task = random_dict.pop(random_id)
+    # 取消任务
+    task.cancel()
+    return PityResponse.success(data=random_id, msg="操作已停止")
 
 
 async def run_single(env: int, case_id: int, data: Dict[int, tuple]):

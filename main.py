@@ -88,5 +88,10 @@ def init_scheduler():
     Scheduler.start()
 
 
+@pity.on_event('shutdown')
+def stop_test():
+    pass
+
+
 if __name__ == "__main__":
     uvicorn.run(app='main:pity', host='0.0.0.0', port=7777, reload=False)

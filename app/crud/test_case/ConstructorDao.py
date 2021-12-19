@@ -17,7 +17,7 @@ class ConstructorDao(object):
     async def list_constructor(case_id: int):
         try:
             async with async_session() as session:
-                sql = select(Constructor).where(Constructor.case_id == case_id, Constructor.deleted_at == None) \
+                sql = select(Constructor).where(Constructor.case_id == case_id, Constructor.deleted_at == 0) \
                     .order_by(Constructor.index, Constructor.updated_at)
                 result = await session.execute(sql)
                 return result.scalars().all()
@@ -31,16 +31,16 @@ class ConstructorDao(object):
             async with async_session() as session:
                 async with session.begin():
                     sql = select(Constructor).where(Constructor.case_id == data.case_id, Constructor.name == data.name,
-                                                    Constructor.deleted_at == None)
+                                                    Constructor.deleted_at == 0)
                     result = await session.execute(sql)
                     if result.scalars().first() is not None:
-                        raise Exception(f"初始化数据: {data.name}已存在")
+                        raise Exception(f"{data.name}已存在")
                     constructor = Constructor(**data.dict(), user=user)
                     constructor.index = await constructor.get_index(session, data.case_id)
                     session.add(constructor)
         except Exception as e:
-            ConstructorDao.log.error(f"新增初始化数据: {data.name}失败, {e}")
-            raise Exception(f"新增初始化数据失败, {e}")
+            ConstructorDao.log.error(f"新增前/后置条件: {data.name}失败, {e}")
+            raise Exception(f"新增前/后置条件失败, {e}")
 
     @staticmethod
     async def update_constructor(data: ConstructorForm, user):
@@ -51,11 +51,11 @@ class ConstructorDao(object):
                     result = await session.execute(sql)
                     query = result.scalars().first()
                     if query is None:
-                        raise Exception(f"数据构造器: {data.name}不存在")
+                        raise Exception(f"{data.name}不存在")
                     DatabaseHelper.update_model(query, data, user)
         except Exception as e:
-            ConstructorDao.log.error(f"编辑初始化数据: {data.name}失败, {e}")
-            raise Exception(f"编辑初始化数据失败, {e}")
+            ConstructorDao.log.error(f"编辑前/后置条件: {data.name}失败, {e}")
+            raise Exception(f"编辑前/后置条件失败, {e}")
 
     @staticmethod
     async def delete_constructor(id: int, user):
@@ -66,11 +66,11 @@ class ConstructorDao(object):
                     result = await session.execute(sql)
                     query = result.scalars().first()
                     if query is None:
-                        raise Exception(f"数据构造器:{id}不存在")
+                        raise Exception(f"前/后置条件{id}不存在")
                     DatabaseHelper.delete_model(query, user)
         except Exception as e:
-            ConstructorDao.log.error(f"删除初始化数据: {id}失败, {e}")
-            raise Exception(f"删除初始化数据失败, {e}")
+            ConstructorDao.log.error(f"删除前/后置条件: {id}失败, {e}")
+            raise Exception(f"删除前/后置条件失败, {e}")
 
     @staticmethod
     def update_constructor_index(data: List[ConstructorIndex]):
@@ -84,17 +84,19 @@ class ConstructorDao(object):
             raise Exception("更新数据构造器顺序失败")
 
     @staticmethod
-    def get_constructor_tree(name: str):
+    def get_constructor_tree(name: str, suffix: bool):
         try:
             with Session() as session:
                 # 获取所有构造参数
                 if name:
                     constructor = session.query(Constructor).filter(Constructor.public == True,
+                                                                    Constructor.suffix == suffix,
                                                                     Constructor.name.ilike("%{}%".format(name)),
-                                                                    Constructor.deleted_at == None).all()
+                                                                    Constructor.deleted_at == 0).all()
                 else:
                     constructor = session.query(Constructor).filter(Constructor.public == True,
-                                                                    Constructor.deleted_at == None).all()
+                                                                    Constructor.suffix == suffix,
+                                                                    Constructor.deleted_at == 0).all()
                 if not constructor:
                     return []
                 temp = defaultdict(list)
@@ -121,24 +123,25 @@ class ConstructorDao(object):
     @staticmethod
     def get_constructor_data(id_: int):
         with Session() as session:
-            data = session.query(Constructor).filter_by(id=id_, deleted_at=None).first()
+            data = session.query(Constructor).filter_by(id=id_, deleted_at=0).first()
             if data is None:
                 raise Exception("构造数据不存在")
             return data
 
     @staticmethod
-    async def get_case_and_constructor(constructor_type: int):
+    async def get_case_and_constructor(constructor_type: int, suffix: bool):
         # 最终返回结果树
         ans = list()
         async with async_session() as session:
             # 此处存放case_id => 前置条件的映射
             constructors = defaultdict(list)
-            # 根据传入的前置条件类型，找出所有前置条件, 类型一致，共享开关打开，并未被删除
+            # 根据传入的前后置条件类型，找出所有前置条件, 类型一致，共享开关打开，并未被删除
             query = await session.execute(
                 select(Constructor).where(
+                    Constructor.suffix == suffix,
                     Constructor.type == constructor_type,
                     Constructor.public == True,
-                    Constructor.deleted_at == None))
+                    Constructor.deleted_at == 0))
             # 并把这些前置条件放到constructors里面
             for q in query.scalars().all():
                 constructors[q.case_id].append({

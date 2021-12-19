@@ -128,9 +128,9 @@ def update_constructor_index(data: List[ConstructorIndex], user_info=Depends(Per
 
 
 @router.get("/constructor/tree")
-async def get_constructor_tree(name: str = "", user_info=Depends(Permission())):
+async def get_constructor_tree(suffix: bool, name: str = "", user_info=Depends(Permission())):
     try:
-        result = ConstructorDao.get_constructor_tree(name)
+        result = ConstructorDao.get_constructor_tree(name, suffix)
         return dict(code=0, msg="操作成功", data=result)
     except Exception as e:
         return dict(code=110, msg=str(e))
@@ -148,9 +148,9 @@ async def get_constructor_tree(id: int, user_info=Depends(Permission())):
 
 # 获取所有数据构造器
 @router.get("/constructor/list")
-async def list_case_and_constructor(constructor_type: int):
+async def list_case_and_constructor(constructor_type: int, suffix: bool):
     try:
-        ans = await ConstructorDao.get_case_and_constructor(constructor_type)
+        ans = await ConstructorDao.get_case_and_constructor(constructor_type, suffix)
         return PityResponse.success(ans)
     except Exception as e:
         return PityResponse.failed(str(e))

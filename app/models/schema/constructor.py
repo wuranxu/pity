@@ -13,8 +13,9 @@ class ConstructorForm(BaseModel):
     enable: bool
     case_id: int
     public: bool
+    suffix: bool
 
-    @validator("name", "constructor_json", "type", "public", "enable")
+    @validator("name", "constructor_json", "type", "public", "enable", "suffix")
     def name_not_empty(cls, v):
         if isinstance(v, str) and len(v.strip()) == 0:
             raise ParamsError("不能为空")

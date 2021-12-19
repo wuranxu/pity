@@ -13,7 +13,7 @@ class TestcaseConstructor(ConstructorAbstract):
             data = json.loads(constructor.constructor_json)
             case_id = data.get("case_id")
             testcase, _ = await TestCaseDao.async_query_test_case(case_id)
-            executor.append(f"当前路径: {path}, 第{index + 1}条构造方法")
+            executor.append(f"当前路径: {path}, 第{index + 1}条{ConstructorAbstract.get_name(constructor)}")
             # 说明是case
             executor_class = kwargs.get('executor_class')(executor.logger)
             new_param = data.get("params")
@@ -27,4 +27,5 @@ class TestcaseConstructor(ConstructorAbstract):
                 raise Exception(f"断言失败, 断言数据: {result.get('asserts', 'unknown')}")
             params[constructor.value] = result
         except Exception as e:
-            raise Exception(f"{path}->{constructor.name} 第{index + 1}个构造方法执行失败: {e}")
+            raise Exception(
+                f"{path}->{constructor.name} 第{index + 1}个{ConstructorAbstract.get_name(constructor)}执行失败: {e}")
