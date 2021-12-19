@@ -22,3 +22,4 @@ yagmail
 oss2
 python-multipart
 awaits
+aioify
