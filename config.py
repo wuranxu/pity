@@ -64,6 +64,14 @@ class Config(object):
     ALIYUN = "aliyun"
     GITEE = "gitee"
 
+    RELATION = "pity_relation"
+    ALIAS = "__alias__"
+    TABLE_TAG = "__tag__"
+    # 数据库表展示的变更字段
+    FIELD = "__fields__"
+    SHOW_FIELD = "__show__"
+    IGNORE_FIELDS = ('created_at', "updated_at", "deleted_at", "create_user", "update_user")
+
     # 请求类型
     class BodyType:
         none = 0
@@ -80,3 +88,11 @@ class Config(object):
         redis = 2
         py_script = 3
         http = 4
+
+    # 日志类型
+    class OperationType:
+        INSERT = 0
+        UPDATE = 1
+        DELETE = 2
+        EXECUTE = 3
+        STOP = 4

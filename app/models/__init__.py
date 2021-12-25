@@ -86,15 +86,21 @@ class DatabaseHelper(object):
         :param update_user:
         :return:
         """
+        changed = []
         for var, value in vars(source).items():
             if not_null:
                 if value:
-                    setattr(dist, var, value)
+                    if getattr(dist, var) != value:
+                        changed.append(var)
+                        setattr(dist, var, value)
             else:
-                setattr(dist, var, value)
+                if getattr(dist, var) != value:
+                    changed.append(var)
+                    setattr(dist, var, value)
         if update_user:
             setattr(dist, 'update_user', update_user)
         setattr(dist, 'updated_at', datetime.now())
+        return changed
 
     @staticmethod
     def delete_model(dist, update_user):
@@ -116,6 +122,9 @@ class DatabaseHelper(object):
         if param is None:
             return cls
         if isinstance(param, bool):
+            condition.append(sentence)
+            return cls
+        if isinstance(param, int):
             condition.append(sentence)
             return cls
         if param:
