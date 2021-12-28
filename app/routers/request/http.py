@@ -14,7 +14,6 @@ from app.routers.request.http_schema import HttpRequestForm
 
 router = APIRouter(prefix="/request")
 
-
 # random_dict = dict()
 
 
@@ -82,14 +81,14 @@ async def execute_as_report(env: int, case_id: List[int], user_info=Depends(Perm
     # return PityResponse.success(data=random_id, msg="任务正在后台运行中, 请静静等待🎉")
 
 
-@router.post("/cancel")
-async def execute_as_report(random_id: str, user_info=Depends(Permission())):
-    if not random_dict.get(random_id):
-        return PityResponse.failed("未找到该任务, 可能已结束")
-    task = random_dict.pop(random_id)
-    # 取消任务
-    task.cancel()
-    return PityResponse.success(data=random_id, msg="操作已停止")
+# @router.post("/cancel")
+# async def execute_as_report(random_id: str, user_info=Depends(Permission())):
+#     if not random_dict.get(random_id):
+#         return PityResponse.failed("未找到该任务, 可能已结束")
+#     task = random_dict.pop(random_id)
+#     # 取消任务
+#     task.cancel()
+#     return PityResponse.success(data=random_id, msg="操作已停止")
 
 
 async def run_single(env: int, case_id: int, data: Dict[int, tuple]):

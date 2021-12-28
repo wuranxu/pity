@@ -64,6 +64,10 @@ class Mapper(object):
         conditions = condition if condition else list()
         if getattr(cls.model, "deleted_at", None):
             conditions.append(getattr(cls.model, "deleted_at") == 0)
+        desc = kwargs.get("desc")
+        if desc:
+            # 需要去掉desc，不然会影响之前的sql执行
+            kwargs.pop("desc")
         # 遍历参数，当参数不为None的时候传递
         for k, v in kwargs.items():
             # 判断是否是like的情况
@@ -71,7 +75,11 @@ class Mapper(object):
             # 如果是like模式，则使用Model.字段.like 否则用 Model.字段 等于
             DatabaseHelper.where(v, getattr(cls.model, k).like(v) if like else getattr(cls.model, k) == v,
                                  conditions)
-        return select(cls.model).where(*conditions)
+        sql = select(cls.model).where(*conditions)
+        if desc and isinstance(desc, list):
+            for d in desc:
+                sql = getattr(sql, "order_by")(d)
+        return sql
 
     @classmethod
     async def query_record(cls, session=None, **kwargs):
@@ -180,7 +188,17 @@ class Mapper(object):
 
     @classmethod
     async def get_diff(cls, session, mode, now, old, changed):
+        """
+        根据新旧model获取2者的diff
+        :param session:
+        :param mode:
+        :param now:
+        :param old:
+        :param changed:
+        :return:
+        """
         fields = getattr(now, Config.FIELD, None)
+        # 根据要展示的字段数量(__show__)获取title数据
         fields_number = getattr(now, Config.SHOW_FIELD, 1)
         if fields:
             # 必须要展示至少1个字段
@@ -205,6 +223,15 @@ class Mapper(object):
 
     @classmethod
     async def fetch_id_with_name(cls, session, id_field, name_field, old_id, new_id):
+        """
+        通用方法，通过id查询name等字段数据
+        :param session:
+        :param id_field:
+        :param name_field:
+        :param old_id:
+        :param new_id:
+        :return:
+        """
         cls_ = id_field.parent.class_
         if old_id is None:
             data = await session.execute(select(cls_).where(getattr(cls_, id_field.name) == new_id))
@@ -216,19 +243,33 @@ class Mapper(object):
         old_value, new_value = old_id, new_id
         for d in data.scalars():
             if getattr(d, id_field.name, None) == old_id:
-                old_value = getattr(d, name_field.name, old_value)
+                new_value = getattr(d, name_field.name, old_value)
             else:
-                new_value = getattr(d, name_field.name, new_value)
+                old_value = getattr(d, name_field.name, new_value)
         return new_value, old_value
 
     @classmethod
     def get_json_field(cls, field):
+        """
+        遇到datetime等类型，进行转换
+        :param field:
+        :return:
+        """
         if isinstance(field, datetime):
             return field.strftime("%Y-%m-%d %H:%M:%S")
         return field
 
     @classmethod
     async def get_field_alias(cls, session, relation: Tuple[PityRelationField], name, now, old=None):
+        """
+        获取别名操作，如果字段是别的表的主键，则还需要根据此字段查询别的表的对应字段
+        :param session:
+        :param relation: relation有2个值，第一个值是别的表对应的主键，第二个值是要显示的字段
+        :param name:
+        :param now:
+        :param old:
+        :return:
+        """
         alias = getattr(now, Config.ALIAS, {})
         current_value = getattr(now, name, None)
         current_value = cls.get_json_field(current_value)
@@ -241,10 +282,12 @@ class Mapper(object):
                     if r.foreign is None:
                         return dict(name=alias.get(name, name), old=old_value, now=current_value)
                     if callable(r.foreign):
-                        # 说明是function
+                        # foreign支持方法和数据库其他表，如果callable为True 说明是function
+                        # 参考 ProjectRoleEnum.name方法 里面将int转为具体角色的方法
                         real_value = r.foreign(current_value)
                         real_old_value = r.foreign(old_value)
                         return dict(name=alias.get(name, name), old=real_old_value, now=real_value)
+                    # 更新字段
                     id_field, name_field = r.foreign
                     current, old = await cls.fetch_id_with_name(session, id_field, name_field, old_value, current_value)
                     return dict(name=alias.get(name, name), old=old, now=current)
@@ -252,6 +295,11 @@ class Mapper(object):
 
     @classmethod
     async def get_fields(cls, model):
+        """
+        遍历字段，排除掉被忽略的字段
+        :param model:
+        :return:
+        """
         ans = []
         fields = getattr(model, Config.FIELD, None)
         fields = [x.name for x in fields] if fields else list()

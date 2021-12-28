@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends
 from app.crud.auth.UserDao import UserDao
 from app.handler.fatcory import PityResponse
 from app.middleware.Jwt import UserToken
+from app.models.schema.user import UserUpdateForm
 from app.routers import Permission
 from app.routers.auth.user_schema import UserDto, UserForm
 from config import Config
@@ -22,14 +23,13 @@ async def register(user: UserDto):
 
 @router.post("/login")
 async def login(data: UserForm):
-    user, err = UserDao.login(data.username, data.password)
-    if err is not None:
-        return dict(code=110, msg=err)
-    user = PityResponse.model_to_dict(user, "password")
-    token = UserToken.get_token(user)
-    if err is not None:
-        return dict(code=110, msg=err)
-    return dict(code=0, msg="登录成功", data=dict(token=token, user=user))
+    try:
+        user = await UserDao.login(data.username, data.password)
+        user = PityResponse.model_to_dict(user, "password")
+        token = UserToken.get_token(user)
+        return dict(code=0, msg="登录成功", data=dict(token=token, user=user))
+    except Exception as e:
+        return PityResponse.failed(e)
 
 
 @router.get("/listUser")
@@ -42,7 +42,7 @@ async def list_users(user_info=Depends(Permission())):
 
 
 @router.get("/github/login")
-def login_with_github(code: str):
+async def login_with_github(code: str):
     try:
         with requests.Session() as session:
             r = session.get(Config.GITHUB_ACCESS, params=dict(client_id=Config.CLIENT_ID,
@@ -51,11 +51,33 @@ def login_with_github(code: str):
             token = r.text.split("&")[0].split("=")[1]
             res = session.get(Config.GITHUB_USER, headers={"Authorization": "token {}".format(token)}, timeout=8)
             user_info = res.json()
-            user = UserDao.register_for_github(user_info.get("login"), user_info.get("name"), user_info.get("email"),
-                                               user_info.get("avatar_url"))
+            user = await UserDao.register_for_github(user_info.get("login"), user_info.get("name"),
+                                                     user_info.get("email"),
+                                                     user_info.get("avatar_url"))
             user = PityResponse.model_to_dict(user, "password")
             token = UserToken.get_token(user)
             return dict(code=0, msg="登录成功", data=dict(token=token, user=user))
     except:
         # 大部分原因是github出问题，忽略
         return dict(code=110, msg="登录超时, 请稍后再试")
+
+
+@router.post("/update")
+async def update_user_info(user_info: UserUpdateForm, user=Depends(Permission(Config.ADMIN))):
+    # 只有超级管理员才可以变更用户信息
+    try:
+        user = await UserDao.update_user(user_info, user['id'])
+        return PityResponse.success(PityResponse.model_to_dict(user))
+    except Exception as e:
+        return PityResponse.failed(e)
+
+
+@router.get("/delete")
+async def delete_user(id: int, user=Depends(Permission(Config.ADMIN))):
+    # 此处要插入操作记录
+    try:
+        user = await UserDao.delete_user(id, user['id'])
+        return PityResponse.success(PityResponse.model_to_dict(user))
+    except Exception as e:
+        return PityResponse.failed(e)
+

@@ -347,7 +347,6 @@ class Executor(object):
     def replace_args(self, params, data: TestCase, constructors: List[Constructor], asserts: List[TestCaseAsserts]):
         self.replace_testcase(params, data)
         self.replace_constructors(params, constructors)
-        # TODO 替换后置条件变量
         self.replace_asserts(params, asserts)
 
     def replace_testcase(self, params: dict, data: TestCase):

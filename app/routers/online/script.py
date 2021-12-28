@@ -5,9 +5,12 @@ from app.models.schema.script import PyScriptForm
 from app.routers import Permission
 from app.routers.online.sql import router
 
+tag = "Python脚本"
+
 
 @router.post("/script")
-def execute_py_script(data: PyScriptForm, user_info=Depends(Permission())):
+def execute_py_script(data: PyScriptForm,
+                      user_info=Depends(Permission())):
     try:
         loc = dict()
         exec(data.command, loc)

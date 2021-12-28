@@ -19,7 +19,7 @@ class PityRedisConfigDao(Mapper):
                                                                  redis_config.password, redis_config.db)
             else:
                 client = PityRedisManager.get_cluster_client(redis_config.id, redis_config.addr)
-            return RedisHelper.execute_command(client, command)
+            return await RedisHelper.execute_command(client, command)
         except Exception as e:
             raise Exception(f"执行redis命令出错: {e}")
 

@@ -14,6 +14,7 @@ from app import pity
 from app.routers.auth import user
 from app.routers.config import router as config_router
 from app.routers.online import router as online_router
+from app.routers.operation import router as operation_router
 from app.routers.oss import router as oss_router
 from app.routers.project import project
 from app.routers.request import http
@@ -28,6 +29,7 @@ pity.include_router(testcase_router)
 pity.include_router(config_router)
 pity.include_router(online_router)
 pity.include_router(oss_router)
+pity.include_router(operation_router)
 
 pity.add_middleware(
     CORSMiddleware,

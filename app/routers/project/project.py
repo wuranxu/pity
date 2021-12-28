@@ -1,8 +1,11 @@
+import traceback
+
 from fastapi import APIRouter, Depends
 
 from app.crud.project.ProjectDao import ProjectDao
 from app.crud.project.ProjectRoleDao import ProjectRoleDao
 from app.handler.fatcory import PityResponse
+from app.models.project_role import ProjectRole
 from app.routers import Permission
 from app.routers.project.project_schema import ProjectForm, ProjectEditForm
 from app.routers.project.project_schema import ProjectRoleForm, ProjectRoleEditForm, ProjectDelForm
@@ -66,11 +69,18 @@ def query_project(projectId: int, user_info=Depends(Permission())):
 @router.post("/role/insert")
 async def insert_project_role(role: ProjectRoleForm, user_info=Depends(Permission())):
     try:
-        err = ProjectRoleDao.add_project_role(**role.dict(),
-                                              user=user_info["id"], user_role=user_info["role"])
+        query = await ProjectRoleDao.query_record(user_id=role.user_id, project_id=role.project_id,
+                                                  deleted_at=0)
+        if query is not None:
+            raise Exception("该用户已存在")
+        user = user_info['id']
+        err = await ProjectRoleDao.has_permission(role.project_id, role.project_role, user, user_info['role'])
         if err is not None:
-            return dict(code=110, msg=err)
+            raise Exception(err)
+        model = ProjectRole(**role.dict(), create_user=user)
+        await ProjectRoleDao.insert_record(model, True)
     except Exception as e:
+        traceback.print_exc()
         return dict(code=110, msg=str(e))
     return dict(code=0, msg="操作成功")
 
@@ -78,10 +88,7 @@ async def insert_project_role(role: ProjectRoleForm, user_info=Depends(Permissio
 @router.post("/role/update")
 async def update_project_role(role: ProjectRoleEditForm, user_info=Depends(Permission())):
     try:
-        err = ProjectRoleDao.update_project_role(role.id, role.project_role,
-                                                 user_info["id"], user_info["role"])
-        if err is not None:
-            return dict(code=110, msg=err)
+        await ProjectRoleDao.update_project_role(role, user_info["id"], user_info["role"])
     except Exception as e:
         return dict(code=110, msg=str(e))
     return dict(code=0, msg="操作成功")
@@ -90,9 +97,7 @@ async def update_project_role(role: ProjectRoleEditForm, user_info=Depends(Permi
 @router.post("/role/delete")
 async def delete_project_role(role: ProjectDelForm, user_info=Depends(Permission())):
     try:
-        err = ProjectRoleDao.delete_project_role(role.id, user_info["id"], user_info["role"])
-        if err is not None:
-            return dict(code=110, msg=err)
+        await ProjectRoleDao.delete_project_role(role.id, user_info["id"], user_info["role"])
     except Exception as e:
         return dict(code=110, msg=str(e))
     return dict(code=0, msg="操作成功")

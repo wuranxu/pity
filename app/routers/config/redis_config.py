@@ -35,7 +35,7 @@ async def insert_redis_config(form: RedisConfigForm,
         if query is not None:
             raise Exception("数据已存在, 请勿重复添加")
         data = PityRedis(**form.dict(), user=user_info['id'])
-        result = await PityRedisConfigDao.insert_record(data)
+        result = await PityRedisConfigDao.insert_record(data, log=True)
         return PityResponse.success(data=PityResponse.model_to_dict(result))
     except Exception as err:
         return PityResponse.failed(err)
@@ -46,7 +46,7 @@ async def update_redis_config(form: RedisConfigForm,
                               background_tasks: BackgroundTasks,
                               user_info=Depends(Permission(Config.ADMIN))):
     try:
-        result = await PityRedisConfigDao.update_record_by_id(user_info['id'], form)
+        result = await PityRedisConfigDao.update_record_by_id(user_info['id'], form, log=True)
         if result.cluster:
             background_tasks.add_task(PityRedisManager.refresh_redis_cluster, *(result.id, result.addr))
         else:

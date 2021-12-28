@@ -1,28 +1,33 @@
-from datetime import datetime
+from sqlalchemy import INT, Column
 
-from sqlalchemy import INT, Column, DATETIME
-
-from app.models import Base
+from app.models.basic import PityBase
 
 
-class ProjectRole(Base):
+class ProjectRoleEnum:
+    ADMIN = 1
+    MEMBER = 2
+
+    @staticmethod
+    def name(role):
+        if role == 1:
+            return "组长"
+        if role == 0:
+            return "组员"
+        return None
+
+
+class ProjectRole(PityBase):
     __tablename__ = 'pity_project_role'
-    id = Column(INT, primary_key=True)
     user_id = Column(INT, index=True)
     project_id = Column(INT, index=True)
     project_role = Column(INT, index=True)
-    created_at = Column(DATETIME, nullable=False)
-    updated_at = Column(DATETIME, nullable=False)
-    deleted_at = Column(DATETIME)
-    create_user = Column(INT, nullable=True)
-    update_user = Column(INT, nullable=True)
+    __alias__ = dict(user_id="用户", project_id="项目", project_role="角色")
+    __tag__ = "项目角色"
+    __fields__ = (project_id, user_id, project_role)
+    __show__ = 2
 
     def __init__(self, user_id, project_id, project_role, create_user):
+        super().__init__(create_user)
         self.user_id = user_id
         self.project_id = project_id
         self.project_role = project_role
-        self.created_at = datetime.now()
-        self.updated_at = datetime.now()
-        self.create_user = create_user
-        self.update_user = create_user
-        self.deleted_at = None

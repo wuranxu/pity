@@ -5,31 +5,86 @@ from sqlalchemy import or_, select
 
 from app.middleware.Jwt import UserToken
 from app.middleware.RedisManager import RedisHelper
-from app.models import Session, async_session
+from app.models import Session, async_session, DatabaseHelper
+from app.models.schema.user import UserUpdateForm
 from app.models.user import User
 from app.utils.logger import Log
+from config import Config
 
 
 class UserDao(object):
     log = Log("UserDao")
 
     @staticmethod
-    def register_for_github(username, name, email, avatar):
+    @RedisHelper.up_cache("user_list")
+    async def update_user(user_info: UserUpdateForm, user_id: int):
+        """
+        变更用户的接口，主要用于用户管理页面(为管理员提供)
+        :param user_id:
+        :param user_info:
+        :return:
+        """
         try:
-            with Session() as session:
-                user = session.query(User).filter(or_(User.username == username, User.email == email)).first()
-                if user:
-                    # 如果存在，则给用户更新信息
-                    user.last_login_at = datetime.now()
-                    user.name = name
-                    user.avatar = avatar
-                else:
-                    random_pwd = random.randint(100000, 999999)
-                    user = User(username, name, UserToken.add_salt(str(random_pwd)), email, avatar)
-                    session.add(user)
-                session.commit()
-                session.refresh(user)
-                return user
+            async with async_session() as session:
+                async with session.begin():
+                    query = await session.execute(select(User).where(User.id == user_info.id))
+                    user = query.scalars().first()
+                    if not user:
+                        raise Exception("该用户不存在, 请检查")
+                    # 开启not_null，这样只有非空字段才修改
+                    DatabaseHelper.update_model(user, user_info, user_id, True)
+                    await session.flush()
+                    session.expunge(user)
+                    return user
+        except Exception as e:
+            UserDao.log.error(f"修改用户信息失败: {str(e)}")
+            raise Exception(e)
+
+    @staticmethod
+    @RedisHelper.up_cache("user_list")
+    async def delete_user(id: int, user_id: int):
+        """
+        变更用户的接口，主要用于用户管理页面(为管理员提供)
+        :param id: 被删除用户id
+        :param user_id: 操作人id
+        :return:
+        """
+        try:
+            async with async_session() as session:
+                async with session.begin():
+                    query = await session.execute(select(User).where(User.id == id))
+                    user = query.scalars().first()
+                    if not user:
+                        raise Exception("该用户不存在, 请检查")
+                    if user.role == Config.ADMIN:
+                        raise Exception("你不能删除超级管理员")
+                    user.update_user = user_id
+                    user.deleted_at = datetime.now()
+        except Exception as e:
+            UserDao.log.error(f"修改用户信息失败: {str(e)}")
+            raise Exception(e)
+
+    @staticmethod
+    async def register_for_github(username, name, email, avatar):
+        try:
+            async with async_session() as session:
+                async with session.begin():
+                    # 异步session只需要 session.begin，下面的commit可以去掉 语法也有一些区别
+                    query = await session.execute(
+                        select(User).where(or_(User.username == username, User.email == email)))
+                    user = query.scalars().first()
+                    if user:
+                        # 如果存在，则给用户更新信息
+                        user.last_login_at = datetime.now()
+                        user.name = name
+                        user.avatar = avatar
+                    else:
+                        random_pwd = random.randint(100000, 999999)
+                        user = User(username, name, UserToken.add_salt(str(random_pwd)), email, avatar)
+                        session.add(user)
+                        await session.flush()
+                        session.expunge(user)
+                    return user
         except Exception as e:
             UserDao.log.error(f"Github用户登录失败: {str(e)}")
             raise Exception("登录失败")
@@ -60,25 +115,38 @@ class UserDao(object):
         return None
 
     @staticmethod
-    def login(username, password):
+    async def login(username, password):
+        """
+        这里要改成异步了，原来的go写法要废弃
+        :param username:
+        :param password:
+        :return:
+        """
         try:
             pwd = UserToken.add_salt(password)
-            with Session() as session:
-                # 查询用户名/密码匹配且没有被删除的用户
-                user = session.query(User).filter_by(username=username, password=pwd, deleted_at=None).first()
-                if user is None:
-                    return None, "用户名或密码错误"
-                # 更新用户的最后登录时间
-                user.last_login_at = datetime.now()
-                session.commit()
-                session.refresh(user)
-                return user, None
+            async with async_session() as session:
+                async with session.begin():
+                    # 查询用户名/密码匹配且没有被删除的用户
+                    query = await session.execute(
+                        select(User).where(User.username == username, User.password == pwd,
+                                           User.deleted_at == None))
+                    user = query.scalars().first()
+                    if user is None:
+                        raise Exception("用户名或密码错误")
+                    if not user.is_valid:
+                        # 说明用户被禁用
+                        raise Exception("您的账号已被封禁, 请联系管理员")
+                    user.last_login_at = datetime.now()
+                    await session.flush()
+                    session.expunge(user)
+                    return user
         except Exception as e:
             UserDao.log.error(f"用户{username}登录失败: {str(e)}")
-            return None, str(e)
+            raise e
 
     @staticmethod
     @RedisHelper.cache("user_list", 3 * 3600, True)
+    # TODO 先不改，里面有redis相关内容
     def list_users():
         try:
             with Session() as session:

@@ -193,9 +193,9 @@ class RedisHelper(object):
             if asyncio.iscoroutinefunction(func):
                 @functools.wraps(func)
                 async def wrapper(*args, **kwargs):
+                    RedisHelper.pity_redis_client.delete(redis_key)
                     new_data = await func(*args, **kwargs)
                     # 更新数据，删除缓存
-                    RedisHelper.pity_redis_client.delete(redis_key)
                     return new_data
 
                 return wrapper

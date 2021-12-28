@@ -89,7 +89,10 @@ class DatabaseHelper(object):
         changed = []
         for var, value in vars(source).items():
             if not_null:
-                if value:
+                if value is None:
+                    continue
+                if isinstance(value, bool) or isinstance(value, int) or value:
+                    # 如果是bool值或者int, false和0也是可以接受的
                     if getattr(dist, var) != value:
                         changed.append(var)
                         setattr(dist, var, value)
