@@ -16,6 +16,8 @@ from app.models.operation_log import PityOperationLog
 from app.models.project import Project
 from app.models.project_role import ProjectRole, ProjectRoleEnum
 from app.models.redis_config import PityRedis
+from app.models.test_case import TestCase
+from app.models.test_plan import PityTestPlan
 from app.models.user import User
 from config import Config
 
@@ -206,7 +208,10 @@ class Mapper(object):
         else:
             fields = ['id']
         if not changed:
-            changed_fields = await cls.get_fields(now)
+            if mode == Config.OperationType.INSERT:
+                changed_fields = await cls.get_fields(now)
+            else:
+                changed_fields = []
         else:
             changed_fields = changed
         detail_fields = [c for c in changed_fields if
@@ -222,6 +227,15 @@ class Mapper(object):
         return result, title
 
     @classmethod
+    async def get_id_list(cls, ids):
+        if isinstance(ids, int):
+            # 说明是多个id
+            id_list = [ids]
+        else:
+            id_list = list(map(int, ids.split(",")))
+        return id_list
+
+    @classmethod
     async def fetch_id_with_name(cls, session, id_field, name_field, old_id, new_id):
         """
         通用方法，通过id查询name等字段数据
@@ -234,19 +248,33 @@ class Mapper(object):
         """
         cls_ = id_field.parent.class_
         if old_id is None:
-            data = await session.execute(select(cls_).where(getattr(cls_, id_field.name) == new_id))
-            result = data.scalars().first()
+            id_list = await cls.get_id_list(new_id)
+            data = await session.execute(select(cls_).where(getattr(cls_, id_field.name).in_(id_list)))
+            result = data.scalars().all()
             if result is None:
                 return new_id, None
-            return getattr(result, name_field.name, new_id), None
-        data = await session.execute(select(cls_).where(getattr(cls_, id_field.name).in_([new_id, old_id])))
-        old_value, new_value = old_id, new_id
+            ans = []
+            for r in result:
+                ans.append(getattr(r, name_field.name, new_id))
+            return ",".join(map(str, ans)), None
+        new_list = await cls.get_id_list(new_id)
+        old_list = await cls.get_id_list(old_id)
+        id_list = old_list + new_list
+        data = await session.execute(select(cls_).where(getattr(cls_, id_field.name).in_(id_list)))
+        # old_value, new_value = old_id, new_id
+        old_ans, new_ans = [], []
+        mp = dict()
         for d in data.scalars():
-            if getattr(d, id_field.name, None) == old_id:
-                new_value = getattr(d, name_field.name, old_value)
-            else:
-                old_value = getattr(d, name_field.name, new_value)
-        return new_value, old_value
+            mp[getattr(d, id_field.name, None)] = getattr(d, name_field.name, None)
+            # if getattr(d, id_field.name, None) == old_id:
+            #     new_value = getattr(d, name_field.name, old_value)
+            # else:
+            #     old_value = getattr(d, name_field.name, new_value)
+        for t in old_list:
+            old_ans.append(mp.get(t, t))
+        for i in new_list:
+            new_ans.append(mp.get(i, i))
+        return ",".join(map(str, new_ans)), ",".join(map(str, old_ans))
 
     @classmethod
     def get_json_field(cls, field):
@@ -367,3 +395,10 @@ init_relation(ProjectRole, PityRelationField(ProjectRole.user_id, (User.id, User
               PityRelationField(ProjectRole.project_role, ProjectRoleEnum.name))
 
 init_relation(PityRedis, PityRelationField(PityRedis.env, (Environment.id, Environment.name)))
+
+init_relation(PityTestPlan, PityRelationField(PityTestPlan.env, (Environment.id, Environment.name)),
+              PityRelationField(PityTestPlan.project_id, (Project.id, Project.name)),
+              PityRelationField(PityTestPlan.msg_type, PityTestPlan.get_msg_type),
+              PityRelationField(PityTestPlan.receiver, (User.id, User.name)))
+
+init_relation(TestCase)

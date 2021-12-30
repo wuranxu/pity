@@ -70,12 +70,12 @@ class Executor(object):
             self.logger.append(content, end)
 
     @case_log
-    async def parse_gconfig(self, data: TestCase, *fields):
+    async def parse_gconfig(self, data, type_, *fields):
         """
         解析全局变量
         """
         for f in fields:
-            await self.parse_field(data, f)
+            await self.parse_field(data, f, Config.GconfigType.value(type_))
 
     @case_log
     def get_parser(self, key_type):
@@ -89,12 +89,12 @@ class Executor(object):
             return YamlGConfigParser.parse
         raise Exception(f"全局变量类型: {key_type}不合法, 请检查!")
 
-    async def parse_field(self, data: TestCase, field):
+    async def parse_field(self, data, field, name):
         """
         解析字段
         """
         try:
-            self.append("获取用例: [{}]字段: [{}]中的el表达式".format(data, field))
+            self.append("获取{}: [{}]字段: [{}]中的el表达式".format(name, data, field))
             field_origin = getattr(data, field)
             variables = self.get_el_expression(field_origin)
             for v in variables:
@@ -108,7 +108,7 @@ class Executor(object):
                     setattr(data, field, new_field)
                     self.append("替换全局变量成功, 字段: [{}]:\n\n[{}] -> [{}]\n".format(field, "${%s}" % v, new_value))
                     field_origin = new_field
-            self.append("获取用例字段: [{}]中的el表达式".format(field), True)
+            self.append("获取{}字段: [{}]中的el表达式".format(name, field), True)
         except Exception as e:
             Executor.log.error(f"查询全局变量失败, error: {str(e)}")
             raise Exception(f"查询全局变量失败, error: {str(e)}")
@@ -264,23 +264,29 @@ class Executor(object):
             response_info["request_method"] = method
 
             # Step1: 替换全局变量
-            await self.parse_gconfig(case_info, *Executor.fields)
+            await self.parse_gconfig(case_info, Config.GconfigType.case, *Executor.fields)
 
             self.append("解析全局变量", True)
 
             # Step2: 获取构造数据
             constructors = await self.get_constructor(case_id)
 
-            # Step3: 获取断言
-            asserts, err = await TestCaseAssertsDao.async_list_test_case_asserts(case_id)
+            #  Step3: 解析前后置条件的全局变量
+            for c in constructors:
+                await self.parse_gconfig(c, Config.GconfigType.constructor, "constructor_json")
 
+            # Step4: 获取断言
+            asserts, err = await TestCaseAssertsDao.async_list_test_case_asserts(case_id)
             if err:
                 return response_info, err
 
-            # Step4: 替换参数
+            for a in asserts:
+                await self.parse_gconfig(a, Config.GconfigType.asserts, "expected", "actually")
+
+            # Step5: 替换参数
             self.replace_args(req_params, case_info, constructors, asserts)
 
-            # Step5: 执行前置条件
+            # Step6: 执行前置条件
             await self.execute_constructors(env, path, case_info, case_params, req_params, constructors, asserts)
 
             response_info["url"] = case_info.url
@@ -298,10 +304,10 @@ class Executor(object):
             else:
                 body = None
 
-            # Step5: 替换请求参数
+            # Step8: 替换请求参数
             body = self.replace_body(request_param, body, case_info.body_type)
 
-            # Step6: 完成http请求
+            # Step9: 完成http请求
             request_obj = await AsyncRequest.client(url=case_info.url, body_type=case_info.body_type, headers=headers,
                                                     body=body)
             res = await request_obj.invoke(method)
@@ -312,7 +318,7 @@ class Executor(object):
             # 执行完成进行断言
             asserts, ans = self.my_assert(asserts, response_info)
 
-            # Step7: 执行后置条件
+            # Step10: 执行后置条件
             await self.execute_constructors(env, path, case_info, case_params, req_params, constructors, asserts, True)
 
             response_info["asserts"] = asserts

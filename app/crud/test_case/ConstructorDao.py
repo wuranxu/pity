@@ -155,7 +155,7 @@ class ConstructorDao(object):
                 return []
             # 二次查询，查出有前置条件的case
             query = await session.execute(
-                select(TestCase).where(TestCase.id.in_(constructors.keys()), TestCase.deleted_at == None))
+                select(TestCase).where(TestCase.id.in_(constructors.keys()), TestCase.deleted_at == 0))
             # 构造树，要知道children已经构建好了，就在constructors里面
             for q in query.scalars().all():
                 # 把用例id放入cs_list，这里就不用原生join了

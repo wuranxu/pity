@@ -1,13 +1,19 @@
+import asyncio
+from copy import deepcopy
+
 from sqlalchemy import select
 
+from app.crud import Mapper
 from app.models import async_session, DatabaseHelper
 from app.models.schema.test_plan import PityTestPlanForm
 from app.models.test_plan import PityTestPlan
+from app.utils.decorator import dao
 from app.utils.logger import Log
+from config import Config
 
 
-class PityTestPlanDao(object):
-    log = Log("PityTestPlanDao")
+@dao(PityTestPlan, Log("PityTestPlanDao"))
+class PityTestPlanDao(Mapper):
 
     @staticmethod
     async def list_test_plan(page: int, size: int, project_id: int = None, name: str = '', priority: str = '',
@@ -46,8 +52,8 @@ class PityTestPlanDao(object):
             PityTestPlanDao.log.error(f"新增测试计划失败: {str(e)}")
             raise Exception(f"添加失败: {str(e)}")
 
-    @staticmethod
-    async def update_test_plan(plan: PityTestPlanForm, user: int):
+    @classmethod
+    async def update_test_plan(cls, plan: PityTestPlanForm, user: int, log=False):
         try:
             async with async_session() as session:
                 async with session.begin():
@@ -56,11 +62,17 @@ class PityTestPlanDao(object):
                     data = query.scalars().first()
                     if data is None:
                         raise Exception("测试计划不存在")
+                    old = deepcopy(data)
                     plan.env = ",".join(map(str, plan.env))
                     plan.receiver = ",".join(map(str, plan.receiver))
                     plan.case_list = ",".join(map(str, plan.case_list))
                     plan.msg_type = ",".join(map(str, plan.msg_type))
-                    DatabaseHelper.update_model(data, plan, user)
+                    changed = DatabaseHelper.update_model(data, plan, user)
+                    await session.flush()
+                    session.expunge(data)
+                if log:
+                    async with session.begin():
+                        await asyncio.create_task(cls.insert_log(session, user, Config.OperationType.UPDATE, data, old, plan.id, changed))
         except Exception as e:
             PityTestPlanDao.log.error(f"编辑测试计划失败: {str(e)}")
             raise Exception(f"编辑失败: {str(e)}")
@@ -91,17 +103,17 @@ class PityTestPlanDao(object):
             PityTestPlanDao.log.error(f"获取测试计划失败: {str(e)}")
             raise Exception(f"获取测试计划失败: {str(e)}")
 
-    @staticmethod
-    async def delete_test_plan(id: int, user: int):
-        try:
-            async with async_session() as session:
-                async with session.begin():
-                    query = await session.execute(
-                        select(PityTestPlan).where(PityTestPlan.id == id, PityTestPlan.deleted_at == 0))
-                    data = query.scalars().first()
-                    if data is None:
-                        raise Exception("测试计划不存在")
-                    DatabaseHelper.delete_model(data, user)
-        except Exception as e:
-            PityTestPlanDao.log.error(f"删除测试计划失败: {str(e)}")
-            raise Exception(f"删除失败: {str(e)}")
+    # @staticmethod
+    # async def delete_test_plan(id: int, user: int):
+    #     try:
+    #         async with async_session() as session:
+    #             async with session.begin():
+    #                 query = await session.execute(
+    #                     select(PityTestPlan).where(PityTestPlan.id == id, PityTestPlan.deleted_at == 0))
+    #                 data = query.scalars().first()
+    #                 if data is None:
+    #                     raise Exception("测试计划不存在")
+    #                 DatabaseHelper.delete_model(data, user)
+    #     except Exception as e:
+    #         PityTestPlanDao.log.error(f"删除测试计划失败: {str(e)}")
+    #         raise Exception(f"删除失败: {str(e)}")

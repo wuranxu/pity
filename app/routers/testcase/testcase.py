@@ -13,6 +13,7 @@ from app.models.schema.constructor import ConstructorForm, ConstructorIndex
 from app.models.schema.testcase_data import PityTestcaseDataForm
 from app.models.schema.testcase_directory import PityTestcaseDirectoryForm
 from app.models.schema.testcase_schema import TestCaseAssertsForm, TestCaseForm
+from app.models.test_case import TestCase
 from app.routers import Permission
 
 router = APIRouter(prefix="/testcase")
@@ -28,10 +29,15 @@ async def list_testcase(directory_id: int = None, name: str = "", create_user: s
 
 
 @router.post("/insert")
-def insert_testcase(data: TestCaseForm, user_info=Depends(Permission())):
+async def insert_testcase(data: TestCaseForm, user_info=Depends(Permission())):
     try:
-        case_id = TestCaseDao.insert_test_case(data.dict(), user_info['id'])
-        return PityResponse.success(case_id)
+        record = await TestCaseDao.query_record(name=data.name, directory_id=data.directory_id)
+        if record is not None:
+            return PityResponse.failed("用例已存在")
+        model = TestCase(**data.dict(), create_user=user_info['id'])
+        model = await TestCaseDao.insert_record(model, True)
+        # case_id = TestCaseDao.insert_test_case(data.dict(), user_info['id'])
+        return PityResponse.success(model.id)
     except Exception as e:
         return PityResponse.failed(e)
 

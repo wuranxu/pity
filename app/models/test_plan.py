@@ -3,6 +3,13 @@ from sqlalchemy.dialects.mysql import TINYTEXT
 
 from app.models.basic import PityBase
 
+_notice_type = {
+    '0': '邮件',
+    '1': '钉钉',
+    '2': '企业微信',
+    '3': '飞书'
+}
+
 
 class PityTestPlan(PityBase):
     project_id = Column(INT, nullable=False)
@@ -35,6 +42,11 @@ class PityTestPlan(PityBase):
 
     __tablename__ = "pity_test_plan"
 
+    __fields__ = (name, project_id, env, priority,)
+    __tag__ = "测试计划"
+    __alias__ = dict(name="名称", project_id="项目", env="环境", priority="优先级", cron="cron", ordered="顺序",
+                     pass_rate="通过率", msg_type="通知类型", retry_minutes="重试时间", receiver="通知人", case_list="用例列表")
+
     def __init__(self, project_id, env, case_list, name, priority, cron, ordered, pass_rate, receiver, msg_type,
                  retry_minutes, user, state=0, id=None):
         super().__init__(user, id)
@@ -50,3 +62,7 @@ class PityTestPlan(PityBase):
         self.msg_type = ",".join(map(str, msg_type))
         self.retry_minutes = retry_minutes
         self.state = state
+
+    @staticmethod
+    def get_msg_type(msg_type):
+        return ",".join(_notice_type.get(str(x), '未知') for x in msg_type.split(","))

@@ -1,6 +1,7 @@
 import asyncio
 import json
 import uuid
+from json import JSONDecodeError
 from typing import List, Dict
 
 from fastapi import Depends, APIRouter
@@ -43,6 +44,8 @@ async def execute_case(env: int, case_id: int, _=Depends(Permission())):
             result, _ = await executor.run(env, case_id, request_param=params)
             ans[data.name] = result
         return PityResponse.success(ans)
+    except JSONDecodeError:
+        return PityResponse.failed("测试数据不为合法的JSON")
     except Exception as e:
         return PityResponse.failed(e)
 

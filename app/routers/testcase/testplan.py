@@ -14,7 +14,8 @@ from config import Config
 async def list_test_plan(page: int, size: int, project_id: int = None, name: str = "", priority: str = '',
                          create_user: int = None, user_info=Depends(Permission())):
     try:
-        data, total = await PityTestPlanDao.list_test_plan(page, size, project_id, name, priority, create_user)
+        data, total = await PityTestPlanDao.list_record_with_pagination(page, size, project_id=project_id, name=name,
+                                                                        priority=priority, create_user=create_user)
         ans = PityResponse.model_to_list(data)
         Scheduler.list_test_plan(ans)
         return PityResponse.success_with_size(ans, total=total)
@@ -36,7 +37,7 @@ async def insert_test_plan(form: PityTestPlanForm, user_info=Depends(Permission(
 @router.post("/plan/update")
 async def update_test_plan(form: PityTestPlanForm, user_info=Depends(Permission(Config.MANAGER))):
     try:
-        await PityTestPlanDao.update_test_plan(form, user_info['id'])
+        await PityTestPlanDao.update_test_plan(form, user_info['id'], True)
         Scheduler.edit_test_plan(form.id, form.name, form.cron)
         return PityResponse.success()
     except Exception as e:
@@ -46,7 +47,7 @@ async def update_test_plan(form: PityTestPlanForm, user_info=Depends(Permission(
 @router.get("/plan/delete")
 async def delete_test_plan(id: int, user_info=Depends(Permission(Config.MANAGER))):
     try:
-        await PityTestPlanDao.delete_test_plan(id, user_info['id'])
+        await PityTestPlanDao.delete_record_by_id(user_info['id'], id)
         Scheduler.remove(id)
         return PityResponse.success()
     except Exception as e:

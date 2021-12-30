@@ -1,3 +1,4 @@
+import asyncio
 from mimetypes import guess_type
 from os.path import isfile
 
@@ -9,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import Response
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
+from starlette.websockets import WebSocket
 
 from app import pity
 from app.routers.auth import user
@@ -94,6 +96,15 @@ def init_scheduler():
 def stop_test():
     pass
 
+
+# @pity.websocket("/ws")
+# async def websocket_endpoint(websocket: WebSocket):
+#     await websocket.accept()
+#     while True:
+#         # data = await websocket.receive_text()
+#         # await websocket.send_text(f"Message text was: {data}")
+#         await websocket.send_text(f"你妹的")
+#         await asyncio.sleep(20)
 
 if __name__ == "__main__":
     uvicorn.run(app='main:pity', host='0.0.0.0', port=7777, reload=False)

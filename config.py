@@ -14,10 +14,10 @@ class Config(object):
     MYSQL_PWD = "wuranxu@33"
     DBNAME = "pity"
 
-    REDIS_HOST = "121.5.2.74"
+    REDIS_HOST = "127.0.0.1"
     REDIS_PORT = 7788
     REDIS_DB = 0
-    REDIS_PASSWORD = "woodywu"
+    REDIS_PASSWORD = "woodywu123"
 
     # Redis连接信息
     REDIS_NODES = [{"host": REDIS_HOST, "port": REDIS_PORT, "db": REDIS_DB, "password": REDIS_PASSWORD}]
@@ -80,6 +80,20 @@ class Config(object):
         x_form = 3
         binary = 4
         graphQL = 5
+
+    # 全局变量的类型
+    class GconfigType:
+        case = 0
+        constructor = 1
+        asserts = 2
+
+        @staticmethod
+        def value(val):
+            if val == 0:
+                return "用例"
+            if val == 1:
+                return "前后置条件"
+            return "断言"
 
     # 前置条件类型
     class ConstructorType:

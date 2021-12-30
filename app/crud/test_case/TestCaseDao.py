@@ -5,6 +5,7 @@ from typing import List
 from sqlalchemy import desc
 from sqlalchemy.future import select
 
+from app.crud import Mapper
 from app.crud.test_case.ConstructorDao import ConstructorDao
 from app.crud.test_case.TestCaseAssertsDao import TestCaseAssertsDao
 from app.crud.test_case.TestCaseDirectory import PityTestcaseDirectoryDao
@@ -13,20 +14,22 @@ from app.models import Session, DatabaseHelper, async_session
 from app.models.constructor import Constructor
 from app.models.schema.testcase_schema import TestCaseForm
 from app.models.test_case import TestCase
+from app.utils.decorator import dao
 from app.utils.logger import Log
 from config import Config
 
 
-class TestCaseDao(object):
+@dao(TestCase, Log("TestCaseDao"))
+class TestCaseDao(Mapper):
     log = Log("TestCaseDao")
 
-    @staticmethod
-    async def list_test_case(directory_id: int = None, name: str = "", create_user: str = None):
+    @classmethod
+    async def list_test_case(cls, directory_id: int = None, name: str = "", create_user: str = None):
         try:
-            filters = [TestCase.deleted_at == None]
+            filters = [TestCase.deleted_at == 0]
             if directory_id:
                 parents = await PityTestcaseDirectoryDao.get_directory_son(directory_id)
-                filters = [TestCase.deleted_at == None, TestCase.directory_id.in_(parents)]
+                filters = [TestCase.deleted_at == 0, TestCase.directory_id.in_(parents)]
                 if name:
                     filters.append(TestCase.name.like(f"%{name}%"))
                 if create_user:
@@ -36,14 +39,14 @@ class TestCaseDao(object):
                 result = await session.execute(sql)
                 return result.scalars().all()
         except Exception as e:
-            TestCaseDao.log.error(f"获取测试用例失败: {str(e)}")
+            cls.log.error(f"获取测试用例失败: {str(e)}")
             raise Exception(f"获取测试用例失败: {str(e)}")
 
     @staticmethod
     async def get_test_case_by_directory_id(directory_id: int):
         try:
             async with async_session() as session:
-                sql = select(TestCase).where(TestCase.deleted_at == None,
+                sql = select(TestCase).where(TestCase.deleted_at == 0,
                                              TestCase.directory_id == directory_id).order_by(TestCase.name.asc())
                 result = await session.execute(sql)
                 ans = []
@@ -85,29 +88,29 @@ class TestCaseDao(object):
             raise err
         return len(data)
 
-    @staticmethod
-    def insert_test_case(test_case, user):
-        """
-
-        :param user: 创建人
-        :param test_case: 测试用例
-        :return:
-        """
-        try:
-            with Session() as session:
-                data = session.query(TestCase).filter_by(name=test_case.get("name"),
-                                                         directory_id=test_case.get("directory_id"),
-                                                         deleted_at=None).first()
-                if data is not None:
-                    raise Exception("用例已存在")
-                cs = TestCase(**test_case, create_user=user)
-                session.add(cs)
-                session.commit()
-                session.refresh(cs)
-                return cs.id
-        except Exception as e:
-            TestCaseDao.log.error(f"添加用例失败: {str(e)}")
-            raise Exception(f"添加用例失败: {str(e)}")
+    # @staticmethod
+    # def insert_test_case(test_case, user):
+    #     """
+    #
+    #     :param user: 创建人
+    #     :param test_case: 测试用例
+    #     :return:
+    #     """
+    #     try:
+    #         with Session() as session:
+    #             data = session.query(TestCase).filter_by(name=test_case.get("name"),
+    #                                                      directory_id=test_case.get("directory_id"),
+    #                                                      deleted_at=0).first()
+    #             if data is not None:
+    #                 raise Exception("用例已存在")
+    #             cs = TestCase(**test_case, create_user=user)
+    #             session.add(cs)
+    #             session.commit()
+    #             session.refresh(cs)
+    #             return cs.id
+    #     except Exception as e:
+    #         TestCaseDao.log.error(f"添加用例失败: {str(e)}")
+    #         raise Exception(f"添加用例失败: {str(e)}")
 
     @staticmethod
     def update_test_case(test_case: TestCaseForm, user):
@@ -119,7 +122,7 @@ class TestCaseDao(object):
         """
         try:
             with Session() as session:
-                data = session.query(TestCase).filter_by(id=test_case.id, deleted_at=None).first()
+                data = session.query(TestCase).filter_by(id=test_case.id, deleted_at=0).first()
                 if data is None:
                     raise Exception("用例不存在")
                 DatabaseHelper.update_model(data, test_case, user)
@@ -134,7 +137,7 @@ class TestCaseDao(object):
     async def query_test_case(case_id: int) -> dict:
         try:
             async with async_session() as session:
-                sql = select(TestCase).where(TestCase.id == case_id, TestCase.deleted_at == None)
+                sql = select(TestCase).where(TestCase.id == case_id, TestCase.deleted_at == 0)
                 result = await session.execute(sql)
                 data = result.scalars().first()
                 if data is None:
@@ -170,7 +173,7 @@ class TestCaseDao(object):
         try:
             async with async_session() as session:
                 result = await session.execute(
-                    select(TestCase).where(TestCase.id == case_id, TestCase.deleted_at == None))
+                    select(TestCase).where(TestCase.id == case_id, TestCase.deleted_at == 0))
                 data = result.scalars().first()
                 if data is None:
                     return None, "用例不存在"
@@ -196,7 +199,7 @@ class TestCaseDao(object):
                 project_index[p.id] = len(result) - 1
             with Session() as session:
                 data = session.query(TestCase).filter(TestCase.project_id.in_(project_map.keys()),
-                                                      TestCase.deleted_at == None).all()
+                                                      TestCase.deleted_at == 0).all()
 
                 for d in data:
                     result[project_index[d.project_id]]["children"].append({
