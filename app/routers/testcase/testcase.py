@@ -166,8 +166,8 @@ async def list_case_and_constructor(constructor_type: int, suffix: bool):
 @router.get("/report")
 async def query_report(id: int, user_info=Depends(Permission())):
     try:
-        report, case_list = await TestReportDao.query(id)
-        return dict(code=0, data=dict(report=PityResponse.model_to_dict(report),
+        report, case_list, plan_name = await TestReportDao.query(id)
+        return dict(code=0, data=dict(report=PityResponse.model_to_dict(report), plan_name=plan_name,
                                       case_list=PityResponse.model_to_list(case_list)), msg="操作成功")
     except Exception as e:
         return dict(code=110, msg=str(e))

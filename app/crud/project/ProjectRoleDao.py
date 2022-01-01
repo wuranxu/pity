@@ -48,13 +48,13 @@ class ProjectRoleDao(Mapper):
         if project is None:
             return "该项目不存在"
         if project.owner != user:
-            if project_admin and project_role == 1:
+            if project_admin and project_role == Config.MANAGER:
                 return "不能修改组长的权限"
             updater_role = await session.execute(select(Project)
                                                  .where(ProjectRole.user_id == user,
                                                         ProjectRole.project_id == project_id,
                                                         ProjectRole.deleted_at == 0)).scalars().first()
-            if updater_role is None or updater_role.project_role == 0:
+            if updater_role is None or updater_role.project_role == Config.MEMBER:
                 return "对不起，你没有权限"
         return None
 

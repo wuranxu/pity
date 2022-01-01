@@ -20,6 +20,7 @@ from app.crud.test_case.TestPlan import PityTestPlanDao
 from app.crud.test_case.TestReport import TestReportDao
 from app.crud.test_case.TestResult import TestResultDao
 from app.crud.test_case.TestcaseDataDao import PityTestcaseDataDao
+from app.enums.GconfigEnum import GConfigParserEnum
 from app.middleware.AsyncHttpClient import AsyncRequest
 from app.models.constructor import Constructor
 from app.models.test_case import TestCase
@@ -81,11 +82,11 @@ class Executor(object):
     def get_parser(self, key_type):
         """获取变量解析器
         """
-        if key_type == 0:
+        if key_type == GConfigParserEnum.string:
             return StringGConfigParser.parse
-        if key_type == 1:
+        if key_type == GConfigParserEnum.json:
             return JSONGConfigParser.parse
-        if key_type == 2:
+        if key_type == GConfigParserEnum.yaml:
             return YamlGConfigParser.parse
         raise Exception(f"全局变量类型: {key_type}不合法, 请检查!")
 

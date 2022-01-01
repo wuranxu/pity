@@ -5,6 +5,7 @@ from sqlalchemy import select, desc
 from app.crud.test_case.TestResult import TestResultDao
 from app.models import async_session
 from app.models.report import PityReport
+from app.models.test_plan import PityTestPlan
 from app.utils.logger import Log
 
 
@@ -78,13 +79,17 @@ class TestReportDao(object):
         """
         try:
             async with async_session() as session:
-                sql = select(PityReport).where(PityReport.id == report_id)
+                sql = select(PityReport, PityTestPlan.name).outerjoin(PityTestPlan,
+                                                                      PityTestPlan.id == PityReport.plan_id
+                                                                      ).where(PityReport.id == report_id)
+                print(sql)
                 data = await session.execute(sql)
                 if data is None:
                     raise Exception("报告不存在")
-                report = data.scalars().first()
+                report, plan_name = data.first()
+                # report = data.scalars().first()
                 test_data = await TestResultDao.list(report_id)
-                return report, test_data
+                return report, test_data, plan_name
         except Exception as e:
             TestReportDao.log.error(f"查询报告失败: {e}")
             raise Exception(f"查询报告失败: {e}")
