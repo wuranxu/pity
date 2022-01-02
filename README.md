@@ -1,5 +1,9 @@
 [English](https://github.com/wuranxu/pity/blob/main/README_EN.md)
 
+![png](https://img.shields.io/badge/Python-3.5+-green)
+![png](https://img.shields.io/badge/fastapi-green)
+![png](https://img.shields.io/badge/React-17+-blue)
+
 ## 🎉 快速开始
 
 1. 拉取代码

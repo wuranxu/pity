@@ -1,5 +1,10 @@
 [中文文档](https://github.com/wuranxu/pity/blob/main/README.md)
 
+![png](https://img.shields.io/badge/Python-3.5+-green)
+![png](https://img.shields.io/badge/fastapi-green)
+![png](https://img.shields.io/badge/React-17+-blue)
+
+
 ## 🎉 Getting Started
 
 1. clone code
@@ -40,21 +45,21 @@ $ python main.py
 
   Sign in and enjoy `pity`！
 
-## Overview 🖕
+## 🖕 Overview 
 
 [Documents 🍚](http://pity.readthedocs.org/)
 
 [Demo 🍍](http://121.5.2.74/)
 
-### About pity 😢
+### 😢 About pity 
 
 pity is an auto test tool based on `Python`+`FastApi`+`React` for api test. It's not an absolute production right now.
 
-### Heart ❤️
+### ❤️ Heart 
 
 I hope pity can help someone still uses robotframework or writes script for apitest.pity can help you a lot.
 
-### Features😊
+### 😊 Features
 
 + [x] 🔥 absolute auth rule, support login with github
 
@@ -72,7 +77,7 @@ I hope pity can help someone still uses robotframework or writes script for apit
 - [x] 😹 cronjob for case
 - [x] 🐧 beautiful test report
 
-## Coming soon 🙋
+## 🙋 Coming soon 
 
 - [ ] 🐘 Micro Services
 - [ ] 🐄 DataFactory for developing data
@@ -85,6 +90,8 @@ I hope pity can help someone still uses robotframework or writes script for apit
 
   You can open issues to communicate with me, if you like the project, give a star will make me happy.
 
-## Wechat communicate group
+## 🎨 Wechat communicate group
+
+  you can ask anything in my wechat group.
 
 ![](https://gitee.com/woodywrx/picture/raw/master/2022-1-2/1641097484952-ddff5bf23bdccaaf23fa227aa2e9957.jpg)
