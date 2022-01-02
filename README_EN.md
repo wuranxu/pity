@@ -1,6 +1,6 @@
 [中文文档](https://github.com/wuranxu/pity/blob/main/README.md)
 
-## Getting Started
+## 🎉 Getting Started
 
 1. clone code
 
@@ -72,7 +72,7 @@ I hope pity can help someone still uses robotframework or writes script for apit
 - [x] 😹 cronjob for case
 - [x] 🐧 beautiful test report
 
-## Comming soon 🙋
+## Coming soon 🙋
 
 - [ ] 🐘 Micro Services
 - [ ] 🐄 DataFactory for developing data
@@ -84,3 +84,7 @@ I hope pity can help someone still uses robotframework or writes script for apit
 - [ ] 🌽 and so on
 
   You can open issues to communicate with me, if you like the project, give a star will make me happy.
+
+## Wechat communicate group
+
+![](https://gitee.com/woodywrx/picture/raw/master/2022-1-2/1641097484952-ddff5bf23bdccaaf23fa227aa2e9957.jpg)
