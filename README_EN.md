@@ -1,8 +1,9 @@
 [中文文档](https://github.com/wuranxu/pity/blob/main/README.md)
 
 ![png](https://img.shields.io/badge/Python-3.5+-green)
-![png](https://img.shields.io/badge/fastapi-green)
 ![png](https://img.shields.io/badge/React-17+-blue)
+![png](https://img.shields.io/badge/FastApi-green)
+![png](https://img.shields.io/badge/contributors-3-green)
 
 
 ## 🎉 Getting Started

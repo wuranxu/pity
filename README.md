@@ -1,8 +1,9 @@
 [English](https://github.com/wuranxu/pity/blob/main/README_EN.md)
 
 ![png](https://img.shields.io/badge/Python-3.5+-green)
-![png](https://img.shields.io/badge/fastapi-green)
 ![png](https://img.shields.io/badge/React-17+-blue)
+![png](https://img.shields.io/badge/FastApi-green)
+![png](https://img.shields.io/badge/contributors-3-green)
 
 ## 🎉 快速开始
 
@@ -80,7 +81,7 @@ pity是一款专注于api自动化的工具，采用`Python`+`FastApi`+`React`�
 
 所以我打算制作这样一款工具，面向的就是中小型公司，他们没有那么多时间/人力成本，甚至是测试资源较为匮乏，那么如果你来到了这儿，我想这款工具可以给你们带来帮助！如果是有一定的经验的Python测试开发，这款工具也可以给你带来一定的借鉴作用。
 
-### 💪 落地效果 
+### 💪 落地效果
 
 可能有人会怀疑项目是否能真正运用到生产系统里，这款工具其实是我在某大型共享单车公司实践2年多的一款工具。之前是golang开发，如今我离开那家公司，打算保留原本功能的基础之上进一步优化，并新增更多丰富的特性。所以大家可以放心，它绝对是一款能方便解决你api自动化测试的利器。
 
