@@ -15,10 +15,11 @@ router = APIRouter(prefix="/auth")
 # router注册的函数都会自带/auth，所以url是/auth/register
 @router.post("/register")
 async def register(user: UserDto):
-    err = UserDao.register_user(**user.dict())
-    if err is not None:
-        return dict(code=110, msg=err)
-    return dict(code=0, msg="注册成功")
+    try:
+        await UserDao.register_user(**user.dict())
+        return PityResponse.success(msg="注册成功, 请登录")
+    except Exception as e:
+        return PityResponse.failed(e)
 
 
 @router.post("/login")
@@ -80,4 +81,3 @@ async def delete_user(id: int, user=Depends(Permission(Config.ADMIN))):
         return PityResponse.success(PityResponse.model_to_dict(user))
     except Exception as e:
         return PityResponse.failed(e)
-

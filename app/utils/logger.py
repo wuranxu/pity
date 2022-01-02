@@ -1,3 +1,5 @@
+import os
+
 import logbook
 
 from config import Config
@@ -13,6 +15,9 @@ class Log(object):
         :param name: 业务名称
         :param filename: 文件名称
         """
+        # 如果目录不存在则创建
+        if not os.path.exists(Config.LOG_DIR):
+            os.mkdir(Config.LOG_DIR)
         self.handler = logbook.FileHandler(filename, encoding='utf-8')
         logbook.set_datetime_format("local")  # 将日志时间设置为本地时间
         self.logger = logbook.Logger(name)

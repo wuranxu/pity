@@ -1,7 +1,9 @@
 # import abc
-from fastapi import WebSocket
-from app.utils.logger import Log
 from typing import TypeVar
+
+from fastapi import WebSocket
+
+from app.utils.logger import Log
 
 MsgType = TypeVar('MsgType', str, dict, bytes)
 
@@ -23,6 +25,7 @@ MsgType = TypeVar('MsgType', str, dict, bytes)
 class ConnectionManager:
     def __init__(self):
         self.active_connections: dict[str, WebSocket] = {}
+        self.log = Log("websocket")
 
     async def connect(self, websocket: WebSocket, client_id: str):
         await websocket.accept()
@@ -32,10 +35,10 @@ class ConnectionManager:
             self.active_connections[client_id]: str = websocket
         else:
             self.active_connections[client_id]: str = websocket
-            Log().info(F"websocket{client_id}： 建立连接成功！")
+            self.log.info(F"websocket{client_id}： 建立连接成功！")
 
     def disconnect(self, client_id: str):
-        Log().info(F"websocket{self.active_connections.pop(client_id)}： 已安全断开！")
+        self.log.info(F"websocket{self.active_connections.pop(client_id)}： 已安全断开！")
 
     @staticmethod
     async def pusher(sender: WebSocket, message: MsgType):
