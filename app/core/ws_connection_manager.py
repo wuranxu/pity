@@ -24,21 +24,22 @@ class ConnectionManager:
     def __init__(self):
         self.active_connections: dict[str, WebSocket] = {}
 
-    async def connect(self, websocket: WebSocket, client_id: str):
+    async def connect(self, websocket: WebSocket, client_id: str) -> None:
         await websocket.accept()
         exist: WebSocket = self.active_connections.get(client_id)
         if exist:
             await exist.close()
-            self.active_connections[client_id]: str = websocket
+            self.active_connections[client_id]: WebSocket = websocket
         else:
-            self.active_connections[client_id]: str = websocket
-            Log().info(F"websocket{client_id}： 建立连接成功！")
+            self.active_connections[client_id]: WebSocket = websocket
+            Log().info(F"websocket:{client_id}： 建立连接成功！")
 
-    def disconnect(self, client_id: str):
-        Log().info(F"websocket{self.active_connections.pop(client_id)}： 已安全断开！")
+    def disconnect(self, client_id: str) -> None:
+        del self.active_connections[client_id]
+        Log().info(F"websocket:{client_id}： 已安全断开！")
 
     @staticmethod
-    async def pusher(sender: WebSocket, message: MsgType):
+    async def pusher(sender: WebSocket, message: MsgType) -> None:
         """
         根据不同的消息类型，调用不同方法发送消息
         """
@@ -52,13 +53,13 @@ class ConnectionManager:
         else:
             raise TypeError(F"websocket不能发送{type(message)}的内容！")
 
-    async def send_personal_message(self, message: MsgType, websocket: WebSocket):
+    async def send_personal_message(self, message: MsgType, websocket: WebSocket) -> None:
         """
         发送个人信息
         """
         await self.pusher(sender=websocket, message=message)
 
-    async def broadcast(self, message: str):
+    async def broadcast(self, message: MsgType) -> None:
         """
         广播
         """
