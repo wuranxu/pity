@@ -32,7 +32,9 @@ $ python main.py
 
 7. 注册用户
 
-  第一个注册的用户会成为`超级管理员`，拥有一切权限。
+  打开浏览器输入: `http://localhost:7777`进入登录页。
+  
+  点击注册按钮，第一个注册的用户会成为`超级管理员`，拥有一切权限。
 
 ![](https://gitee.com/woodywrx/picture/raw/master/2022-1-2/1641092636428-image.png)
 

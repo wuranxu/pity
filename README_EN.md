@@ -32,7 +32,9 @@ $ python main.py
 
 7. registry
 
-  Fisrt people will be `ADMIN`
+  Open your browser, enter url: `http://localhost:7777`, then you will see the page.
+
+  First people will be `ADMIN`
 
 ![](https://gitee.com/woodywrx/picture/raw/master/2022-1-2/1641092636428-image.png)
 
