@@ -1,10 +1,12 @@
 # 基础配置类
 import os
+from enum import IntEnum
 
 
 class Config(object):
     ROOT = os.path.dirname(os.path.abspath(__file__))
-    LOG_NAME = os.path.join(ROOT, 'logs', 'pity.log')
+    LOG_DIR = os.path.join(ROOT, 'logs')
+    LOG_NAME = os.path.join(LOG_DIR, 'pity.log')
     # JSON_AS_ASCII = False  # Flask jsonify编码问题
 
     # MySQL连接信息
@@ -14,7 +16,7 @@ class Config(object):
     MYSQL_PWD = "wuranxu@33"
     DBNAME = "pity"
 
-    REDIS_HOST = "127.0.0.1"
+    REDIS_HOST = "121.5.2.74"
     REDIS_PORT = 7788
     REDIS_DB = 0
     REDIS_PASSWORD = "woodywu123"
@@ -73,7 +75,7 @@ class Config(object):
     IGNORE_FIELDS = ('created_at', "updated_at", "deleted_at", "create_user", "update_user")
 
     # 请求类型
-    class BodyType:
+    class BodyType(IntEnum):
         none = 0
         json = 1
         form = 2

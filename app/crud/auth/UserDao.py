@@ -1,7 +1,7 @@
 import random
 from datetime import datetime
 
-from sqlalchemy import or_, select
+from sqlalchemy import or_, select, func
 
 from app.middleware.Jwt import UserToken
 from app.middleware.RedisManager import RedisHelper
@@ -90,7 +90,7 @@ class UserDao(object):
             raise Exception("登录失败")
 
     @staticmethod
-    def register_user(username, name, password, email):
+    async def register_user(username: str, name: str, password: str, email: str):
         """
 
         :param username: 用户名
@@ -100,19 +100,22 @@ class UserDao(object):
         :return:
         """
         try:
-            with Session() as session:
-                users = session.query(User).filter(or_(User.username == username, User.email == email)).all()
-                if users:
-                    raise Exception("用户名或邮箱已存在")
-                # 注册的时候给密码加盐
-                pwd = UserToken.add_salt(password)
-                user = User(username, name, pwd, email)
-                session.add(user)
-                session.commit()
+            async with async_session() as session:
+                async with session.begin():
+                    users = await session.execute(select(User).where(or_(User.username == username, User.email == email)))
+                    counts = await session.execute(select(func.count(User.id)))
+                    if users.scalars().first():
+                        raise Exception("用户名或邮箱已存在")
+                    # 注册的时候给密码加盐
+                    pwd = UserToken.add_salt(password)
+                    user = User(username, name, pwd, email)
+                    # 如果用户数量为0 则注册为超管
+                    if counts.scalars().first() == 0:
+                        user.role = Config.ADMIN
+                    session.add(user)
         except Exception as e:
             UserDao.log.error(f"用户注册失败: {str(e)}")
-            return str(e)
-        return None
+            raise Exception("注册失败")
 
     @staticmethod
     async def login(username, password):
