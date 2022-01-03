@@ -1,11 +1,13 @@
 import requests
 from fastapi import APIRouter, Depends
+from starlette import status
 
 from app.crud.auth.UserDao import UserDao
+from app.excpetions.RequestException import AuthException
 from app.handler.fatcory import PityResponse
 from app.middleware.Jwt import UserToken
 from app.models.schema.user import UserUpdateForm
-from app.routers import Permission
+from app.routers import Permission, FORBIDDEN
 from app.routers.auth.user_schema import UserDto, UserForm
 from config import Config
 
@@ -64,13 +66,32 @@ async def login_with_github(code: str):
 
 
 @router.post("/update")
-async def update_user_info(user_info: UserUpdateForm, user=Depends(Permission(Config.ADMIN))):
-    # 只有超级管理员才可以变更用户信息
+async def update_user_info(user_info: UserUpdateForm, user=Depends(Permission(Config.MEMBER))):
     try:
+        if user['role'] != Config.ADMIN:
+            if user['id'] != user_info.id:
+                # 既不是改自己的资料，也不是超管
+                return PityResponse.failed(FORBIDDEN)
+            # 如果不是超管，说明是自己改自己，不允许自己改自己的角色
+            user_info.role = None
         user = await UserDao.update_user(user_info, user['id'])
         return PityResponse.success(PityResponse.model_to_dict(user))
+    except AuthException as e:
+        raise e
     except Exception as e:
         return PityResponse.failed(e)
+
+
+@router.get("/query")
+async def update_user_info(token: str):
+    try:
+        if not token:
+            raise AuthException(status.HTTP_200_OK, "token不存在")
+        user_info = UserToken.parse_token(token)
+        user = await UserDao.query_user(user_info['id'])
+        return PityResponse.success(PityResponse.model_to_dict(user))
+    except Exception as e:
+        raise AuthException(status.HTTP_200_OK, e)
 
 
 @router.get("/delete")

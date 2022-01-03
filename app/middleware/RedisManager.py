@@ -10,6 +10,7 @@ from redis import ConnectionPool, StrictRedis
 from rediscluster import RedisCluster, ClusterConnectionPool
 
 from app.excpetions.RedisException import RedisException
+from app.handler.encoder import JsonEncoder
 from app.handler.fatcory import PityResponse
 from config import Config
 
@@ -122,13 +123,16 @@ class RedisHelper(object):
         return client.execute_command(command, *args, **kwargs)
 
     @staticmethod
-    def get_key(key: str, *args):
-        return f"{RedisHelper.pity_prefix}:{key}{':'.join(str(a) for a in args)}"
+    def get_key(key: str, args_key: bool = True, *args):
+        if args_key:
+            return f"{RedisHelper.pity_prefix}:{key}{':'.join(str(a) for a in args)}"
+        return f"{RedisHelper.pity_prefix}:{key}"
 
     @staticmethod
-    def cache(key: str, expired_time=3 * 60, model=False):
+    def cache(key: str, expired_time=3 * 60, model=False, args_key=True):
         """
         自动缓存装饰器
+        :param args_key:
         :param model:
         :param key: 被缓存的key
         :param expired_time: 默认key过期时间
@@ -140,19 +144,21 @@ class RedisHelper(object):
             if asyncio.iscoroutinefunction(func):
                 @functools.wraps(func)
                 async def wrapper(*args, **kwargs):
-                    redis_key = RedisHelper.get_key(key, *args)
+                    redis_key = RedisHelper.get_key(key, args_key, *args)
                     data = RedisHelper.pity_redis_client.get(redis_key)
                     # 缓存已存在
                     if data is not None:
                         return json.loads(data)
                     # 获取最新数据
                     new_data = await func(*args, **kwargs)
+                    if len(new_data) > 1:
+                        new_data = list(new_data)
                     if model:
                         if isinstance(new_data, list):
                             new_data = PityResponse.model_to_list(new_data)
                         else:
                             new_data = PityResponse.model_to_dict(new_data)
-                    info = json.dumps(new_data, ensure_ascii=False)
+                    info = json.dumps(new_data, cls=JsonEncoder, ensure_ascii=False)
                     RedisHelper.pity_redis_client.set(redis_key, info, ex=expired_time)
                     return new_data
 

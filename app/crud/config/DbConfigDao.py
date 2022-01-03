@@ -8,6 +8,8 @@ from sqlalchemy.exc import ResourceClosedError
 
 from app.crud.config.EnvironmentDao import EnvironmentDao
 from app.handler.fatcory import PityResponse
+from app.middleware import RedisManager
+from app.middleware.RedisManager import RedisHelper
 from app.models import async_session, DatabaseHelper, db_helper
 from app.models.database import PityDatabase
 from app.models.schema.database import DatabaseForm
@@ -112,6 +114,7 @@ class DbConfigDao(object):
             raise Exception("获取数据库配置失败")
 
     @staticmethod
+    @RedisHelper.cache("database:cache", expired_time=3600 * 3, args_key=False)
     async def query_database_and_tables():
         """
         方法会查询所有数据库表配置的信息

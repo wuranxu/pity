@@ -19,6 +19,7 @@ from app.models.redis_config import PityRedis
 from app.models.test_case import TestCase
 from app.models.test_plan import PityTestPlan
 from app.models.user import User
+from app.models.oss_file import PityOssFile
 from config import Config
 
 

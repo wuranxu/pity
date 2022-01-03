@@ -14,6 +14,7 @@ class User(Base):
     password = Column(String(32), unique=False)
     email = Column(String(64), unique=True, nullable=False)
     role = Column(INT, default=0, comment="0: 普通用户 1: 组长 2: 超级管理员")
+    phone = Column(String(12), unique=True)
     created_at = Column(DATETIME, nullable=False)
     updated_at = Column(DATETIME, nullable=False)
     deleted_at = Column(DATETIME)
@@ -23,7 +24,7 @@ class User(Base):
     # 管理员可以禁用某个用户，当他离职后
     is_valid = Column(Boolean, nullable=False, default=True, comment="是否合法")
 
-    def __init__(self, username, name, password, email, avatar=None, is_valid=True):
+    def __init__(self, username, name, password, email, avatar=None, phone=None, is_valid=True):
         self.username = username
         self.password = password
         self.email = email
@@ -31,5 +32,6 @@ class User(Base):
         self.created_at = datetime.now()
         self.updated_at = datetime.now()
         self.role = 0
+        self.phone = phone
         self.avatar = avatar
         self.is_valid = is_valid

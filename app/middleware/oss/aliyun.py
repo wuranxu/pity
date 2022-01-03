@@ -17,7 +17,7 @@ class AliyunOss(OssFile):
         self.bucket.put_object(filepath, content)
 
     @aioify
-    async def update_file(self, filepath: str, content: bytes):
+    async def update_file(self, filepath: str, content: bytes, base_path: str = None):
         self.bucket.put_object(filepath, content)
 
     @aioify

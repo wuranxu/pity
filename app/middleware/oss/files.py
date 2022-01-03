@@ -1,17 +1,17 @@
 import random
 import time
 from abc import ABC, abstractmethod
-from typing import ByteString
 
 
 class OssFile(ABC):
+    _base_path = "pity"
 
     @abstractmethod
-    async def create_file(self, filepath: str, content: bytes):
+    async def create_file(self, filepath: str, content: bytes, base_path: str = None) -> (str, int, str):
         pass
 
     @abstractmethod
-    async def update_file(self, filepath: str, content: bytes):
+    async def update_file(self, filepath: str, content: bytes, base_path: str = None):
         pass
 
     @abstractmethod
@@ -29,6 +29,9 @@ class OssFile(ABC):
     @abstractmethod
     async def get_file_object(self, filepath):
         pass
+
+    async def get_real_path(self, filepath, base_path=None):
+        return f"{self._base_path if base_path is None else base_path}/{filepath}"
 
     @staticmethod
     def get_random_filename(filename):

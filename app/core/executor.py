@@ -617,7 +617,8 @@ class Executor(object):
             return
         if executor != 0:
             # 说明不是系统执行
-            name = await UserDao.query_user(executor)
+            user = await UserDao.query_user(executor)
+            name = user.name if user is not None else "未知"
         else:
             name = "CPU"
         st = time.perf_counter()

@@ -10,6 +10,7 @@ from app.middleware.oss import OssFile
 
 class GiteeOss(OssFile):
     _base_url = "https://gitee.com/api/v5/repos/{}/{}/contents/{}/{}"
+    _url = "https://gitee.com/{}/{}/raw/master/{}"
     _download_url = "https://gitee.com/api/v5/repos/{}/{}/git/blobs/{}"
     _base_path = "pity"
 
@@ -19,15 +20,20 @@ class GiteeOss(OssFile):
         self.token = token
 
     @aioify
-    async def create_file(self, filepath: str, content: bytes):
-        gitee_url = self._base_url.format(self.user, self.repo, self._base_path, filepath)
+    async def create_file(self, filepath: str, content: bytes, base_path=None) -> (str, int, str):
+        base_path = base_path if base_path is not None else self._base_path
+        gitee_url = self._base_url.format(self.user, self.repo, base_path, filepath)
         data = base64.b64encode(content).decode()
+        file_size = len(content)
         json_data = {"access_token": self.token, "message": "pity create file", "content": data}
         r = requests.post(url=gitee_url, json=json_data)
         if r.status_code == 400:
-            raise Exception("文件重复，请先删除旧文件")
+            return await self.update_file(filepath, content, base_path)
         if r.status_code != 201:
             raise Exception("上传文件到gitee失败")
+        sha = r.json().get("content", {}).get("sha")
+        view_url = self._url.format(self.user, self.repo, await self.get_real_path(filepath, base_path))
+        return view_url, file_size, sha
 
     @aioify
     async def query_file_by_path(self, filepath: str, ans: List[dict]):
@@ -47,8 +53,18 @@ class GiteeOss(OssFile):
     #     return requests.get(url, stream=True).headers['Content-Length']
 
     @aioify
-    async def update_file(self, filepath: str, content: bytes):
-        pass
+    async def update_file(self, filepath: str, content: bytes, base_path: str = None):
+        base_path = base_path if base_path is not None else self._base_path
+        gitee_url = self._base_url.format(self.user, self.repo, base_path, filepath)
+        r = requests.get(gitee_url, params=dict(access_token=self.token))
+        data = r.json()
+        sha = data.get("sha")
+        b64 = base64.b64encode(content).decode()
+        updated = requests.put(gitee_url, json=dict(access_token=self.token, sha=sha, content=b64, message="updated"))
+        sha = updated.json().get("content", {}).get("sha")
+        view_url = self._url.format(self.user, self.repo, await self.get_real_path(filepath, base_path))
+        return view_url, len(b64), sha
+
 
     @aioify
     async def delete_file(self, filepath: str):

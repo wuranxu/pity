@@ -8,6 +8,7 @@ class UserUpdateForm(BaseModel):
     id: int
     name: str = None
     email: str = None
+    phone: str = None
     role: int = None
     is_valid: bool = None
 

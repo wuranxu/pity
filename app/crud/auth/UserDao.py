@@ -2,6 +2,7 @@ import random
 from datetime import datetime
 
 from sqlalchemy import or_, select, func
+from sqlalchemy import update
 
 from app.middleware.Jwt import UserToken
 from app.middleware.RedisManager import RedisHelper
@@ -14,6 +15,18 @@ from config import Config
 
 class UserDao(object):
     log = Log("UserDao")
+
+    @staticmethod
+    @RedisHelper.up_cache("user_list")
+    async def update_avatar(user_id: int, avatar_url: str):
+        try:
+            async with async_session() as session:
+                async with session.begin():
+                    sql = update(User).where(User.id == user_id).values(avatar=avatar_url)
+                    await session.execute(sql)
+        except Exception as e:
+            UserDao.log.error(f"修改用户头像失败: {str(e)}")
+            raise Exception(e)
 
     @staticmethod
     @RedisHelper.up_cache("user_list")
@@ -102,7 +115,8 @@ class UserDao(object):
         try:
             async with async_session() as session:
                 async with session.begin():
-                    users = await session.execute(select(User).where(or_(User.username == username, User.email == email)))
+                    users = await session.execute(
+                        select(User).where(or_(User.username == username, User.email == email)))
                     counts = await session.execute(select(func.count(User.id)))
                     if users.scalars().first():
                         raise Exception("用户名或邮箱已存在")
@@ -159,14 +173,11 @@ class UserDao(object):
             raise Exception("获取用户列表失败")
 
     @staticmethod
-    @RedisHelper.cache("query_user", 72 * 3600)
     async def query_user(id: int):
         async with async_session() as session:
             query = await session.execute(select(User).where(User.id == id))
             result = query.scalars().first()
-            if result is None:
-                return "unknown"
-            return result.name
+            return result
 
     @staticmethod
     @RedisHelper.cache("user_email", 3600)
