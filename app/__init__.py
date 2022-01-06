@@ -79,6 +79,6 @@ async def unexpected_exception_error(request: Request, exc: AuthException):
         status_code=status.HTTP_200_OK,
         content=jsonable_encoder({
             "code": 401,
-            "msg": exc.detail,
+            "msg": str(exc.detail),
         })
     )

@@ -1,10 +1,11 @@
 import traceback
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, File, UploadFile
 
 from app.crud.project.ProjectDao import ProjectDao
 from app.crud.project.ProjectRoleDao import ProjectRoleDao
 from app.handler.fatcory import PityResponse
+from app.middleware.oss import OssClient
 from app.models.project_role import ProjectRole
 from app.routers import Permission
 from app.routers.project.project_schema import ProjectForm, ProjectEditForm
@@ -15,7 +16,7 @@ router = APIRouter(prefix="/project")
 
 
 @router.get("/list")
-async def list_project(page: int = 1, size: int = 8, name: str = "", user_info=Depends(Permission())):
+def list_project(page: int = 1, size: int = 8, name: str = "", user_info=Depends(Permission())):
     """
     获取项目列表
     :param name: 项目名称
@@ -36,12 +37,28 @@ async def list_project(page: int = 1, size: int = 8, name: str = "", user_info=D
 @router.post("/insert")
 async def insert_project(data: ProjectForm, user_info=Depends(Permission(Config.MANAGER))):
     try:
-        err = ProjectDao.add_project(user=user_info["id"], **data.dict())
+        err = await ProjectDao.add_project(user=user_info["id"], **data.dict())
         if err is not None:
             return dict(code=110, msg=err)
         return dict(code=0, msg="操作成功")
     except Exception as e:
         return dict(code=110, msg=str(e))
+
+
+@router.post("/avatar/{project_id}")
+async def update_project_avatar(project_id: int, file: UploadFile = File(...), user_info=Depends(Permission())):
+    try:
+        file_content = await file.read()
+        suffix = file.filename.split(".")[-1]
+        filepath = f"project_{project_id}.{suffix}"
+        client = OssClient.get_oss_client()
+        file_url, _, _ = await client.create_file(filepath, file_content, base_path="avatar")
+        err = await ProjectDao.update_avatar(project_id, user_info['id'], user_info['role'], file_url)
+        if err:
+            return PityResponse.failed(err)
+        return PityResponse.success(file_url)
+    except Exception as e:
+        return PityResponse.failed(f"上传头像失败: {e}")
 
 
 @router.post("/update")
