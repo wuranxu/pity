@@ -11,6 +11,7 @@ from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 
 from app import pity
+from app.core.ws_connection_manager import ConnectionManager
 from app.routers.auth import user
 from app.routers.config import router as config_router
 from app.routers.online import router as online_router
@@ -20,7 +21,6 @@ from app.routers.project import project
 from app.routers.request import http
 from app.routers.testcase import router as testcase_router
 from app.utils.scheduler import Scheduler
-from app.core.ws_connection_manager import ConnectionManager
 from config import Config
 
 pity.include_router(user.router)
@@ -113,6 +113,7 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
     except WebSocketDisconnect:
         if client_id in ws_manage.active_connections:
             ws_manage.disconnect(client_id)
+
 
 if __name__ == "__main__":
     uvicorn.run(app='main:pity', host='0.0.0.0', port=7777, reload=False)

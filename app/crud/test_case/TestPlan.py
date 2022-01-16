@@ -88,6 +88,9 @@ class PityTestPlanDao(Mapper):
                     if data is None:
                         raise Exception("测试计划不存在")
                     data.state = state
+                    # await session.flush()
+                    # session.expunge(data)
+                    # return data
         except Exception as e:
             PityTestPlanDao.log.error(f"编辑测试计划失败: {str(e)}")
             raise Exception(f"编辑失败: {str(e)}")

@@ -595,7 +595,7 @@ class Executor(object):
                 *(Executor.run_multiple(executor, int(e), case_list, mode=1,
                                         plan_id=plan.id, ordered=plan.ordered, report_dict=report_dict) for e in env))
             await PityTestPlanDao.update_test_plan_state(plan.id, 0)
-            await PityTestPlanDao.update_test_plan(plan, plan.update_user)
+            # await PityTestPlanDao.update_test_plan(plan, plan.update_user)
             # TODO 后续通知部分
             users = await UserDao.list_user_email(*receiver)
             for e in env:

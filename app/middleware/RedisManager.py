@@ -151,7 +151,8 @@ class RedisHelper(object):
                         return json.loads(data)
                     # 获取最新数据
                     new_data = await func(*args, **kwargs)
-                    if len(new_data) > 1:
+                    # 针对func有多个返回值的时候，需要先判断一下是否是元祖
+                    if isinstance(new_data, tuple) and len(new_data) > 1:
                         new_data = list(new_data)
                     if model:
                         if isinstance(new_data, list):

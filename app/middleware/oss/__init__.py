@@ -23,9 +23,9 @@ class OssClient(object):
             endpoint = oss_config.get("endpoint")
             if oss_config is None:
                 raise Exception("服务器未配置oss信息, 请在configuration.json中添加")
-            if oss_config.get("type").lower() == Config.ALIYUN:
+            if oss_config.get("oss_type").lower() == Config.ALIYUN:
                 return AliyunOss(access_key_id, access_key_secret, endpoint, bucket)
-            if oss_config.get("type").lower() == Config.GITEE:
+            if oss_config.get("oss_type").lower() == Config.GITEE:
                 return GiteeOss(access_key_secret, bucket, access_key_id)
             raise Exception("不支持的oss类型")
         return OssClient._client
