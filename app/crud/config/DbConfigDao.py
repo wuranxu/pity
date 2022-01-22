@@ -186,12 +186,17 @@ class DbConfigDao(object):
         row_count = 0
         try:
             session = conn.get("session")
-            async with session() as s:
-                async with s.begin():
-                    result = await s.execute(sql)
-                    row_count = result.rowcount
-                    ans = result.mappings().all()
-                    return ans
+            with session() as s:
+                result = s.execute(sql)
+                row_count = result.rowcount
+                ans = result.mappings().all()
+                return ans
+            # async with session() as s:
+            #     async with s.begin():
+            #         result = await s.execute(sql)
+            #         row_count = result.rowcount
+            #         ans = result.mappings().all()
+            #         return ans
         except ResourceClosedError:
             # 说明是update或其他语句
             return [{"rowCount": row_count}]
