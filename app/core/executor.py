@@ -2,6 +2,7 @@ import asyncio
 import json
 import re
 import time
+import traceback
 from collections import defaultdict
 from datetime import datetime
 from typing import List, Any
@@ -368,7 +369,7 @@ class Executor(object):
     def replace_asserts(self, params, asserts: List[TestCaseAsserts]):
         """替换断言中的参数"""
         for a in asserts:
-            self.replace_cls(params, a, "expected")
+            self.replace_cls(params, a, "expected", "actually")
 
     @staticmethod
     async def run_with_test_data(env, data, report_id, case_id, params_pool: dict = None,
@@ -458,12 +459,17 @@ class Executor(object):
                 result[item.id] = {"status": False, "msg": f"解析变量失败, {err}"}
                 continue
             try:
-                a, b = self.translate(a), self.translate(b)
+                # 解析预期/实际结果
+                a = self.translate(a)
+                # 判断请求返回是否是json格式，如果不是则不进行loads操作
+                if response_info.get("json_format", False):
+                    b = self.translate(b)
                 status, err = self.ops(item.assert_type, a, b)
                 result[item.id] = {"status": status, "msg": err}
                 if not status:
                     ans = False
             except Exception as e:
+                traceback.print_exc()
                 result[item.id] = {"status": False, "msg": str(e)}
                 raise Exception(f"断言取值失败: {e}, 请检查断言语句")
         return json.dumps(result, ensure_ascii=False), ans
@@ -522,6 +528,25 @@ class Executor(object):
             if len(data) == 0:
                 return True, "预期JSON ✔ 等于 ✔ 实际JSON"
             return False, data
+        if assert_type == "text_in":
+            if isinstance(b, str):
+                # 如果b是string，则不转换
+                if a in b:
+                    return True, f"预期结果: {a} ✔ 文本包含于 ✔ 实际结果: {b}"
+                return False, f"预期结果: {a} ❌ 文本不包含于 ❌ 实际结果: {b}"
+            temp = json.dumps(b, ensure_ascii=False)
+            if a in temp:
+                return True, f"预期结果: {a} ✔ 文本包含于 ✔ 实际结果: {b}"
+            return False, f"预期结果: {a} ❌ 文本不包含于 ❌ 实际结果: {b}"
+        if assert_type == "text_not_in":
+            if isinstance(b, str):
+                if a in b:
+                    return True, f"预期结果: {a} ❌ 文本包含于 ❌ 实际结果: {b}"
+                return False, f"预期结果: {a} ✔ 文本不包含于 ✔ 实际结果: {b}"
+            temp = json.dumps(b, ensure_ascii=False)
+            if a in temp:
+                return True, f"预期结果: {a} ❌ 文本包含于 ❌ 实际结果: {b}"
+            return False, f"预期结果: {a} ✔ 文本不包含于 ✔ 实际结果: {b}"
         return False, "不支持的断言方式💔"
 
     def get_el_expression(self, string: str):

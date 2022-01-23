@@ -22,15 +22,15 @@ class AsyncRequest(object):
     async def invoke(self, method: str):
         start = time.time()
         async with aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar(unsafe=True)) as session:
-            async with session.request(method, self.url, timeout=self.timeout, **self.kwargs) as resp:
+            async with session.request(method, self.url, timeout=self.timeout, verify_ssl=False, **self.kwargs) as resp:
                 if resp.status != 200:
                     return await self.collect(False, self.kwargs.get("data"), resp.status)
                 cost = "%.0fms" % ((time.time() - start) * 1000)
-                response = await AsyncRequest.get_resp(resp)
+                response, json_format = await AsyncRequest.get_resp(resp)
                 cookie = self.get_cookie(session)
                 return await self.collect(True, self.kwargs.get("data"), resp.status, response,
                                           resp.headers, resp.request_info.headers, elapsed=cost,
-                                          cookies=cookie)
+                                          cookies=cookie, json_format=json_format)
 
     @staticmethod
     async def client(url: str, body_type: int, timeout=15, **kwargs):
@@ -75,10 +75,12 @@ class AsyncRequest(object):
     async def get_resp(resp):
         try:
             data = await resp.json(encoding='utf-8')
-            return json.dumps(data, ensure_ascii=False, indent=4)
+            # 说明是json格式
+            return json.dumps(data, ensure_ascii=False, indent=4), True
         except:
             data = await resp.text()
-            return data
+            # 说明不是json格式，我们不做loads操作了
+            return data, False
 
     @staticmethod
     def get_request_data(body):
@@ -93,7 +95,7 @@ class AsyncRequest(object):
 
     @staticmethod
     async def collect(status, request_data, status_code=200, response=None, response_headers=None,
-                      request_headers=None, cookies=None, elapsed=None, msg="success"):
+                      request_headers=None, cookies=None, elapsed=None, msg="success", **kwargs):
         """
         收集http返回数据
         :param status: 请求状态
@@ -118,5 +120,5 @@ class AsyncRequest(object):
             "status": status, "response": response, "status_code": status_code,
             "request_data": AsyncRequest.get_request_data(request_data),
             "response_headers": response_headers, "request_headers": request_headers,
-            "msg": msg, "cost": elapsed, "cookies": cookies,
+            "msg": msg, "cost": elapsed, "cookies": cookies, **kwargs,
         }
