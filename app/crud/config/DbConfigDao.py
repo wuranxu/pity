@@ -8,7 +8,6 @@ from sqlalchemy.exc import ResourceClosedError
 
 from app.crud.config.EnvironmentDao import EnvironmentDao
 from app.handler.fatcory import PityResponse
-from app.middleware import RedisManager
 from app.middleware.RedisManager import RedisHelper
 from app.models import async_session, DatabaseHelper, db_helper
 from app.models.database import PityDatabase

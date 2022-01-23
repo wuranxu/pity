@@ -7,7 +7,7 @@ from copy import deepcopy
 from datetime import datetime
 from typing import Tuple
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from app.models import Base, engine, async_session, DatabaseHelper
 from app.models.basic import PityRelationField, init_relation
@@ -19,7 +19,6 @@ from app.models.redis_config import PityRedis
 from app.models.test_case import TestCase
 from app.models.test_plan import PityTestPlan
 from app.models.user import User
-from app.models.oss_file import PityOssFile
 from config import Config
 
 
@@ -116,6 +115,17 @@ class Mapper(object):
         except Exception as e:
             cls.log.error(f"添加{cls.model}记录失败, error: {e}")
             raise Exception(f"添加记录失败")
+
+    @classmethod
+    async def update_by_map(cls, *condition, **kwargs):
+        try:
+            async with async_session() as session:
+                async with session.begin():
+                    sql = update(cls.model).where(*condition).values(**kwargs, updated_at=datetime.now())
+                    await session.execute(sql)
+        except Exception as e:
+            cls.log.error(f"更新数据失败: {e}")
+            raise Exception("更新数据失败")
 
     @classmethod
     async def update_record_by_id(cls, user, model, not_null=False, log=False):
