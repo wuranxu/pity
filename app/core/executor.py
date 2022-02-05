@@ -12,6 +12,7 @@ from app.core.constructor.python_constructor import PythonConstructor
 from app.core.constructor.redis_constructor import RedisConstructor
 from app.core.constructor.sql_constructor import SqlConstructor
 from app.core.msg.mail import Email
+from app.core.ws_connection_manager import ws_manage
 from app.crud.auth.UserDao import UserDao
 from app.crud.config.EnvironmentDao import EnvironmentDao
 from app.crud.config.GConfigDao import GConfigDao
@@ -631,6 +632,8 @@ class Executor(object):
                         Email.send_msg(
                             f"【{report_dict[e].get('env')}】测试计划【{plan.name}】执行完毕（{report_dict[e].get('plan_result')}）",
                             render_html, None, *users)
+            if executor != 0:
+                await ws_manage.notify(executor, title="测试计划执行完毕", content=f"请前往测试报告页面查看细节")
         except Exception as e:
             Executor.log.error(f"执行测试计划: 【{plan.name}】失败: {str(e)}")
 

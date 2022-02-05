@@ -11,7 +11,10 @@ from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 
 from app import pity
-from app.core.ws_connection_manager import ConnectionManager
+from app.core.msg.wss_msg import WebSocketMessage
+from app.core.ws_connection_manager import ws_manage
+from app.crud.notification.NotificationDao import PityNotificationDao
+from app.enums.MessageEnum import MessageStateEnum, MessageTypeEnum
 from app.routers.auth import user
 from app.routers.config import router as config_router
 from app.routers.notification import router as msg_router
@@ -45,7 +48,6 @@ pity.add_middleware(
 pity.mount("/statics", StaticFiles(directory="statics"), name="statics")
 
 templates = Jinja2Templates(directory="statics")
-ws_manage = ConnectionManager()
 
 
 @pity.get("/")
@@ -99,22 +101,31 @@ def stop_test():
     pass
 
 
-@pity.websocket("/ws/{client_id}")
-async def websocket_endpoint(websocket: WebSocket, client_id: str):
-    await ws_manage.connect(websocket, client_id)
-    # 定义特殊值的回复，配合前端实现确定连接，心跳检测等逻辑
-    questions_and_answers_map: dict = {
-        "HELLO SERVER": F"hello {client_id}",
-        "HEARTBEAT": F"{client_id}",
-    }
+@pity.websocket("/ws/{user_id}")
+async def websocket_endpoint(websocket: WebSocket, user_id: int):
+    await ws_manage.connect(websocket, user_id)
     try:
+        # 定义特殊值的回复，配合前端实现确定连接，心跳检测等逻辑
+        questions_and_answers_map: dict = {
+            "HELLO SERVER": F"hello {user_id}",
+            "HEARTBEAT": F"{user_id}",
+        }
+
+        # 存储连接后获取消息
+        msg_records = await PityNotificationDao.list_messages(msg_type=MessageTypeEnum.all.value, receiver=user_id,
+                                                              msg_status=MessageStateEnum.unread.value)
+        # 如果有未读消息, 则推送给前端对应的count
+        if len(msg_records) > 0:
+            await websocket.send_json(WebSocketMessage.msg_count(len(msg_records), True))
         while True:
             data: str = await websocket.receive_text()
             if (du := data.upper()) in questions_and_answers_map:
                 await ws_manage.send_personal_message(message=questions_and_answers_map.get(du), websocket=websocket)
     except WebSocketDisconnect:
-        if client_id in ws_manage.active_connections:
-            ws_manage.disconnect(client_id)
+        if user_id in ws_manage.active_connections:
+            ws_manage.disconnect(user_id)
+    except Exception as e:
+        print(e)
 
 
 if __name__ == "__main__":

@@ -24,7 +24,8 @@ class AsyncRequest(object):
         async with aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar(unsafe=True)) as session:
             async with session.request(method, self.url, timeout=self.timeout, verify_ssl=False, **self.kwargs) as resp:
                 if resp.status != 200:
-                    return await self.collect(False, self.kwargs.get("data"), resp.status)
+                    # 修复bug，当http状态码不为200的时候给出提示
+                    return await self.collect(False, self.kwargs.get("data"), resp.status, msg="http状态码不为200")
                 cost = "%.0fms" % ((time.time() - start) * 1000)
                 response, json_format = await AsyncRequest.get_resp(resp)
                 cookie = self.get_cookie(session)
@@ -40,8 +41,13 @@ class AsyncRequest(object):
         if body_type == Config.BodyType.json:
             if "Content-Type" not in headers:
                 headers['Content-Type'] = "application/json; charset=UTF-8"
+            # 新增json校验，修复史诗级bug: json被额外序列化
+            try:
+                body = json.loads(kwargs.get("body"))
+            except Exception as e:
+                raise Exception(f"json格式不正确: {e}")
             r = AsyncRequest(url, headers=headers, timeout=timeout,
-                             json=kwargs.get("body"))
+                             json=body)
         elif body_type == Config.BodyType.form:
             try:
                 body = kwargs.get("body")

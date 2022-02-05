@@ -1,3 +1,6 @@
+import asyncio
+
+from apscheduler.jobstores.base import JobLookupError
 from fastapi import Depends
 
 from app.core.executor import Executor
@@ -49,9 +52,12 @@ async def delete_test_plan(id: int, user_info=Depends(Permission(Config.MANAGER)
     try:
         await PityTestPlanDao.delete_record_by_id(user_info['id'], id)
         Scheduler.remove(id)
-        return PityResponse.success()
+    except JobLookupError:
+        # 说明没找到job
+        pass
     except Exception as e:
         return PityResponse.failed(str(e))
+    return PityResponse.success()
 
 
 @router.get("/plan/switch")
@@ -66,7 +72,7 @@ async def switch_test_plan(id: int, status: bool, user_info=Depends(Permission(C
 @router.get("/plan/execute")
 async def run_test_plan(id: int, user_info=Depends(Permission(Config.MEMBER))):
     try:
-        await Executor.run_test_plan(id, user_info['id'])
-        return PityResponse.success()
+        asyncio.create_task(Executor.run_test_plan(id, user_info['id']))
+        return PityResponse.success("开始执行，请耐心等待")
     except Exception as e:
         return PityResponse.failed(str(e))
