@@ -2,7 +2,6 @@ from datetime import datetime
 
 from sqlalchemy import desc, select
 
-from app.middleware import RedisManager
 from app.middleware.RedisManager import RedisHelper
 from app.models import Session, DatabaseHelper, async_session
 from app.models.gconfig import GConfig

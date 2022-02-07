@@ -4,13 +4,13 @@ from os.path import isfile
 import uvicorn
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from fastapi import Request, WebSocket, WebSocketDisconnect
+from fastapi import Request, WebSocket, WebSocketDisconnect, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import Response
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 
-from app import pity
+from app import pity, init_logging
 from app.core.msg.wss_msg import WebSocketMessage
 from app.core.ws_connection_manager import ws_manage
 from app.crud.notification.NotificationDao import PityNotificationDao
@@ -25,17 +25,43 @@ from app.routers.project import project
 from app.routers.request import http
 from app.routers.testcase import router as testcase_router
 from app.utils.scheduler import Scheduler
-from config import Config
+from config import Config, PITY_ENV, BANNER
+
+# def bind_logger(logger):
+#     for v in logger._core.handlers.values():
+#         if v._filter is None:
+#             return v
+#     return logger
+
+
+logger = init_logging()
+
+# log = bind_logger(logger)
+logger.bind(name=None).opt(ansi=True).info(f"pity is running at <red>{PITY_ENV}</red>")
+logger.bind(name=None).info(BANNER)
+
+
+async def request_info(request: Request):
+    logger.bind(name=None).info(f"{request.method} {request.url}")
+    try:
+        body = await request.json()
+        logger.bind(payload=body, name=None).debug("request_json: ")
+    except:
+        body = await request.body()
+        if len(body) != 0:
+            # 有请求体，记录日志
+            logger.bind(payload=body, name=None).debug(body)
+
 
 pity.include_router(user.router)
-pity.include_router(project.router)
-pity.include_router(http.router)
-pity.include_router(testcase_router)
-pity.include_router(config_router)
-pity.include_router(online_router)
-pity.include_router(oss_router)
-pity.include_router(operation_router)
-pity.include_router(msg_router)
+pity.include_router(project.router, dependencies=[Depends(request_info)])
+pity.include_router(http.router, dependencies=[Depends(request_info)])
+pity.include_router(testcase_router, dependencies=[Depends(request_info)])
+pity.include_router(config_router, dependencies=[Depends(request_info)])
+pity.include_router(online_router, dependencies=[Depends(request_info)])
+pity.include_router(oss_router, dependencies=[Depends(request_info)])
+pity.include_router(operation_router, dependencies=[Depends(request_info)])
+pity.include_router(msg_router, dependencies=[Depends(request_info)])
 
 pity.add_middleware(
     CORSMiddleware,
@@ -125,7 +151,7 @@ async def websocket_endpoint(websocket: WebSocket, user_id: int):
         if user_id in ws_manage.active_connections:
             ws_manage.disconnect(user_id)
     except Exception as e:
-        print(e)
+        logger.bind(name=None).info(f"websocket: 用户: {user_id} 异常退出: {e}")
 
 
 if __name__ == "__main__":

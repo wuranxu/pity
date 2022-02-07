@@ -1,4 +1,4 @@
-logbook~=1.5.3
+loguru
 pyjwt==2.1.0
 mysql-connector-python~=8.0.26
 requests~=2.23.0

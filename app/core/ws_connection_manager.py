@@ -41,11 +41,11 @@ class ConnectionManager:
             self.active_connections[client_id]: WebSocket = websocket
         else:
             self.active_connections[client_id]: WebSocket = websocket
-            self.log.info(F"websocket:{client_id}： 建立连接成功！")
+            self.log.info(F"websocket: 用户[{client_id}]建立连接成功！")
 
     def disconnect(self, client_id: int) -> None:
         del self.active_connections[client_id]
-        self.log.info(F"websocket:{client_id}： 已安全断开！")
+        self.log.info(F"websocket: 用户[{client_id}] 已安全断开！")
 
     @staticmethod
     async def pusher(sender: WebSocket, message: MsgType) -> None:
