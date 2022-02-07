@@ -38,7 +38,9 @@ class PityNotificationDao(Mapper):
                 else:
                     # 说明是全部消息
                     conditions = [*default_condition,
-                                  or_(PityNotification.msg_type != msg_type, PityNotification.receiver == receiver)]
+                                  or_(PityNotification.msg_type == MessageTypeEnum.broadcast.value,
+                                      and_(PityNotification.msg_type == MessageTypeEnum.others.value,
+                                           PityNotification.receiver == receiver))]
                 sql = select(PityNotification, PityBroadcastReadUser) \
                     .outerjoin(PityBroadcastReadUser,
                                and_(PityNotification.id == PityBroadcastReadUser.notification_id,
