@@ -167,7 +167,7 @@ class UserDao(object):
     def list_users():
         try:
             with Session() as session:
-                return session.query(User).filter_by(deleted_at=None).all()
+                return session.query(User).all()
         except Exception as e:
             UserDao.log.error(f"获取用户列表失败: {str(e)}")
             raise Exception("获取用户列表失败")
