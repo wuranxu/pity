@@ -38,3 +38,8 @@ class Log(object):
         file_name, line, func, _, _ = inspect.getframeinfo(inspect.currentframe().f_back)
         logger.bind(name=Config.PITY_INFO, func=func, line=line,
                     business=self.business, filename=file_name).debug(message)
+
+    def exception(self, message: str):
+        file_name, line, func, _, _ = inspect.getframeinfo(inspect.currentframe().f_back)
+        logger.bind(name=Config.PITY_ERROR, func=func, line=line,
+                    business=self.business, filename=file_name).exception(message)

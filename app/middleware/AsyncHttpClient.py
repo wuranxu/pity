@@ -43,7 +43,9 @@ class AsyncRequest(object):
                 headers['Content-Type'] = "application/json; charset=UTF-8"
             # 新增json校验，修复史诗级bug: json被额外序列化
             try:
-                body = json.loads(kwargs.get("body"))
+                body = kwargs.get("body")
+                if body:
+                    body = json.loads(body)
             except Exception as e:
                 raise Exception(f"json格式不正确: {e}")
             r = AsyncRequest(url, headers=headers, timeout=timeout,
