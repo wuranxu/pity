@@ -297,7 +297,7 @@ class Executor(object):
             # Step7: 批量改写主方法参数
             await self.parse_params(case_info, case_params)
 
-            if case_info.request_headers != "":
+            if case_info.request_headers and case_info.request_headers != "":
                 headers = json.loads(case_info.request_headers)
             else:
                 headers = dict()
@@ -331,7 +331,7 @@ class Executor(object):
             response_info["status"] = ans
             return response_info, None
         except Exception as e:
-            Executor.log.error(f"执行用例失败: {str(e)}")
+            Executor.log.exception("执行用例失败: \n")
             self.append(f"执行用例失败: {str(e)}")
             if self._main:
                 response_info["logs"] = self.logger.join()

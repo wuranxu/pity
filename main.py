@@ -24,6 +24,7 @@ from app.routers.oss import router as oss_router
 from app.routers.project import project
 from app.routers.request import http
 from app.routers.testcase import router as testcase_router
+from app.routers.workspace import router as workspace_router
 from app.utils.scheduler import Scheduler
 from config import Config, PITY_ENV, BANNER
 
@@ -53,6 +54,7 @@ async def request_info(request: Request):
             logger.bind(payload=body, name=None).debug(body)
 
 
+# 注册路由
 pity.include_router(user.router)
 pity.include_router(project.router, dependencies=[Depends(request_info)])
 pity.include_router(http.router, dependencies=[Depends(request_info)])
@@ -62,6 +64,7 @@ pity.include_router(online_router, dependencies=[Depends(request_info)])
 pity.include_router(oss_router, dependencies=[Depends(request_info)])
 pity.include_router(operation_router, dependencies=[Depends(request_info)])
 pity.include_router(msg_router, dependencies=[Depends(request_info)])
+pity.include_router(workspace_router, dependencies=[Depends(request_info)])
 
 pity.add_middleware(
     CORSMiddleware,

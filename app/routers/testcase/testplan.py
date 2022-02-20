@@ -15,15 +15,17 @@ from config import Config
 
 @router.get("/plan/list")
 async def list_test_plan(page: int, size: int, project_id: int = None, name: str = "", priority: str = '',
-                         create_user: int = None, user_info=Depends(Permission())):
+                         create_user: int = None, follow: bool = None, user_info=Depends(Permission())):
     try:
-        data, total = await PityTestPlanDao.list_record_with_pagination(page, size, project_id=project_id, name=name,
-                                                                        priority=priority, create_user=create_user)
-        ans = PityResponse.model_to_list(data)
-        Scheduler.list_test_plan(ans)
+        data, total = await PityTestPlanDao.list_test_plan(page, size, project_id=project_id, name=name,
+                                                           follow=follow, priority=priority,
+                                                           create_user=create_user, user_id=user_info['id'])
+
+        # = PityResponse.model_to_list(data)
+        ans = Scheduler.list_test_plan(data)
         return PityResponse.success_with_size(ans, total=total)
     except Exception as e:
-        return PityResponse.failed(str(e))
+        return PityResponse.failed(e)
 
 
 @router.post("/plan/insert")
@@ -74,5 +76,23 @@ async def run_test_plan(id: int, user_info=Depends(Permission(Config.MEMBER))):
     try:
         asyncio.create_task(Executor.run_test_plan(id, user_info['id']))
         return PityResponse.success("开始执行，请耐心等待")
+    except Exception as e:
+        return PityResponse.failed(str(e))
+
+
+@router.get("/plan/follow", description="关注测试计划")
+async def follow_test_plan(id: int, user_info=Depends(Permission(Config.MEMBER))):
+    try:
+        await PityTestPlanDao.follow_test_plan(id, user_info['id'])
+        return PityResponse.success(msg="关注成功")
+    except Exception as e:
+        return PityResponse.failed(str(e))
+
+
+@router.get("/plan/unfollow", description="取消关注测试计划")
+async def unfollow_test_plan(id: int, user_info=Depends(Permission(Config.MEMBER))):
+    try:
+        await PityTestPlanDao.unfollow_test_plan(id, user_info['id'])
+        return PityResponse.success(msg="取关成功")
     except Exception as e:
         return PityResponse.failed(str(e))

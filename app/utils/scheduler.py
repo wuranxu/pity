@@ -4,6 +4,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 from app.core.executor import Executor
+from app.handler.fatcory import PityResponse
 
 
 class Scheduler(object):
@@ -36,6 +37,10 @@ class Scheduler(object):
         :param cron:
         :return:
         """
+        job = Scheduler.scheduler.get_job(str(plan_id))
+        if job is None:
+            # 新增job
+            return Scheduler.add_test_plan(plan_id, plan_name, cron)
         Scheduler.scheduler.modify_job(job_id=str(plan_id), trigger=CronTrigger.from_crontab(cron), name=plan_name)
         Scheduler.scheduler.pause_job(str(plan_id))
         Scheduler.scheduler.resume_job(str(plan_id))
@@ -64,14 +69,20 @@ class Scheduler(object):
 
     @staticmethod
     def list_test_plan(data: List):
-        for d in data:
-            job = Scheduler.scheduler.get_job(str(d.get('id')))
+        ans = []
+        for d, follow in data:
+            temp = PityResponse.model_to_dict(d)
+            temp['follow'] = follow is not None
+            job = Scheduler.scheduler.get_job(str(temp.get('id')))
             if job is None:
                 # 说明job初始化失败了
-                d["state"] = 2
+                temp["state"] = 2
+                ans.append(temp)
                 continue
             if job.next_run_time is None:
                 # 说明job被暂停了
-                d["state"] = 3
+                temp["state"] = 3
             else:
-                d["next_run"] = job.next_run_time.strftime("%Y-%m-%d %H:%M:%S")
+                temp["next_run"] = job.next_run_time.strftime("%Y-%m-%d %H:%M:%S")
+            ans.append(temp)
+        return ans

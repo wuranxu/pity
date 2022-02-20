@@ -1,8 +1,8 @@
 import json
 from collections import defaultdict
-from typing import List
+from typing import List, Dict
 
-from sqlalchemy import desc
+from sqlalchemy import desc, func, and_
 from sqlalchemy.future import select
 
 from app.crud import Mapper
@@ -10,10 +10,12 @@ from app.crud.test_case.ConstructorDao import ConstructorDao
 from app.crud.test_case.TestCaseAssertsDao import TestCaseAssertsDao
 from app.crud.test_case.TestCaseDirectory import PityTestcaseDirectoryDao
 from app.crud.test_case.TestcaseDataDao import PityTestcaseDataDao
+from app.middleware.RedisManager import RedisHelper
 from app.models import Session, DatabaseHelper, async_session
 from app.models.constructor import Constructor
 from app.models.schema.testcase_schema import TestCaseForm
 from app.models.test_case import TestCase
+from app.models.user import User
 from app.utils.decorator import dao
 from app.utils.logger import Log
 from config import Config
@@ -296,12 +298,33 @@ class TestCaseDao(Mapper):
 
     @staticmethod
     async def get_xmind_data(case_id: int):
-        result = dict()
+        # result = dict()
         data = await TestCaseDao.query_test_case(case_id)
         cs = data.get("case")
         # 开始解析测试数据
-        result.update(dict(id=f"case_{case_id}", label=f"{cs.name}({cs.id})"))
+        result = dict(id=f"case_{case_id}", label=f"{cs.name}({cs.id})")
         children = list()
         await TestCaseDao.collect_data(case_id, children)
         result["children"] = children
         return result
+
+    @staticmethod
+    @RedisHelper.cache("rank")
+    async def query_user_case_list() -> Dict[str, List]:
+        """
+        created by woody at 2022-02-13 12:59
+        查询用户case数量和排名
+        :return:
+        """
+        ans = dict()
+        async with async_session() as session:
+            async with session.begin():
+                sql = select(TestCase.create_user, func.count(TestCase.id)) \
+                    .outerjoin(User, and_(User.deleted_at == 0, TestCase.create_user == User.id)).where(
+                    TestCase.deleted_at == 0).group_by(TestCase.create_user).order_by(
+                    desc(func.count(TestCase.id)))
+                query = await session.execute(sql)
+                for i, q in enumerate(query.all()):
+                    user, count = q
+                    ans[str(user)] = [count, i + 1]
+        return ans

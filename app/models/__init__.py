@@ -119,8 +119,8 @@ class DatabaseHelper(object):
         if str(dist.__class__.deleted_at.property.columns[0].type) == "DATETIME":
             dist.deleted_at = datetime.now()
         else:
-            dist.deleted_at = time.time()
-        dist.updated_at = datetime.now()
+            dist.deleted_at = time.time_ns()
+        dist.updated_at = time.time_ns()
         dist.update_user = update_user
 
     @classmethod
@@ -138,9 +138,10 @@ class DatabaseHelper(object):
         return cls
 
     @staticmethod
-    async def pagination(page: int, size: int, session, sql):
+    async def pagination(page: int, size: int, session, sql: str, scalars=True):
         """
         分页查询
+        :param scalars:
         :param session:
         :param page:
         :param size:
@@ -153,7 +154,9 @@ class DatabaseHelper(object):
             return [], 0
         sql = sql.offset((page - 1) * size).limit(size)
         data = await session.execute(sql)
-        return data.scalars().all(), total
+        if scalars:
+            return data.scalars().all(), total
+        return data.all(), total
 
     @staticmethod
     def like(s: str):

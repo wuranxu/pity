@@ -5,6 +5,7 @@ from sqlalchemy import or_, desc, select
 from app.crud.project.ProjectRoleDao import ProjectRoleDao
 from app.models import Session, async_session
 from app.models.project import Project
+from app.models.project_role import ProjectRole
 from app.utils.logger import Log
 from config import Config
 
@@ -116,3 +117,31 @@ class ProjectDao(object):
         except Exception as e:
             ProjectDao.log.error(f"查询项目: {project_id}失败, {e}")
             return None, [], f"查询项目: {project_id}失败, {e}"
+
+    @staticmethod
+    async def query_user_project(user_id: int) -> int:
+        """
+        created by woody at 2022-02-13 12:05
+        查询用户有多少项目
+        :param user_id: 用户id
+        :return: 返回项目数量
+        """
+        ans = set()
+        async with async_session() as session:
+            async with session.begin():
+                # 先选出未被删除的用户
+                project_sql = select(Project).where(Project.deleted_at == 0)
+                projects = await session.execute(project_sql)
+                project_list = []
+                # 将数据放入列表，把owner等于该用户的放入列表
+                for r in projects.scalars().all():
+                    project_list.append(r.id)
+                    if r.owner == user_id:
+                        ans.add(r.id)
+                # 接着查询项目角色表有该用户的角色，把角色的项目id放入列表
+                # 由于是set，所以不会重复
+                query = await session.execute(
+                    select(ProjectRole).where(ProjectRole.deleted_at == 0, ProjectRole.user_id == user_id))
+                for q in query.scalars().all():
+                    ans.add(q.project_id)
+        return len(ans)

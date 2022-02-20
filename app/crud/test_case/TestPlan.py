@@ -1,12 +1,16 @@
 import asyncio
+import time
 from copy import deepcopy
 
-from sqlalchemy import select
+from sqlalchemy import select, and_, or_, null
 
 from app.crud import Mapper
+from app.handler.fatcory import PityResponse
 from app.models import async_session, DatabaseHelper
+from app.models.report import PityReport
 from app.models.schema.test_plan import PityTestPlanForm
 from app.models.test_plan import PityTestPlan
+from app.models.testplan_follow_user import PityTestPlanFollowUserRel
 from app.utils.decorator import dao
 from app.utils.logger import Log
 from config import Config
@@ -17,7 +21,7 @@ class PityTestPlanDao(Mapper):
 
     @staticmethod
     async def list_test_plan(page: int, size: int, project_id: int = None, name: str = '', priority: str = '',
-                             create_user: int = None):
+                             create_user: int = None, user_id: int = None, follow: bool = None):
         try:
             async with async_session() as session:
                 conditions = [PityTestPlan.deleted_at == 0]
@@ -25,8 +29,29 @@ class PityTestPlanDao(Mapper):
                     .where(name, PityTestPlan.name.like(f"%{name}%"), conditions) \
                     .where(priority, PityTestPlan.priority == priority, conditions) \
                     .where(create_user, PityTestPlan.create_user == create_user, conditions)
-                sql = select(PityTestPlan).where(*conditions)
-                result, total = await DatabaseHelper.pagination(page, size, session, sql)
+                if follow is None:
+                    sql = select(PityTestPlan, PityTestPlanFollowUserRel.id) \
+                        .outerjoin(PityTestPlanFollowUserRel,
+                                   and_(
+                                       PityTestPlanFollowUserRel.user_id == user_id,
+                                       PityTestPlanFollowUserRel.deleted_at == 0,
+                                       PityTestPlanFollowUserRel.plan_id == PityTestPlan.id)) \
+                        .where(*conditions)
+                elif follow:
+                    sql = select(PityTestPlan, PityTestPlanFollowUserRel.id) \
+                        .outerjoin(PityTestPlanFollowUserRel,
+                                   PityTestPlanFollowUserRel.plan_id == PityTestPlan.id,
+                                   ).where(
+                        *conditions, PityTestPlanFollowUserRel.user_id == user_id,
+                                     PityTestPlanFollowUserRel.deleted_at == 0)
+                else:
+                    sql = select(PityTestPlan, null().label('null_bar')) \
+                        .outerjoin(PityTestPlanFollowUserRel,
+                                   PityTestPlanFollowUserRel.plan_id == PityTestPlan.id).where(
+                        *conditions, or_(PityTestPlanFollowUserRel.id == None,
+                                         PityTestPlanFollowUserRel.deleted_at != 0))
+                print(sql)
+                result, total = await DatabaseHelper.pagination(page, size, session, sql, False)
                 return result, total
         except Exception as e:
             PityTestPlanDao.log.error(f"获取测试计划失败: {str(e)}")
@@ -72,7 +97,8 @@ class PityTestPlanDao(Mapper):
                     session.expunge(data)
                 if log:
                     async with session.begin():
-                        await asyncio.create_task(cls.insert_log(session, user, Config.OperationType.UPDATE, data, old, plan.id, changed))
+                        await asyncio.create_task(
+                            cls.insert_log(session, user, Config.OperationType.UPDATE, data, old, plan.id, changed))
         except Exception as e:
             PityTestPlanDao.log.error(f"编辑测试计划失败: {str(e)}")
             raise Exception(f"编辑失败: {str(e)}")
@@ -120,3 +146,70 @@ class PityTestPlanDao(Mapper):
     #     except Exception as e:
     #         PityTestPlanDao.log.error(f"删除测试计划失败: {str(e)}")
     #         raise Exception(f"删除失败: {str(e)}")
+
+    @staticmethod
+    async def follow_test_plan(plan_id: int, user_id: int):
+        """
+        关注测试计划
+        :param plan_id:
+        :param user_id:
+        :return:
+        """
+        async with async_session() as session:
+            async with session.begin():
+                sql = select(PityTestPlanFollowUserRel).where(PityTestPlanFollowUserRel.deleted_at == 0,
+                                                              PityTestPlanFollowUserRel.plan_id == plan_id,
+                                                              PityTestPlanFollowUserRel.user_id == user_id)
+                data = await session.execute(sql)
+                ans = data.scalars().first()
+                if ans is not None:
+                    raise Exception("已关注过此测试计划")
+                model = PityTestPlanFollowUserRel(plan_id, user_id, user_id)
+                session.add(model)
+
+    @staticmethod
+    async def unfollow_test_plan(plan_id: int, user_id: int):
+        """
+        取关测试计划
+        :param plan_id:
+        :param user_id:
+        :return:
+        """
+        async with async_session() as session:
+            async with session.begin():
+                sql = select(PityTestPlanFollowUserRel).where(PityTestPlanFollowUserRel.deleted_at == 0,
+                                                              PityTestPlanFollowUserRel.plan_id == plan_id,
+                                                              PityTestPlanFollowUserRel.user_id == user_id)
+                data = await session.execute(sql)
+                ans = data.scalars().first()
+                if ans is None:
+                    raise Exception("已取关过此测试计划")
+                ans.deleted_at = time.time_ns()
+
+    @staticmethod
+    async def query_user_follow_test_plan(user_id: int):
+        """
+        根据用户id查询出用户关注的测试计划执行数据
+        :param user_id:
+        :return:
+        """
+        ans = []
+        async with async_session() as session:
+            async with session.begin():
+                # 找到最近7次通过率
+                sql = select(PityReport, PityTestPlan).outerjoin(PityTestPlan, PityTestPlan.id == PityReport.plan_id) \
+                    .outerjoin(PityTestPlanFollowUserRel, PityTestPlanFollowUserRel.plan_id == PityTestPlan.id) \
+                    .where(PityTestPlanFollowUserRel.deleted_at == 0, PityTestPlanFollowUserRel.user_id == user_id) \
+                    .order_by(PityReport.start_at.desc()).limit(7)
+                data = await session.execute(sql)
+                temp = dict()
+                for items in data.all():
+                    report, plan = items
+                    if plan.id not in temp:
+                        ans.append({
+                            "plan": PityResponse.model_to_dict(plan),
+                            "report": [],
+                        })
+                        temp[plan.id] = len(ans) - 1
+                    ans[temp[plan.id]]["report"].append(PityResponse.model_to_dict(report))
+        return ans

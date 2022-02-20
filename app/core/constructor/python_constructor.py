@@ -1,7 +1,7 @@
 import json
 
 from awaits.awaitable import awaitable
-
+from loguru import logger
 from app.core.constructor.constructor import ConstructorAbstract
 from app.models.constructor import Constructor
 
@@ -20,7 +20,8 @@ class PythonConstructor(ConstructorAbstract):
             exec(command, loc)
             py_data = loc[constructor.value]
             if not isinstance(py_data, str):
-                py_data = json.dumps(params[constructor.value], ensure_ascii=False)
+                py_data = json.dumps(py_data, ensure_ascii=False)
+            params[constructor.value] = py_data
             executor.append(
                 f"当前{ConstructorAbstract.get_name(constructor)}返回变量: {constructor.value}\n返回值:\n {py_data}\n")
         except Exception as e:
