@@ -120,7 +120,7 @@ class DatabaseHelper(object):
             dist.deleted_at = datetime.now()
         else:
             dist.deleted_at = time.time_ns()
-        dist.updated_at = time.time_ns()
+        dist.updated_at = datetime.now()
         dist.update_user = update_user
 
     @classmethod
