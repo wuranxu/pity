@@ -35,14 +35,18 @@ async def execute_case(env: int, case_id: int, _=Depends(Permission())):
     try:
         executor = Executor()
         test_data = await PityTestcaseDataDao.list_testcase_data_by_env(env, case_id)
-        if not test_data:
-            # 说明该环境下没有测试数据
-            return PityResponse.failed("此环境无测试数据, 请进入用例添加🎨")
+        # if not test_data:
+        #     # 说明该环境下没有测试数据
+        #     return PityResponse.failed("此环境无测试数据, 请进入用例添加🎨")
         ans = dict()
-        for data in test_data:
-            params = json.loads(data.json_data)
-            result, _ = await executor.run(env, case_id, request_param=params)
-            ans[data.name] = result
+        if not test_data:
+            result, _ = await executor.run(env, case_id)
+            ans["默认数据"] = result
+        else:
+            for data in test_data:
+                params = json.loads(data.json_data)
+                result, _ = await executor.run(env, case_id, request_param=params)
+                ans[data.name] = result
         return PityResponse.success(ans)
     except JSONDecodeError:
         return PityResponse.failed("测试数据不为合法的JSON")

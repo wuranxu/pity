@@ -60,7 +60,7 @@ class AsyncRequest(object):
                     for item in items:
                         # 如果是文本类型，直接添加key-value
                         if item.get("type") == 'TEXT':
-                            form_data.add_field(item.get("key"), item.get("value"))
+                            form_data.add_field(item.get("key"), item.get("value", ''))
                         else:
                             client = OssClient.get_oss_client()
                             file_object = await client.get_file_object(item.get("value"))

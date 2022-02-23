@@ -410,6 +410,10 @@ class Executor(object):
     async def run_single(env: int, data, report_id, case_id, params_pool: dict = None, path="主case"):
 
         test_data = await PityTestcaseDataDao.list_testcase_data_by_env(env, case_id)
+        if not test_data:
+            await Executor.run_with_test_data(env, data, report_id, case_id, params_pool, dict(), path,
+                                              "默认数据")
+            return
         await asyncio.gather(
             *(Executor.run_with_test_data(env, data, report_id, case_id, params_pool, Executor.get_dict(x.json_data),
                                           path,
