@@ -32,9 +32,9 @@
 
 ## ✉ 使用文档
 
-  [使用文档(github)](https://wuranxu.github.io/pitydoc)
+  [使用文档(github)](https://wuranxu.github.io/pityDoc/)
 
-  [备用地址(gitee)](https://woodywrx.gitee.io/pitydoc)
+  [备用地址(gitee)](https://woodywrx.gitee.io/pityDoc/)
 
 ## 😊 开发参考文章
 
