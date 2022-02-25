@@ -5,7 +5,7 @@
 ![png](https://img.shields.io/badge/FastApi-green)
 ![png](https://img.shields.io/badge/contributors-3-green)
 
-## 项目谍照
+## 平台展示
 
   [在线体验 🍍](http://121.5.2.74/)
 
