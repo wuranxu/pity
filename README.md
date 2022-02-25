@@ -5,7 +5,52 @@
 ![png](https://img.shields.io/badge/FastApi-green)
 ![png](https://img.shields.io/badge/contributors-3-green)
 
-## 🎉 快速开始
+## 项目谍照
+
+  [在线体验 🍍](http://121.5.2.74/)
+
+#### 测试计划
+
+![](https://gitee.com/woodywrx/picture/raw/master/2022-2-25/1645803999678-image.png)
+
+#### 测试报告
+
+![](https://gitee.com/woodywrx/picture/raw/master/2022-2-25/1645804075353-image.png)
+
+#### 测试用例
+
+![](https://gitee.com/woodywrx/picture/raw/master/2022-2-25/1645804276470-image.png)
+
+
+#### SQL客户端
+
+![](https://gitee.com/woodywrx/picture/raw/master/2022-2-25/1645804151559-image.png)
+
+#### 项目管理
+
+![](https://gitee.com/woodywrx/picture/raw/master/2022-2-25/1645804216830-image.png)
+
+## ✉ 使用文档
+
+  [使用文档(github)](https://wuranxu.github.io/pitydoc)
+
+  [备用地址(gitee)](https://woodywrx.gitee.io/pitydoc)
+
+## 😊 开发参考文章
+
+  [开发文档-公众号](https://mp.weixin.qq.com/mp/appmsgalbum?__biz=MzIyMjUwOTk5Mw==&action=getalbum&album_id=1983195471686762500&scene=173&from_msgid=2247484522&from_itemidx=8&count=3&nolastread=1#wechat_redirect)
+
+  [开发文档-掘金](https://juejin.cn/column/6977933898952998926)
+
+### 😢 关于Pity平台
+
+  pity是一款专注于api自动化的工具，采用`Python`+`FastApi`+`React`开发，目前还不能作为生产级别的工具，作者正在努力之中。
+
+这个项目叫pity，一个从0开始写的自动化测试平台(基于FastApi)，旨在总结自己最近几年的工作经验，也顺便帮助大家进步。目前还在火热更新中，基本上每周都会更新几篇吧，前期以教学+编码为主，后期以实现功能为主。希望大家能够喜欢！~
+
+项目起源是本人很期待的某家头部公司🐧拒绝了我，觉得特别遗憾吧😅。加上这一年`浑浑噩噩`的，也没有什么产出，做的东西不如18，19年多。所以打算把自己18-19的项目重写出来，给大家一些参考。
+
+### 🎉 二次开发
 
 1. 拉取代码
 
@@ -45,20 +90,6 @@ $ python main.py
 
 登录后就可以开启pity之旅啦！
 
-## 🖕相关地址
-
-[官方文档 🍚](http://pity.readthedocs.org/)
-
-[在线演示 🍍](http://121.5.2.74/)
-
-### 😢 关于Pity平台
-
-pity是一款专注于api自动化的工具，采用`Python`+`FastApi`+`React`开发，目前还不能作为生产级别的工具，作者正在努力之中。
-
-这个项目叫pity，一个从0开始写的自动化测试平台(基于FastApi)，旨在总结自己最近几年的工作经验，也顺便帮助大家进步。目前还在火热更新中，基本上每周都会更新几篇吧，前期以教学+编码为主，后期以实现功能为主。希望大家能够喜欢！~
-
-项目起源是本人很期待的某家头部公司🐧拒绝了我，觉得特别遗憾吧😅。加上这一年`浑浑噩噩`的，也没有什么产出，做的东西不如18，19年多。所以打算把自己18-19的项目重写出来，给大家一些参考。
-
 ### 📞 作者介绍
 
     大家好，我是米洛，一个乐于分享，喜欢钻研技术的测试开发工程师，目前就职于上海某三线互联网公司。
@@ -68,6 +99,7 @@ pity是一款专注于api自动化的工具，采用`Python`+`FastApi`+`React`�
     个人技术公众号: `米洛的测开日记`，欢迎大家关注我，掌握最新测试开发知识。
 
 ![](https://gitee.com/woodywrx/picture/raw/master/2022-1-1/1641020334827-qrcode_for_gh_f52fb2135f68_430.jpg)
+
 
 ### ❤️ 平台初心
 
