@@ -51,6 +51,20 @@ def update_testcase(data: TestCaseForm, user_info=Depends(Permission())):
         return PityResponse.failed(e)
 
 
+@router.delete("/delete", description="删除测试用例")
+async def delete_testcase(id_list: List[int], user_info=Depends(Permission())):
+    try:
+        # 删除case
+        await TestCaseDao.delete_records(user_info['id'], id_list)
+        # 删除断言
+        await TestCaseAssertsDao.delete_records(user_info['id'], id_list, column="case_id")
+        # 删除测试数据
+        await PityTestcaseDataDao.delete_records(user_info['id'], id_list, column="case_id")
+        return PityResponse.success()
+    except Exception as e:
+        return PityResponse.failed(e)
+
+
 @router.get("/query")
 async def query_testcase(caseId: int, user_info=Depends(Permission())):
     try:

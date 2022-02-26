@@ -5,7 +5,7 @@ import os
 import sys
 from copy import deepcopy
 from datetime import datetime
-from typing import Tuple
+from typing import Tuple, List
 
 from sqlalchemy import select, update
 
@@ -18,6 +18,7 @@ from app.models.project_role import ProjectRole, ProjectRoleEnum
 from app.models.redis_config import PityRedis
 from app.models.test_case import TestCase
 from app.models.test_plan import PityTestPlan
+from app.models.testcase_asserts import TestCaseAsserts
 from app.models.user import User
 from config import Config
 
@@ -152,7 +153,7 @@ class Mapper(object):
             raise Exception(f"更新记录失败")
 
     @classmethod
-    async def delete_record_by_id(cls, user, id, log=True):
+    async def delete_record_by_id(cls, user: int, id: int, log=True):
         """
         逻辑删除
         :param log:
@@ -176,6 +177,29 @@ class Mapper(object):
                         await asyncio.create_task(
                             cls.insert_log(session, user, Config.OperationType.DELETE, original, key=id))
                 return original
+        except Exception as e:
+            cls.log.error(f"删除{cls.model}记录失败, error: {e}")
+            raise Exception(f"删除记录失败")
+
+    @classmethod
+    async def delete_records(cls, user, id_list: List[int], column="id", log=True):
+        try:
+            async with async_session() as session:
+                for id_ in id_list:
+                    async with session.begin():
+                        query = cls.query_wrapper(**{column: id_})
+                        result = await session.execute(query)
+                        original = result.scalars().first()
+                        if original is None:
+                            continue
+                            # raise Exception("记录不存在")
+                        DatabaseHelper.delete_model(original, user)
+                        await session.flush()
+                        session.expunge(original)
+                    if log:
+                        async with session.begin():
+                            await asyncio.create_task(
+                                cls.insert_log(session, user, Config.OperationType.DELETE, original, key=id_))
         except Exception as e:
             cls.log.error(f"删除{cls.model}记录失败, error: {e}")
             raise Exception(f"删除记录失败")
@@ -413,3 +437,5 @@ init_relation(PityTestPlan, PityRelationField(PityTestPlan.env, (Environment.id,
               PityRelationField(PityTestPlan.receiver, (User.id, User.name)))
 
 init_relation(TestCase)
+
+init_relation(TestCaseAsserts, PityRelationField(TestCaseAsserts.case_id, (TestCase.id, TestCase.name)))

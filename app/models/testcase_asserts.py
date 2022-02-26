@@ -1,11 +1,9 @@
-from datetime import datetime
+from sqlalchemy import Column, INT, String, TEXT
 
-from sqlalchemy import Column, INT, String, DATETIME, TEXT
-
-from app.models import Base
+from app.models.basic import PityBase
 
 
-class TestCaseAsserts(Base):
+class TestCaseAsserts(PityBase):
     __tablename__ = "pity_testcase_asserts"
     id = Column(INT, primary_key=True)
     name = Column(String(32), nullable=False)
@@ -13,20 +11,15 @@ class TestCaseAsserts(Base):
     assert_type = Column(String(16), comment="equal: 等于 not_equal: 不等于 in: 属于")
     expected = Column(TEXT, nullable=False)
     actually = Column(TEXT, nullable=False)
-    created_at = Column(DATETIME, nullable=False)
-    updated_at = Column(DATETIME, nullable=False)
-    deleted_at = Column(DATETIME)
-    create_user = Column(INT, nullable=False)
-    update_user = Column(INT, nullable=False)
+    __fields__ = (name, case_id, assert_type, expected, actually,)
+    __tag__ = "断言"
+    __alias__ = dict(name="名称", case_id="测试用例", assert_type="断言类型", expected="预期结果", actually="实际结果")
 
     def __init__(self, name, case_id, assert_type, expected, actually, user, id=0):
+        super().__init__(user)
         self.id = id
         self.name = name
         self.case_id = case_id
         self.assert_type = assert_type
         self.expected = expected
         self.actually = actually
-        self.created_at = datetime.now()
-        self.updated_at = datetime.now()
-        self.create_user = user
-        self.update_user = user

@@ -1,13 +1,16 @@
 from sqlalchemy import asc, select
 
+from app.crud import Mapper
 from app.models import Session, async_session, DatabaseHelper
 from app.models.schema.testcase_schema import TestCaseAssertsForm
 from app.models.testcase_asserts import TestCaseAsserts
+from app.utils.decorator import dao
 from app.utils.logger import Log
 
 
-class TestCaseAssertsDao(object):
-    log = Log("TestCaseAssertsDao")
+@dao(TestCaseAsserts, Log("TestCaseAssertsDao"))
+class TestCaseAssertsDao(Mapper):
+    # log = Log("TestCaseAssertsDao")
 
     @staticmethod
     def list_test_case_asserts(case_id: int):
@@ -20,16 +23,16 @@ class TestCaseAssertsDao(object):
             TestCaseAssertsDao.log.error(f"获取用例断言失败: {str(e)}")
             return [], f"获取用例断言失败: {str(e)}"
 
-    @staticmethod
-    async def async_list_test_case_asserts(case_id: int):
+    @classmethod
+    async def async_list_test_case_asserts(cls, case_id: int):
         try:
             async with async_session() as session:
                 sql = select(TestCaseAsserts).where(TestCaseAsserts.case_id == case_id,
-                                                    TestCaseAsserts.deleted_at == None).order_by(TestCaseAsserts.name)
+                                                    TestCaseAsserts.deleted_at == 0).order_by(TestCaseAsserts.name)
                 case_list = await session.execute(sql)
                 return case_list.scalars().all(), None
         except Exception as e:
-            TestCaseAssertsDao.log.error(f"获取用例断言失败: {str(e)}")
+            cls.log.error(f"获取用例断言失败: {str(e)}")
             return [], f"获取用例断言失败: {str(e)}"
 
     @staticmethod
@@ -40,7 +43,7 @@ class TestCaseAssertsDao(object):
                 async with session.begin():
                     sql = select(TestCaseAsserts).where(TestCaseAsserts.case_id == form.case_id,
                                                         TestCaseAsserts.name == form.name,
-                                                        TestCaseAsserts.deleted_at == None)
+                                                        TestCaseAsserts.deleted_at == 0)
                     result = await session.execute(sql)
                     data = result.scalars().first()
                     if data is not None:
@@ -62,7 +65,7 @@ class TestCaseAssertsDao(object):
             async with async_session() as session:
                 async with session.begin():
                     sql = select(TestCaseAsserts).where(TestCaseAsserts.id == form.id,
-                                                        TestCaseAsserts.deleted_at == None)
+                                                        TestCaseAsserts.deleted_at == 0)
                     result = await session.execute(sql)
                     data = result.scalars().first()
                     if data is None:
@@ -81,7 +84,7 @@ class TestCaseAssertsDao(object):
             async with async_session() as session:
                 async with session.begin():
                     sql = select(TestCaseAsserts).where(TestCaseAsserts.id == id,
-                                                        TestCaseAsserts.deleted_at == None)
+                                                        TestCaseAsserts.deleted_at == 0)
                     result = await session.execute(sql)
                     data = result.scalars().first()
                     if data is None:

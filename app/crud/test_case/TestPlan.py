@@ -184,7 +184,7 @@ class PityTestPlanDao(Mapper):
                 ans = data.scalars().first()
                 if ans is None:
                     raise Exception("已取关过此测试计划")
-                ans.deleted_at = time.time_ns()
+                ans.deleted_at = int(time.time() * 1000)
 
     @staticmethod
     async def query_user_follow_test_plan(user_id: int):

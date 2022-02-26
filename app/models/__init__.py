@@ -119,7 +119,7 @@ class DatabaseHelper(object):
         if str(dist.__class__.deleted_at.property.columns[0].type) == "DATETIME":
             dist.deleted_at = datetime.now()
         else:
-            dist.deleted_at = time.time_ns()
+            dist.deleted_at = int(time.time() * 1000)
         dist.updated_at = datetime.now()
         dist.update_user = update_user
 

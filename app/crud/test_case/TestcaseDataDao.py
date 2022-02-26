@@ -3,17 +3,19 @@ from typing import List
 
 from sqlalchemy import select
 
+from app.crud import Mapper
 from app.models import async_session, DatabaseHelper
 from app.models.schema.testcase_data import PityTestcaseDataForm
 from app.models.testcase_data import PityTestcaseData
+from app.utils.decorator import dao
 from app.utils.logger import Log
 
 
-class PityTestcaseDataDao(object):
-    log = Log("PityTestcaseDataDao")
+@dao(PityTestcaseData, Log("PityTestcaseDataDao"))
+class PityTestcaseDataDao(Mapper):
 
-    @staticmethod
-    async def insert_testcase_data(form: PityTestcaseDataForm, user: int):
+    @classmethod
+    async def insert_testcase_data(cls, form: PityTestcaseDataForm, user: int):
         try:
             async with async_session() as session:
                 async with session.begin():
@@ -32,11 +34,11 @@ class PityTestcaseDataDao(object):
                     session.expunge(data)
                     return data
         except Exception as e:
-            PityTestcaseDataDao.log.error(f"新增测试数据失败, error: {str(e)}")
+            cls.log.error(f"新增测试数据失败, error: {str(e)}")
             raise Exception(f"新增测试数据失败, {str(e)}")
 
-    @staticmethod
-    async def update_testcase_data(form: PityTestcaseDataForm, user: int):
+    @classmethod
+    async def update_testcase_data(cls, form: PityTestcaseDataForm, user: int):
         try:
             async with async_session() as session:
                 async with session.begin():
@@ -51,11 +53,11 @@ class PityTestcaseDataDao(object):
                     session.expunge(query)
                     return query
         except Exception as e:
-            PityTestcaseDataDao.log.error(f"编辑测试数据失败, error: {str(e)}")
+            cls.log.error(f"编辑测试数据失败, error: {str(e)}")
             raise Exception(f"编辑测试数据失败, {str(e)}")
 
-    @staticmethod
-    async def delete_testcase_data(id: int, user: int):
+    @classmethod
+    async def delete_testcase_data(cls, id: int, user: int):
         try:
             async with async_session() as session:
                 async with session.begin():
@@ -67,11 +69,11 @@ class PityTestcaseDataDao(object):
                         raise Exception("测试数据不存在")
                     DatabaseHelper.delete_model(query, user)
         except Exception as e:
-            PityTestcaseDataDao.log.error(f"删除测试数据失败, error: {str(e)}")
+            cls.log.error(f"删除测试数据失败, error: {str(e)}")
             raise Exception(f"删除测试数据失败, {str(e)}")
 
-    @staticmethod
-    async def list_testcase_data(case_id: int):
+    @classmethod
+    async def list_testcase_data(cls, case_id: int):
         ans = defaultdict(list)
         try:
             async with async_session() as session:
@@ -83,11 +85,11 @@ class PityTestcaseDataDao(object):
                     ans[q.env].append(q)
                 return ans
         except Exception as e:
-            PityTestcaseDataDao.log.error(f"查询测试数据失败, error: {str(e)}")
+            cls.log.error(f"查询测试数据失败, error: {str(e)}")
             raise Exception(f"查询测试数据失败, {str(e)}")
 
-    @staticmethod
-    async def list_testcase_data_by_env(env: int, case_id: int) -> List[PityTestcaseData]:
+    @classmethod
+    async def list_testcase_data_by_env(cls, env: int, case_id: int) -> List[PityTestcaseData]:
         try:
             async with async_session() as session:
                 sql = select(PityTestcaseData).where(PityTestcaseData.case_id == case_id,
@@ -96,5 +98,5 @@ class PityTestcaseDataDao(object):
                 result = await session.execute(sql)
                 return result.scalars().all()
         except Exception as e:
-            PityTestcaseDataDao.log.error(f"查询测试数据失败, error: {str(e)}")
+            cls.log.error(f"查询测试数据失败, error: {str(e)}")
             raise Exception(f"查询测试数据失败, {str(e)}")

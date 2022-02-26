@@ -48,10 +48,14 @@ async def request_info(request: Request):
         body = await request.json()
         logger.bind(payload=body, name=None).debug("request_json: ")
     except:
-        body = await request.body()
-        if len(body) != 0:
-            # 有请求体，记录日志
-            logger.bind(payload=body, name=None).debug(body)
+        try:
+            body = await request.body()
+            if len(body) != 0:
+                # 有请求体，记录日志
+                logger.bind(payload=body, name=None).debug(body)
+        except:
+            # 忽略文件上传类型的数据
+            pass
 
 
 # 注册路由
