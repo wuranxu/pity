@@ -135,7 +135,7 @@ class PityTestcaseDirectoryDao(object):
                 title=temp.name,
                 key=temp.id,
                 children=child,
-                disabled=len(child) == 0
+                # disabled=len(child) == 0
             ))
             await PityTestcaseDirectoryDao.get_directory(ans_map, parent_map, temp.id, child, case_node)
 
@@ -162,6 +162,7 @@ class PityTestcaseDirectoryDao(object):
         if not son:
             return
         for s in son:
+            result.append(s)
             sons = parent_map.get(s)
             if not sons:
                 continue

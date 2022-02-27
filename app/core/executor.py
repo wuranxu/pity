@@ -139,6 +139,8 @@ class Executor(object):
                     result = result[int(branch)]
                 else:
                     result = result.get(branch)
+                if result is None:
+                    raise Exception(f"变量路径: {v}不存在, 请检查JSON或路径!")
             if field_name != "request_headers" and not isinstance(result, str):
                 new_value = json.dumps(result, ensure_ascii=False)
             else:
@@ -319,7 +321,7 @@ class Executor(object):
                         f"\n\nBody:\n{body}\n\nResponse:\n{res.get('response', '未获取到返回值')}")
             response_info.update(res)
             # 执行完成进行断言
-            asserts, ans = self.my_assert(asserts, response_info)
+            asserts, ans = self.my_assert(asserts, response_info, request_param)
 
             # Step10: 执行后置条件
             await self.execute_constructors(env, path, case_info, case_params, req_params, constructors, asserts, True)
@@ -443,7 +445,7 @@ class Executor(object):
         return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     @case_log
-    def my_assert(self, asserts: List, response_info) -> [str, bool]:
+    def my_assert(self, asserts: List, response_info, request_param: dict) -> [str, bool]:
         """
         断言验证
         """
@@ -453,23 +455,20 @@ class Executor(object):
             self.append("未设置断言, 用例结束")
             return json.dumps(result, ensure_ascii=False), ans
         for item in asserts:
-            a, err = self.parse_variable(response_info, item.expected)
-            if err:
-                ans = False
-                result[item.id] = {"status": False, "msg": f"解析变量失败, {err}"}
-                continue
-            b, err = self.parse_variable(response_info, item.actually)
-            if err:
+            try:
+                expected = self.parse_variable(response_info, item.expected, request_param)
+                actually = self.parse_variable(response_info, item.actually, request_param)
+            except Exception as err:
                 ans = False
                 result[item.id] = {"status": False, "msg": f"解析变量失败, {err}"}
                 continue
             try:
                 # 解析预期/实际结果
-                a = self.translate(a)
+                expected = self.translate(expected)
                 # 判断请求返回是否是json格式，如果不是则不进行loads操作
                 if response_info.get("json_format", False):
-                    b = self.translate(b)
-                status, err = self.ops(item.assert_type, a, b)
+                    actually = self.translate(actually)
+                status, err = self.ops(item.assert_type, expected, actually)
                 result[item.id] = {"status": status, "msg": err}
                 if not status:
                     ans = False
@@ -568,20 +567,35 @@ class Executor(object):
         """
         return json.loads(data)
 
+    def replace_branch(self, branch: str, params: dict):
+        if not params:
+            return branch
+        if branch.startswith("#"):
+            # 说明branch也是个子变量
+            data = branch[1:]
+            if len(data) == 0:
+                return branch
+            dist = params.get(data)
+            if dist is None:
+                return branch
+            return params.get(data)
+        return branch
+
     @case_log
-    def parse_variable(self, response_info, string: str):
+    def parse_variable(self, response_info, string: str, params=None):
         """
         解析返回response中的变量
         """
-        data = self.get_el_expression(string)
-        if len(data) == 0:
-            return string, None
-        data = data[0]
+        exp = self.get_el_expression(string)
+        if len(exp) == 0:
+            return string
+        data = exp[0]
         el_list = data.split(".")
         # ${response.data.id}
         result = response_info
         try:
             for branch in el_list:
+                branch = self.replace_branch(branch, params)
                 if isinstance(result, str):
                     # 说明需要反序列化
                     try:
@@ -589,16 +603,17 @@ class Executor(object):
                     except Exception as e:
                         self.append(f"反序列化失败, result: {result}\nERROR: {e}")
                         break
-                if isinstance(branch, int):
+                # 2022-02-27 修复数组变量替换的bug
+                if isinstance(branch, int) or branch.isdigit():
                     # 说明路径里面的是数组
                     result = result[int(branch)]
                 else:
                     result = result.get(branch)
         except Exception as e:
-            return None, f"获取变量失败: {str(e)}"
+            raise Exception(f"获取变量失败: {str(e)}")
         if string == "${response}":
-            return result, None
-        return json.dumps(result, ensure_ascii=False), None
+            return result
+        return json.dumps(result, ensure_ascii=False)
 
     @staticmethod
     @lock("test_plan")
@@ -697,3 +712,10 @@ class Executor(object):
                 "env": current_env.name,
             }
         return report_id
+
+
+if __name__ == "__main__":
+    a = Executor()
+    temp = json.dumps({"a": {"b": [{"c": 1, "d": 2}]}})
+    ans = a.parse_variable(temp, "${a.b.#name.c}", {"name": 0})
+    print(ans)

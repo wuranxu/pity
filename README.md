@@ -28,7 +28,7 @@
 
 #### 项目管理
 
-![](https://gitee.com/woodywrx/picture/raw/master/2022-2-25/1645804216830-image.png)
+![](https://gitee.com/woodywrx/picture/raw/master/2022-2-26/1645854332681-image.png)
 
 ## ✉ 使用文档
 
