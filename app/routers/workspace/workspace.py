@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from fastapi import APIRouter, Depends
 
 from app.crud.project.ProjectDao import ProjectDao
@@ -14,8 +16,11 @@ async def query_user_statistics(user_info=Depends(Permission())):
     user_id = user_info['id']
     count = await ProjectDao.query_user_project(user_id)
     rank = await TestCaseDao.query_user_case_list()
+    today = datetime.today()
+    weekly_case = await TestCaseDao.query_weekly_user_case(user_id, (today - timedelta(days=6)), today)
     case_count, user_rank = rank[str(user_id)]
     return PityResponse.success(dict(project_count=count, case_count=case_count,
+                                     weekly_case=weekly_case,
                                      user_rank=user_rank, total_user=len(rank)))
 
 

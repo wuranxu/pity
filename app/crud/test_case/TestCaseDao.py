@@ -1,8 +1,9 @@
 import json
 from collections import defaultdict
+from datetime import datetime, timedelta
 from typing import List, Dict
 
-from sqlalchemy import desc, func, and_
+from sqlalchemy import desc, func, and_, asc
 from sqlalchemy.future import select
 
 from app.crud import Mapper
@@ -327,4 +328,37 @@ class TestCaseDao(Mapper):
                 for i, q in enumerate(query.all()):
                     user, count = q
                     ans[str(user)] = [count, i + 1]
+        return ans
+
+    @staticmethod
+    async def query_weekly_user_case(user_id: int, start_time: datetime, end_time: datetime) -> List:
+        ans = dict()
+        async with async_session() as session:
+            async with session.begin():
+                date_ = func.date_format(TestCase.created_at, "%Y-%m-%d")
+                sql = select(date_, func.count(TestCase.id)).where(
+                    TestCase.create_user == user_id,
+                    TestCase.deleted_at == 0, TestCase.created_at.between(start_time, end_time)).group_by(
+                    date_).order_by(asc(date_))
+                query = await session.execute(sql)
+                for i, q in enumerate(query.all()):
+                    date, count = q
+                    ans[date] = count
+        return await TestCaseDao.fill_data(start_time, end_time, ans)
+
+    @staticmethod
+    async def fill_data(start_time: datetime, end_time: datetime, data: dict):
+        """
+        填补数据
+        :param data:
+        :param start_time:
+        :param end_time:
+        :return:
+        """
+        start = start_time
+        ans = []
+        while start <= end_time:
+            date = start.strftime("%Y-%m-%d")
+            ans.append(dict(date=date, count=data.get(date, 0)))
+            start += timedelta(days=1)
         return ans
