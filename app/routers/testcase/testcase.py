@@ -2,6 +2,7 @@ from typing import List
 
 from fastapi import APIRouter, Depends
 
+from app.crud.project.ProjectRoleDao import ProjectRoleDao
 from app.crud.test_case.ConstructorDao import ConstructorDao
 from app.crud.test_case.TestCaseAssertsDao import TestCaseAssertsDao
 from app.crud.test_case.TestCaseDao import TestCaseDao
@@ -202,7 +203,7 @@ async def list_report(page: int, size: int, start_time: str, end_time: str, exec
 @router.get("/xmind")
 async def get_xmind_data(case_id: int, user_info=Depends(Permission())):
     try:
-        tree_data = await TestCaseDao.get_xmind_data(case_id)
+        tree_data = await TestCaseDao.get_xmind_data(case_id, user_info["id"], user_info["role"])
         return PityResponse.success(tree_data)
     except Exception as e:
         return PityResponse.failed(e)
@@ -233,6 +234,7 @@ async def get_directory_and_case(project_id: int, user_info=Depends(Permission()
 async def query_testcase_directory(directory_id: int, user_info=Depends(Permission())):
     try:
         data = await PityTestcaseDirectoryDao.query_directory(directory_id)
+        await ProjectRoleDao.read_permission(data.project_id, user_info["id"], user_info['role'])
         return PityResponse.success(data)
     except Exception as e:
         return PityResponse.failed(e)

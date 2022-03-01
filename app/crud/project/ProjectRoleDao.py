@@ -50,13 +50,39 @@ class ProjectRoleDao(Mapper):
         if project.owner != user:
             if project_admin and project_role == Config.MANAGER:
                 return "不能修改组长的权限"
-            updater_role = await session.execute(select(Project)
-                                                 .where(ProjectRole.user_id == user,
-                                                        ProjectRole.project_id == project_id,
-                                                        ProjectRole.deleted_at == 0)).scalars().first()
+            query = await session.execute(select(ProjectRole)
+                                          .where(ProjectRole.user_id == user,
+                                                 ProjectRole.project_id == project_id,
+                                                 ProjectRole.deleted_at == 0))
+            updater_role = query.scalars().first()
             if updater_role is None or updater_role.project_role == Config.MEMBER:
                 return "对不起，你没有权限"
         return None
+
+    @staticmethod
+    async def read_permission(project_id: int, user: int, user_role: int):
+        """
+        判断用户是否有读取项目的权限
+        :param user_role:
+        :param project_id:
+        :param user:
+        :return:
+        """
+        if user_role == Config.ADMIN:
+            # 超管不需要判断权限
+            return
+        async with async_session() as session:
+            query = await session.execute(select(Project).where(Project.id == project_id, Project.deleted_at == 0))
+            project = query.scalars().first()
+            if project is None:
+                raise Exception("项目不存在")
+            if project.private and project.owner != user:
+                query = await session.execute(select(ProjectRole).where(ProjectRole.user_id == user,
+                                                                        ProjectRole.project_id == project_id,
+                                                                        ProjectRole.deleted_at == 0))
+                role = query.scalars().first()
+                if role is None:
+                    raise Exception("没有权限访问项目用例")
 
     @staticmethod
     async def has_permission(project_id, project_role, user, user_role, project_admin=False, session=None):

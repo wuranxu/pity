@@ -298,9 +298,9 @@ class TestCaseDao(Mapper):
             parent.get("children").append(temp)
 
     @staticmethod
-    async def get_xmind_data(case_id: int):
+    async def get_xmind_data(case_id: int, user: int, role: int):
         # result = dict()
-        data = await TestCaseDao.query_test_case(case_id)
+        data = await TestCaseDao.query_test_case(case_id, user, role)
         cs = data.get("case")
         # 开始解析测试数据
         result = dict(id=f"case_{case_id}", label=f"{cs.name}({cs.id})")

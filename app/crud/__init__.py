@@ -178,8 +178,9 @@ class Mapper(object):
                             cls.insert_log(session, user, Config.OperationType.DELETE, original, key=id))
                 return original
         except Exception as e:
-            cls.log.error(f"删除{cls.model}记录失败, error: {e}")
-            raise Exception(f"删除记录失败")
+            cls.log.exception(f"删除{cls.model.__name__}记录失败: \n")
+            cls.log.error(f"删除{cls.model.__name__}记录失败, error: {e}")
+            raise Exception(f"删除失败")
 
     @classmethod
     async def delete_records(cls, user, id_list: List[int], column="id", log=True):

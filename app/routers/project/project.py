@@ -83,6 +83,15 @@ def query_project(projectId: int, user_info=Depends(Permission())):
     return dict(code=0, data=result, msg="操作成功")
 
 
+@router.delete("/delete", description="删除项目")
+async def query_project(projectId: int, user_info=Depends(Permission(Config.ADMIN))):
+    try:
+        await ProjectDao.delete_record_by_id(user_info['id'], projectId)
+        return PityResponse.success()
+    except Exception as e:
+        return PityResponse.failed(e)
+
+
 @router.post("/role/insert")
 async def insert_project_role(role: ProjectRoleForm, user_info=Depends(Permission())):
     try:

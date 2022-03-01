@@ -12,6 +12,10 @@ class Project(PityBase):
     private = Column(BOOLEAN, default=False)
     description = Column(String(200))
     avatar = Column(String(128), nullable=True)
+    __tag__ = "项目"
+    __fields__ = (name, owner, app, private, description, avatar)
+    __alias__ = dict(name="项目名称", owner="项目所有者", app="项目所属应用", private="是否私有", description="项目描述", avatar="项目头像")
+    __show__ = 2
 
     def __init__(self, name, app, owner, create_user, description="", private=False, avatar=None):
         super().__init__(create_user)
