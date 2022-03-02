@@ -58,6 +58,9 @@ class BaseConfig(object):
     # dao路径
     DAO_PATH = os.path.join(APP_PATH, 'crud')
 
+    # markdown地址
+    MARKDOWN_PATH = os.path.join(ROOT, 'templates', "markdown")
+
     SERVER_REPORT = "http://localhost:8000/#/record/report/"
 
     ALIYUN = "aliyun"
@@ -109,6 +112,13 @@ class BaseConfig(object):
         DELETE = 2
         EXECUTE = 3
         STOP = 4
+
+    # 通知类型
+    class NoticeType(IntEnum):
+        EMAIL = 0
+        DINGDING = 1
+        WECHAT = 2
+        FEISHU = 3
 
     # 日志名
     PITY_ERROR = "pity_error"

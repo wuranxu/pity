@@ -203,7 +203,7 @@ async def list_report(page: int, size: int, start_time: str, end_time: str, exec
 @router.get("/xmind")
 async def get_xmind_data(case_id: int, user_info=Depends(Permission())):
     try:
-        tree_data = await TestCaseDao.get_xmind_data(case_id, user_info["id"], user_info["role"])
+        tree_data = await TestCaseDao.get_xmind_data(case_id)
         return PityResponse.success(tree_data)
     except Exception as e:
         return PityResponse.failed(e)

@@ -9,6 +9,7 @@ class ProjectForm(BaseModel):
     owner: int
     private: bool = False
     description: str = ''
+    dingtalk_url: str = ''
 
     @validator('name', 'app', 'owner')
     def name_not_empty(cls, v):
@@ -24,6 +25,7 @@ class ProjectEditForm(BaseModel):
     owner: int
     private: bool = False
     description: str = ''
+    dingtalk_url: str = ''
 
     @validator('id', 'name', 'app', 'owner')
     def name_not_empty(cls, v):

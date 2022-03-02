@@ -81,7 +81,7 @@ class ProjectDao(Mapper):
         return None
 
     @classmethod
-    def update_project(cls, id, user, role, name, app, owner, private, description):
+    def update_project(cls, id, user, role, name, app, owner, private, description, dingtalk_url=None):
         try:
             with Session() as session:
                 data = session.query(Project).filter_by(id=id, deleted_at=0).first()
@@ -97,6 +97,7 @@ class ProjectDao(Mapper):
                 data.description = description
                 data.updated_at = datetime.now()
                 data.update_user = user
+                data.dingtalk_url = dingtalk_url
                 session.commit()
         except Exception as e:
             cls.log.error(f"编辑项目: {name}失败, {e}")
@@ -109,17 +110,14 @@ class ProjectDao(Mapper):
             with Session() as session:
                 data = session.query(Project).filter_by(id=project_id, deleted_at=0).first()
                 if data is None:
-                    return None, [], "项目不存在"
+                    raise Exception("项目不存在")
                 roles, err = ProjectRoleDao.list_role(project_id)
                 if err is not None:
-                    return None, [], err
-                # tree, err = TestCaseDao.list_test_case(project_id)
-                # if err is not None:
-                #     return None, [], [], err
-                return data, roles, None
+                    raise err
+                return data, roles
         except Exception as e:
             cls.log.error(f"查询项目: {project_id}失败, {e}")
-            return None, [], f"查询项目: {project_id}失败, {e}"
+            raise Exception(f"查询项目: {project_id}失败, {e}")
 
     @staticmethod
     async def query_user_project(user_id: int) -> int:

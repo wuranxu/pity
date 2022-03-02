@@ -180,14 +180,14 @@ class UserDao(object):
             return result
 
     @staticmethod
-    @RedisHelper.cache("user_email", 3600)
-    async def list_user_email(*user):
+    @RedisHelper.cache("user_touch", 3600)
+    async def list_user_touch(*user):
         try:
             if not user:
                 return []
             async with async_session() as session:
                 query = await session.execute(select(User).where(User.id.in_(user), User.deleted_at == None))
-                return [q.email for q in query.scalars().all()]
+                return [{"email": q.email, "phone": q.phone} for q in query.scalars().all()]
         except Exception as e:
-            UserDao.log.error(f"获取用户邮箱失败: {str(e)}")
-            raise Exception(f"获取用户邮箱失败: {e}")
+            UserDao.log.error(f"获取用户联系方式失败: {str(e)}")
+            raise Exception(f"获取用户联系方式失败: {e}")

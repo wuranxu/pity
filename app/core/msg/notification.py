@@ -1,8 +1,5 @@
-from abc import ABC
-
-
-class Notification(ABC):
+class Notification(object):
 
     @staticmethod
     def send_msg(subject, content, attachment=None, *receiver):
-        pass
+        raise NotImplementedError

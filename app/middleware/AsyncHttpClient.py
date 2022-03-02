@@ -34,7 +34,7 @@ class AsyncRequest(object):
                                           cookies=cookie, json_format=json_format)
 
     @staticmethod
-    async def client(url: str, body_type: int, timeout=15, **kwargs):
+    async def client(url: str, body_type: int = Config.BodyType.json, timeout=15, **kwargs):
         if not url.startswith(("http://", "https://")):
             raise Exception("请输入正确的url, 记得带上http哦")
         headers = kwargs.get("headers", {})

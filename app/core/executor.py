@@ -11,11 +11,13 @@ from app.core.constructor.case_constructor import TestcaseConstructor
 from app.core.constructor.python_constructor import PythonConstructor
 from app.core.constructor.redis_constructor import RedisConstructor
 from app.core.constructor.sql_constructor import SqlConstructor
+from app.core.msg.dingtalk import DingTalk
 from app.core.msg.mail import Email
 from app.core.ws_connection_manager import ws_manage
 from app.crud.auth.UserDao import UserDao
 from app.crud.config.EnvironmentDao import EnvironmentDao
 from app.crud.config.GConfigDao import GConfigDao
+from app.crud.project.ProjectDao import ProjectDao
 from app.crud.test_case.TestCaseAssertsDao import TestCaseAssertsDao
 from app.crud.test_case.TestCaseDao import TestCaseDao
 from app.crud.test_case.TestPlan import PityTestPlanDao
@@ -25,7 +27,9 @@ from app.crud.test_case.TestcaseDataDao import PityTestcaseDataDao
 from app.enums.GconfigEnum import GConfigParserEnum
 from app.middleware.AsyncHttpClient import AsyncRequest
 from app.models.constructor import Constructor
+from app.models.project import Project
 from app.models.test_case import TestCase
+from app.models.test_plan import PityTestPlan
 from app.models.testcase_asserts import TestCaseAsserts
 from app.utils.case_logger import CaseLog
 from app.utils.decorator import case_log, lock
@@ -616,6 +620,38 @@ class Executor(object):
         return json.dumps(result, ensure_ascii=False)
 
     @staticmethod
+    async def notice(env: list, plan: PityTestPlan, project: Project, report_dict: dict, users: list):
+        """
+        消息通知方法
+        :param env:
+        :param plan:
+        :param project:
+        :param report_dict:
+        :param users:
+        :return:
+        """
+        for e in env:
+            msg_types = plan.msg_type.split(",")
+            for m in msg_types:
+                if int(m) == Config.NoticeType.EMAIL:
+                    render_html = Email.render_html(plan_name=plan.name, **report_dict[e])
+                    Email.send_msg(
+                        f"【{report_dict[e].get('env')}】测试计划【{plan.name}】执行完毕（{report_dict[e].get('plan_result')}）",
+                        render_html, None, *[r.get("email") for r in users])
+                if int(m) == Config.NoticeType.DINGDING:
+                    report_dict[e]['result_color'] = '#67C23A' if report_dict[e]['plan_result'] == '通过' \
+                        else '#E6A23C'
+                    # 批量获取用户手机号
+                    users = [r.get("phone") for r in users]
+                    report_dict[e]['notification_user'] = " ".join(map(lambda x: f"@{x}", users))
+                    render_markdown = DingTalk.render_markdown(**report_dict[e], plan_name=plan.name)
+                    if not project.dingtalk_url:
+                        Executor.log.info("项目未配置钉钉通知机器人")
+                        continue
+                    ding = DingTalk(project.dingtalk_url)
+                    await ding.send_msg("pity测试报告", render_markdown, None, users)
+
+    @staticmethod
     @lock("test_plan")
     async def run_test_plan(plan_id: int, executor: int = 0):
         """
@@ -631,6 +667,7 @@ class Executor(object):
         try:
             # 设置为running
             await PityTestPlanDao.update_test_plan_state(plan.id, 1)
+            project, _ = ProjectDao.query_project(plan.project_id)
             env = list(map(int, plan.env.split(",")))
             case_list = list(map(int, plan.case_list.split(",")))
             receiver = list(map(int, plan.receiver.split(",")))
@@ -641,19 +678,12 @@ class Executor(object):
                                         plan_id=plan.id, ordered=plan.ordered, report_dict=report_dict) for e in env))
             await PityTestPlanDao.update_test_plan_state(plan.id, 0)
             # await PityTestPlanDao.update_test_plan(plan, plan.update_user)
-            # TODO 后续通知部分
-            users = await UserDao.list_user_email(*receiver)
-            for e in env:
-                msg_types = plan.msg_type.split(",")
-                for m in msg_types:
-                    if int(m) == 0:
-                        render_html = Email.render_html(plan_name=plan.name, **report_dict[e])
-                        Email.send_msg(
-                            f"【{report_dict[e].get('env')}】测试计划【{plan.name}】执行完毕（{report_dict[e].get('plan_result')}）",
-                            render_html, None, *users)
+            users = await UserDao.list_user_touch(receiver)
+            await Executor.notice(env, plan, project, report_dict, users)
             if executor != 0:
                 await ws_manage.notify(executor, title="测试计划执行完毕", content=f"请前往测试报告页面查看细节")
         except Exception as e:
+            Executor.log.exception(f"执行测试计划: 【{plan.name}】失败: {str(e)}")
             Executor.log.error(f"执行测试计划: 【{plan.name}】失败: {str(e)}")
 
     @staticmethod
@@ -701,6 +731,7 @@ class Executor(object):
             report_dict[env] = {
                 "report_url": f"{Config.SERVER_REPORT}{report_id}",
                 "start_time": report.start_at.strftime("%Y-%m-%d %H:%M:%S"),
+                "end_time": report.finished_at.strftime("%Y-%m-%d %H:%M:%S"),
                 "success": ok,
                 "failed": fail,
                 "total": ok + fail + error + skip,

@@ -4,7 +4,7 @@ from datetime import timedelta, datetime
 import jwt
 from jwt.exceptions import ExpiredSignatureError, DecodeError
 
-EXPIRED_HOUR = 24
+EXPIRED_HOUR = 48
 
 
 class UserToken(object):
