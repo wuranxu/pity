@@ -50,7 +50,6 @@ class PityTestPlanDao(Mapper):
                                    PityTestPlanFollowUserRel.plan_id == PityTestPlan.id).where(
                         *conditions, or_(PityTestPlanFollowUserRel.id == None,
                                          PityTestPlanFollowUserRel.deleted_at != 0))
-                print(sql)
                 result, total = await DatabaseHelper.pagination(page, size, session, sql, False)
                 return result, total
         except Exception as e:
@@ -195,21 +194,23 @@ class PityTestPlanDao(Mapper):
         """
         ans = []
         async with async_session() as session:
-            async with session.begin():
-                # 找到最近7次通过率
-                sql = select(PityReport, PityTestPlan).outerjoin(PityTestPlan, PityTestPlan.id == PityReport.plan_id) \
-                    .outerjoin(PityTestPlanFollowUserRel, PityTestPlanFollowUserRel.plan_id == PityTestPlan.id) \
-                    .where(PityTestPlanFollowUserRel.deleted_at == 0, PityTestPlanFollowUserRel.user_id == user_id) \
-                    .order_by(PityReport.start_at.desc()).limit(7)
-                data = await session.execute(sql)
-                temp = dict()
-                for items in data.all():
-                    report, plan = items
-                    if plan.id not in temp:
-                        ans.append({
-                            "plan": PityResponse.model_to_dict(plan),
-                            "report": [],
-                        })
-                        temp[plan.id] = len(ans) - 1
-                    ans[temp[plan.id]]["report"].append(PityResponse.model_to_dict(report))
+            # 找到最近7次通过率
+            sql = select(PityTestPlan, PityTestPlanFollowUserRel.id) \
+                .outerjoin(PityTestPlanFollowUserRel,
+                           PityTestPlanFollowUserRel.plan_id == PityTestPlan.id,
+                           ).where(
+                PityTestPlanFollowUserRel.user_id == user_id,
+                PityTestPlanFollowUserRel.deleted_at == 0,
+                PityTestPlan.deleted_at == 0)
+            data = await session.execute(sql)
+            for d in data.scalars().all():
+                reports = list()
+                query = await session.execute(select(PityReport).where(PityReport.plan_id == d.id).order_by(
+                    PityReport.start_at.desc()).limit(7))
+                for report in query.scalars().all():
+                    reports.append(PityResponse.model_to_dict(report))
+                ans.append({
+                    "plan": PityResponse.model_to_dict(d),
+                    "report": reports,
+                })
         return ans
