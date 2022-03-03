@@ -12,7 +12,10 @@ jobs:
     name: deploy
     runs-on: ubuntu-latest
     steps:
-    - name: copy file via ssh password
+      - name: 拉取代码
+        uses: actions/checkout@main
+
+      - name: copy file via ssh password
       uses: appleboy/scp-action@master
       with:
         host: ${{ secrets.HOST }}
