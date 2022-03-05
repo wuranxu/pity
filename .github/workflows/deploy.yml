@@ -33,4 +33,5 @@ jobs:
           script: |
             cd /home/tester/pity
             pkill gunicorn
+            sleep 5
             gunicorn -c gunicorn.py main:pity

@@ -118,11 +118,12 @@ class Mapper(object):
             raise Exception(f"添加记录失败")
 
     @classmethod
-    async def update_by_map(cls, *condition, **kwargs):
+    async def update_by_map(cls, user, *condition, **kwargs):
         try:
             async with async_session() as session:
                 async with session.begin():
-                    sql = update(cls.model).where(*condition).values(**kwargs, updated_at=datetime.now())
+                    sql = update(cls.model).where(*condition).values(**kwargs, updated_at=datetime.now(),
+                                                                     update_user=user)
                     await session.execute(sql)
         except Exception as e:
             cls.log.error(f"更新数据失败: {e}")

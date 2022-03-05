@@ -28,7 +28,8 @@ async def list_msg(msg_status: int, msg_type: int, user_info=Depends(Permission(
 async def read_msg(form: NotificationForm, user_info=Depends(Permission())):
     try:
         if form.personal:
-            await PityNotificationDao.update_by_map(PityNotification.id.in_(form.personal),
+            await PityNotificationDao.update_by_map(user_info['id'],
+                                                    PityNotification.id.in_(form.personal),
                                                     PityNotification.receiver == user_info['id'],
                                                     msg_status=MessageStateEnum.read.value)
         if form.broadcast:

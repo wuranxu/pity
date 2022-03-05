@@ -12,7 +12,7 @@ from app.crud.test_case.TestcaseDataDao import PityTestcaseDataDao
 from app.handler.fatcory import PityResponse
 from app.models.schema.constructor import ConstructorForm, ConstructorIndex
 from app.models.schema.testcase_data import PityTestcaseDataForm
-from app.models.schema.testcase_directory import PityTestcaseDirectoryForm
+from app.models.schema.testcase_directory import PityTestcaseDirectoryForm, PityMoveTestCaseDto
 from app.models.schema.testcase_schema import TestCaseAssertsForm, TestCaseForm
 from app.models.test_case import TestCase
 from app.routers import Permission
@@ -289,6 +289,17 @@ async def insert_testcase_data(form: PityTestcaseDataForm, user_info=Depends(Per
 async def insert_testcase_data(id: int, user_info=Depends(Permission())):
     try:
         await PityTestcaseDataDao.delete_testcase_data(id, user_info['id'])
+        return PityResponse.success()
+    except Exception as e:
+        return PityResponse.failed(e)
+
+
+@router.post("/move", description="移动case到其他目录")
+async def move_testcase(form: PityMoveTestCaseDto, user_info=Depends(Permission())):
+    try:
+        # 判断是否有移动case的权限
+        await ProjectRoleDao.read_permission(form.project_id, user_info["id"], user_info['role'])
+        await TestCaseDao.update_by_map(user_info['id'], TestCase.id.in_(form.id_list), directory_id=form.directory_id)
         return PityResponse.success()
     except Exception as e:
         return PityResponse.failed(e)
