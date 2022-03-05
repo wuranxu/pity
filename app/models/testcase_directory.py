@@ -1,12 +1,12 @@
 from datetime import datetime
 
-from sqlalchemy import Column, INT, DATETIME, String, UniqueConstraint
+from sqlalchemy import Column, INT, String, UniqueConstraint
 
-from app.models import Base
+from app.models.basic import PityBase
 from app.models.schema.testcase_directory import PityTestcaseDirectoryForm
 
 
-class PityTestcaseDirectory(Base):
+class PityTestcaseDirectory(PityBase):
     """
     用例目录表
     """
@@ -17,11 +17,6 @@ class PityTestcaseDirectory(Base):
     )
     id = Column(INT, primary_key=True)
     project_id = Column(INT, index=True)
-    created_at = Column(DATETIME, nullable=False)
-    updated_at = Column(DATETIME, nullable=False)
-    deleted_at = Column(DATETIME)
-    create_user = Column(INT, nullable=False)
-    update_user = Column(INT, nullable=False)
 
     # 目录名称
     name = Column(String(18), nullable=False)
@@ -30,6 +25,7 @@ class PityTestcaseDirectory(Base):
     parent = Column(INT)
 
     def __init__(self, form: PityTestcaseDirectoryForm, user):
+        super().__init__(user)
         self.project_id = form.project_id
         self.name = form.name
         self.parent = form.parent

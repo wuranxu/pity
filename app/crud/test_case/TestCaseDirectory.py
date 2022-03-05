@@ -1,3 +1,4 @@
+import time
 from collections import defaultdict
 from datetime import datetime
 
@@ -17,7 +18,7 @@ class PityTestcaseDirectoryDao(object):
         try:
             async with async_session() as session:
                 sql = select(PityTestcaseDirectory).where(PityTestcaseDirectory.id == directory_id,
-                                                          PityTestcaseDirectory.deleted_at == None)
+                                                          PityTestcaseDirectory.deleted_at == 0)
                 result = await session.execute(sql)
                 return result.scalars().first()
         except Exception as e:
@@ -29,7 +30,7 @@ class PityTestcaseDirectoryDao(object):
         try:
             async with async_session() as session:
                 sql = select(PityTestcaseDirectory) \
-                    .where(PityTestcaseDirectory.deleted_at == None,
+                    .where(PityTestcaseDirectory.deleted_at == 0,
                            PityTestcaseDirectory.project_id == project_id) \
                     .order_by(asc(PityTestcaseDirectory.name))
                 result = await session.execute(sql)
@@ -43,7 +44,7 @@ class PityTestcaseDirectoryDao(object):
         try:
             async with async_session() as session:
                 async with session.begin():
-                    sql = select(PityTestcaseDirectory).where(PityTestcaseDirectory.deleted_at == None,
+                    sql = select(PityTestcaseDirectory).where(PityTestcaseDirectory.deleted_at == 0,
                                                               PityTestcaseDirectory.name == form.name,
                                                               PityTestcaseDirectory.parent == form.parent,
                                                               PityTestcaseDirectory.project_id == form.project_id)
@@ -61,7 +62,7 @@ class PityTestcaseDirectoryDao(object):
             async with async_session() as session:
                 async with session.begin():
                     sql = select(PityTestcaseDirectory).where(PityTestcaseDirectory.id == form.id,
-                                                              PityTestcaseDirectory.deleted_at == None)
+                                                              PityTestcaseDirectory.deleted_at == 0)
                     result = await session.execute(sql)
                     query = result.scalars().first()
                     if query is None:
@@ -79,12 +80,12 @@ class PityTestcaseDirectoryDao(object):
             async with async_session() as session:
                 async with session.begin():
                     sql = select(PityTestcaseDirectory).where(PityTestcaseDirectory.id == id,
-                                                              PityTestcaseDirectory.deleted_at == None)
+                                                              PityTestcaseDirectory.deleted_at == 0)
                     result = await session.execute(sql)
                     query = result.scalars().first()
                     if query is None:
                         raise Exception("目录不存在")
-                    query.deleted_at = datetime.now()
+                    query.deleted_at = int(time.time() * 1000)
                     query.update_user = user
         except Exception as e:
             PityTestcaseDirectoryDao.log.error(f"删除目录失败, error: {e}")
@@ -146,7 +147,7 @@ class PityTestcaseDirectoryDao(object):
             ans = [directory_id]
             # 找出父类为directory_id或者非根的目录
             sql = select(PityTestcaseDirectory) \
-                .where(PityTestcaseDirectory.deleted_at == None,
+                .where(PityTestcaseDirectory.deleted_at == 0,
                        or_(PityTestcaseDirectory.parent == directory_id, PityTestcaseDirectory.parent != None)) \
                 .order_by(asc(PityTestcaseDirectory.name))
             result = await session.execute(sql)
