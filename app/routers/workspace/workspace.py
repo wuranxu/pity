@@ -16,8 +16,8 @@ async def query_user_statistics(user_info=Depends(Permission())):
     user_id = user_info['id']
     count = await ProjectDao.query_user_project(user_id)
     rank = await TestCaseDao.query_user_case_list()
-    today = datetime.today()
-    weekly_case = await TestCaseDao.query_weekly_user_case(user_id, (today - timedelta(days=6)), today)
+    now = datetime.now()
+    weekly_case = await TestCaseDao.query_weekly_user_case(user_id, (now - timedelta(days=7)), now)
     case_count, user_rank = rank.get(str(user_id), [0, 0])
     return PityResponse.success(dict(project_count=count, case_count=case_count,
                                      weekly_case=weekly_case,

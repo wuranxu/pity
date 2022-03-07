@@ -117,6 +117,8 @@ class PityTestcaseDirectoryDao(object):
                 nodes, cs = await case_node(r.get('key'))
                 r.get('children').extend(nodes)
                 case_map.update(cs)
+            if not r.get('children'):
+                r['disabled'] = True
         return ans, case_map
 
     @staticmethod
@@ -140,7 +142,7 @@ class PityTestcaseDirectoryDao(object):
                 title=temp.name,
                 key=temp.id,
                 children=child,
-                # disabled=len(child) == 0
+                disabled=len(child) == 0
             ))
             await PityTestcaseDirectoryDao.get_directory(ans_map, parent_map, temp.id, child, case_node)
 
