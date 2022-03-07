@@ -113,6 +113,10 @@ class PityTestcaseDirectoryDao(object):
         for r in ans:
             await PityTestcaseDirectoryDao.get_directory(ans_map, parent_map, r.get('key'), r.get('children'), case_map,
                                                          case_node)
+            if case_node is not None:
+                nodes, cs = await case_node(r.get('key'))
+                r.get('children').extend(nodes)
+                case_map.update(cs)
         return ans, case_map
 
     @staticmethod
@@ -130,7 +134,7 @@ class PityTestcaseDirectoryDao(object):
             if case_node is None:
                 child = list()
             else:
-                child, cs = await case_node(parent)
+                child, cs = await case_node(temp.id)
                 case_map.update(cs)
             children.append(dict(
                 title=temp.name,

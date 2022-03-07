@@ -24,3 +24,4 @@ python-multipart
 awaits
 aioify
 grpc-requests
+loguru

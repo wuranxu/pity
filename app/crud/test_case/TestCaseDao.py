@@ -55,7 +55,7 @@ class TestCaseDao(Mapper):
                 ans = []
                 case_map = dict()
                 for item in result.scalars():
-                    ans.append({"title": item.name, "key": "testcase_{}".format(item.id), "children": []})
+                    ans.append({"title": item.name, "key": "testcase_{}".format(item.id)})
                     case_map[item.id] = item.name
                 return ans, case_map
         except Exception as e:
