@@ -45,14 +45,14 @@ class ProjectDao(Mapper):
             return [], 0, f"获取用户: {user}项目列表失败, {e}"
 
     @classmethod
-    async def add_project(cls, name, app, owner, user, private, description):
+    async def add_project(cls, name, app, owner, user, private, description, dingtalk_url=None):
         try:
             async with async_session() as session:
                 async with session.begin():
                     data = await session.execute(select(Project).where(Project.name == name, Project.deleted_at == 0))
                     if data.scalars().first() is not None:
                         return "项目已存在"
-                    pr = Project(name, app, owner, user, description, private)
+                    pr = Project(name, app, owner, user, description, private, dingtalk_url)
                     session.add(pr)
         except Exception as e:
             cls.log.error(f"新增项目: {name}失败, {e}")

@@ -20,7 +20,7 @@ class PityTestPlan(PityBase):
     # 测试计划优先级
     priority = Column(String(3), nullable=False)
     # cron表达式
-    cron = Column(String(12), nullable=False)
+    cron = Column(String(24), nullable=False)
     # 用例列表
     case_list = Column(TEXT, nullable=False)
     # 并行/串行(是否顺序执行)
