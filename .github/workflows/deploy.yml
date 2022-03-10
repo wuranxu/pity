@@ -31,6 +31,6 @@ jobs:
           username: ${{ secrets.USERNAME }}
           password: ${{ secrets.PASSWORD }}
           script: |
-            pkill gunicorn
-            sleep 5
+            pkill gunicorn \
+            sleep 5 \
             cd /home/tester/pity && source start.sh
