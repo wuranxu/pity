@@ -3,6 +3,7 @@ from starlette import status
 
 from app.excpetions.RequestException import AuthException, PermissionException
 from app.middleware.Jwt import UserToken
+from app.models import async_session
 from config import Config
 
 FORBIDDEN = "对不起, 你没有足够的权限"
@@ -24,3 +25,12 @@ class Permission:
         except Exception as e:
             raise AuthException(status.HTTP_200_OK, str(e))
         return user_info
+
+
+async def get_session():
+    """
+    获取异步session
+    :return:
+    """
+    async with async_session() as session:
+        yield session

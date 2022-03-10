@@ -9,7 +9,7 @@ from app.handler.fatcory import PityResponse
 from app.models.broadcast_read_user import PityBroadcastReadUser
 from app.models.notification import PityNotification
 from app.models.schema.notification import NotificationForm
-from app.routers import Permission
+from app.routers import Permission, get_session
 
 router = APIRouter(prefix="/notification")
 
@@ -43,10 +43,9 @@ async def read_msg(form: NotificationForm, user_info=Depends(Permission())):
 
 
 @router.post("/delete", description="用户删除消息")
-async def read_msg(msg_id: List[int], user_info=Depends(Permission())):
+async def read_msg(msg_id: List[int], user_info=Depends(Permission()), session=Depends(get_session)):
     try:
-        await PityNotificationDao.delete_record_by_id(PityNotification.id.in_(msg_id),
-                                                      PityNotification.receiver == user_info['id'], log=False)
+        await PityNotificationDao.delete_message(session, msg_id, user_info['id'])
         return PityResponse.success()
     except Exception as e:
         return PityResponse.failed(str(e))

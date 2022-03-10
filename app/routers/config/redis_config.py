@@ -8,7 +8,7 @@ from app.models import DatabaseHelper
 from app.models.redis_config import PityRedis
 from app.models.schema.online_redis import OnlineRedisForm
 from app.models.schema.redis_config import RedisConfigForm
-from app.routers import Permission
+from app.routers import Permission, get_session
 from app.routers.config.environment import router
 from config import Config
 
@@ -59,9 +59,9 @@ async def update_redis_config(form: RedisConfigForm,
 
 @router.get("/redis/delete")
 async def delete_redis_config(id: int, background_tasks: BackgroundTasks,
-                              user_info=Depends(Permission(Config.ADMIN))):
+                              user_info=Depends(Permission(Config.ADMIN)), session=Depends(get_session)):
     try:
-        ans = await PityRedisConfigDao.delete_record_by_id(user_info['id'], id)
+        ans = await PityRedisConfigDao.delete_record_by_id(session, user_info['id'], id)
         # 更新缓存
         background_tasks.add_task(PityRedisManager.delete_client, *(id, ans.cluster))
         return PityResponse.success()

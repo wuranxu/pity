@@ -7,7 +7,7 @@ from app.crud.oss.PityOssDao import PityOssDao
 from app.handler.fatcory import PityResponse
 from app.middleware.oss import OssClient
 from app.models.oss_file import PityOssFile
-from app.routers import Permission
+from app.routers import Permission, get_session
 from config import Config
 
 router = APIRouter(prefix="/oss")
@@ -57,13 +57,13 @@ async def list_oss_file(filepath: str = '', user_info=Depends(Permission(Config.
 
 
 @router.get("/delete")
-async def delete_oss_file(filepath: str, user_info=Depends(Permission(Config.MANAGER))):
+async def delete_oss_file(filepath: str, user_info=Depends(Permission(Config.MANAGER)), session=Depends(get_session)):
     try:
         # 先获取到本地的记录，拿到sha值
         record = await PityOssDao.query_record(file_path=filepath, deleted_at=0)
         if record is None:
             raise Exception("文件不存在或已被删除")
-        result = await PityOssDao.delete_record_by_id(user_info["id"], record.id, True)
+        result = await PityOssDao.delete_record_by_id(session, user_info["id"], record.id, log=True)
         client = OssClient.get_oss_client()
         f_path = f"{filepath}${result.sha}" if result.sha else filepath
         await client.delete_file(f_path)

@@ -1,6 +1,7 @@
 from datetime import timedelta, datetime
+from typing import List
 
-from sqlalchemy import select, and_, or_
+from sqlalchemy import select, and_, or_, update
 
 from app.crud import Mapper
 from app.enums.MessageEnum import MessageTypeEnum, MessageStateEnum
@@ -64,3 +65,16 @@ class PityNotificationDao(Mapper):
                             if not read:
                                 ans.append(notify)
         return ans
+
+    @classmethod
+    async def delete_message(cls, session, msg_id: List[int], receiver: int):
+        async with session.begin():
+            await session.execute(
+                update(PityNotification).where(
+                    PityNotification.id.in_(msg_id),
+                    PityNotification.receiver == receiver,
+                    PityNotification.deleted_at == 0)) \
+                .values(
+                deleted_at=0,
+                updated_at=datetime.now(),
+                update_user=receiver)

@@ -4,10 +4,11 @@ from fastapi import APIRouter, Depends, File, UploadFile
 
 from app.crud.project.ProjectDao import ProjectDao
 from app.crud.project.ProjectRoleDao import ProjectRoleDao
+from app.crud.test_case.TestPlan import PityTestPlanDao
 from app.handler.fatcory import PityResponse
 from app.middleware.oss import OssClient
 from app.models.project_role import ProjectRole
-from app.routers import Permission
+from app.routers import Permission, get_session
 from app.routers.project.project_schema import ProjectForm, ProjectEditForm
 from app.routers.project.project_schema import ProjectRoleForm, ProjectRoleEditForm, ProjectDelForm
 from config import Config
@@ -85,9 +86,12 @@ def query_project(projectId: int, user_info=Depends(Permission())):
 
 
 @router.delete("/delete", description="删除项目")
-async def query_project(projectId: int, user_info=Depends(Permission(Config.ADMIN))):
+async def query_project(projectId: int, user_info=Depends(Permission(Config.ADMIN)), session=Depends(get_session)):
     try:
-        await ProjectDao.delete_record_by_id(user_info['id'], projectId)
+        async with session.begin():
+            # 事务开始
+            await ProjectDao.delete_record_by_id(session, user_info['id'], projectId)
+            await PityTestPlanDao.delete_record_by_id(session, user_info['id'], projectId, key="project_id")
         return PityResponse.success()
     except Exception as e:
         return PityResponse.failed(e)
