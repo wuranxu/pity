@@ -19,7 +19,7 @@ class Project(PityBase):
                      dingtalk_url="钉钉通知url")
     __show__ = 2
 
-    def __init__(self, name, app, owner, create_user, description="", private=False, avatar=None, dingtalk_url=None):
+    def __init__(self, name, app, owner, create_user, description="", private=False, avatar=None, dingtalk_url=''):
         super().__init__(create_user)
         self.name = name
         self.app = app

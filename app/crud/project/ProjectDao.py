@@ -45,7 +45,7 @@ class ProjectDao(Mapper):
             return [], 0, f"获取用户: {user}项目列表失败, {e}"
 
     @classmethod
-    async def add_project(cls, name, app, owner, user, private, description, dingtalk_url=None):
+    async def add_project(cls, name, app, owner, user, private, description, dingtalk_url=''):
         try:
             async with async_session() as session:
                 async with session.begin():
@@ -81,7 +81,7 @@ class ProjectDao(Mapper):
         return None
 
     @classmethod
-    def update_project(cls, id, user, role, name, app, owner, private, description, dingtalk_url=None):
+    def update_project(cls, id, user, role, name, app, owner, private, description, dingtalk_url=''):
         try:
             with Session() as session:
                 data = session.query(Project).filter_by(id=id, deleted_at=0).first()

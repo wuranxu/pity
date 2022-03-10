@@ -113,10 +113,10 @@ class PityTestcaseDirectoryDao(object):
         for r in ans:
             await PityTestcaseDirectoryDao.get_directory(ans_map, parent_map, r.get('key'), r.get('children'), case_map,
                                                          case_node)
-            if case_node is not None:
-                nodes, cs = await case_node(r.get('key'))
-                r.get('children').extend(nodes)
-                case_map.update(cs)
+            # if case_node is not None:
+            #     nodes, cs = await case_node(r.get('key'))
+            #     r.get('children').extend(nodes)
+            #     case_map.update(cs)
             if not r.get('children'):
                 r['disabled'] = True
         return ans, case_map
@@ -124,12 +124,11 @@ class PityTestcaseDirectoryDao(object):
     @staticmethod
     async def get_directory(ans_map: dict, parent_map, parent, children, case_map, case_node=None):
         current = parent_map.get(parent)
-        if current is None:
-            if case_node is None:
-                return
+        if case_node is not None:
             nodes, cs = await case_node(parent)
             children.extend(nodes)
             case_map.update(cs)
+        if current is None:
             return
         for c in current:
             temp = ans_map.get(c)
