@@ -324,11 +324,12 @@ class Executor(object):
                         f"Request Headers:\n{headers}\n\nUrl: {case_info.url}"
                         f"\n\nBody:\n{body}\n\nResponse:\n{res.get('response', '未获取到返回值')}")
             response_info.update(res)
-            # 执行完成进行断言
-            asserts, ans = self.my_assert(asserts, response_info, request_param)
 
             # Step10: 执行后置条件
             await self.execute_constructors(env, path, case_info, case_params, req_params, constructors, asserts, True)
+
+            # Step11: 断言
+            asserts, ans = self.my_assert(asserts, response_info, request_param)
 
             response_info["asserts"] = asserts
             # 日志输出, 如果不是开头用例则不记录
