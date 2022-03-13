@@ -1,11 +1,11 @@
-from sqlalchemy import Column, String, INT, TEXT, SMALLINT
+from sqlalchemy import Column, String, INT, TEXT, SMALLINT, UniqueConstraint
 
 from app.models.basic import PityBase
 
 
 class TestCase(PityBase):
     __tablename__ = "pity_testcase"
-    name = Column(String(32), unique=True, index=True)
+    name = Column(String(32), index=True)
     request_type = Column(INT, default=1, comment="请求类型 1: http 2: grpc 3: dubbo")
     url = Column(TEXT, nullable=False, comment="请求url")
     request_method = Column(String(12), nullable=True, comment="请求方式, 如果非http可为空")
@@ -20,6 +20,10 @@ class TestCase(PityBase):
     # catalogue = Column(String(12), comment="用例目录")
     # expected = Column(TEXT, comment="预期结果, 支持el表达式", nullable=False)
     case_type = Column(SMALLINT, comment="0: 普通用例 1: 前置用例 2: 数据工厂")
+    # 调整联合唯一索引
+    __table_args__ = (
+        UniqueConstraint('directory_id', 'name', 'deleted_at'),
+    )
     __tag__ = "测试用例"
     __fields__ = (name, request_type, url, request_method,
                   request_headers, body, body_type, directory_id,

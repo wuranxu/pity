@@ -211,9 +211,10 @@ async def get_xmind_data(case_id: int, user_info=Depends(Permission())):
 
 # 获取case目录
 @router.get("/directory")
-async def get_testcase_directory(project_id: int, user_info=Depends(Permission())):
+async def get_testcase_directory(project_id: int, move: bool, user_info=Depends(Permission())):
     try:
-        tree_data, _ = await PityTestcaseDirectoryDao.get_directory_tree(project_id)
+        # 如果是move，则不需要禁用树
+        tree_data, _ = await PityTestcaseDirectoryDao.get_directory_tree(project_id, move=move)
         return PityResponse.success(tree_data)
     except Exception as e:
         return PityResponse.failed(e)

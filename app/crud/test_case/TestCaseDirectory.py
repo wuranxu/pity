@@ -92,7 +92,14 @@ class PityTestcaseDirectoryDao(object):
             raise Exception(f"删除目录失败: {e}")
 
     @staticmethod
-    async def get_directory_tree(project_id: int, case_node=None):
+    async def get_directory_tree(project_id: int, case_node=None, move: bool = False):
+        """
+        通过项目获取目录树
+        :param project_id:
+        :param case_node:
+        :param move:
+        :return:
+        """
         res = await PityTestcaseDirectoryDao.list_directory(project_id)
         ans = list()
         ans_map = dict()
@@ -112,17 +119,17 @@ class PityTestcaseDirectoryDao(object):
         # 获取到所有数据信息
         for r in ans:
             await PityTestcaseDirectoryDao.get_directory(ans_map, parent_map, r.get('key'), r.get('children'), case_map,
-                                                         case_node)
+                                                         case_node, move)
             # if case_node is not None:
             #     nodes, cs = await case_node(r.get('key'))
             #     r.get('children').extend(nodes)
             #     case_map.update(cs)
-            if not r.get('children'):
+            if not move and not r.get('children'):
                 r['disabled'] = True
         return ans, case_map
 
     @staticmethod
-    async def get_directory(ans_map: dict, parent_map, parent, children, case_map, case_node=None):
+    async def get_directory(ans_map: dict, parent_map, parent, children, case_map, case_node=None, move=False):
         current = parent_map.get(parent)
         if case_node is not None:
             nodes, cs = await case_node(parent)
@@ -141,7 +148,7 @@ class PityTestcaseDirectoryDao(object):
                 title=temp.name,
                 key=temp.id,
                 children=child,
-                disabled=len(child) == 0
+                disabled=len(child) == 0 and not move
             ))
             await PityTestcaseDirectoryDao.get_directory(ans_map, parent_map, temp.id, child, case_node)
 
