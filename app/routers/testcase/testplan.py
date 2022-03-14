@@ -18,10 +18,9 @@ async def list_test_plan(page: int, size: int, project_id: int = None, name: str
                          create_user: int = None, follow: bool = None, user_info=Depends(Permission())):
     try:
         data, total = await PityTestPlanDao.list_test_plan(page, size, project_id=project_id, name=name,
-                                                           follow=follow, priority=priority,
+                                                           follow=follow, priority=priority, role=user_info['role'],
                                                            create_user=create_user, user_id=user_info['id'])
 
-        # = PityResponse.model_to_list(data)
         ans = Scheduler.list_test_plan(data)
         return PityResponse.success_with_size(ans, total=total)
     except Exception as e:

@@ -5,6 +5,7 @@ from copy import deepcopy
 from sqlalchemy import select, and_, or_, null
 
 from app.crud import Mapper
+from app.crud.project.ProjectDao import ProjectDao
 from app.handler.fatcory import PityResponse
 from app.models import async_session, DatabaseHelper
 from app.models.report import PityReport
@@ -21,12 +22,21 @@ class PityTestPlanDao(Mapper):
 
     @staticmethod
     async def list_test_plan(page: int, size: int, project_id: int = None, name: str = '', priority: str = '',
-                             create_user: int = None, user_id: int = None, follow: bool = None):
+                             role: str = None, create_user: int = None,
+                             user_id: int = None, follow: bool = None):
         try:
             async with async_session() as session:
                 conditions = [PityTestPlan.deleted_at == 0]
-                DatabaseHelper.where(project_id, PityTestPlan.project_id == project_id, conditions) \
-                    .where(name, PityTestPlan.name.like(f"%{name}%"), conditions) \
+                if project_id:
+                    DatabaseHelper.where(project_id, PityTestPlan.project_id == project_id, conditions)
+                else:
+                    # 找出用户能看到的项目
+                    projects = await ProjectDao.list_project_id_by_user(session, user_id, role)
+                    if len(projects) == 0:
+                        # 说明用户一个项目都没有，不需要继续查询了
+                        return [], 0
+                    DatabaseHelper.where(projects, PityTestPlan.project_id.in_(projects), conditions)
+                DatabaseHelper.where(name, PityTestPlan.name.like(f"%{name}%"), conditions) \
                     .where(priority, PityTestPlan.priority == priority, conditions) \
                     .where(create_user, PityTestPlan.create_user == create_user, conditions)
                 if follow is None:

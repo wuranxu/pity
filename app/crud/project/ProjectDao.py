@@ -45,6 +45,27 @@ class ProjectDao(Mapper):
             return [], 0, f"获取用户: {user}项目列表失败, {e}"
 
     @classmethod
+    async def list_project_id_by_user(cls, session, user, role):
+        """
+        获取用户可见的项目
+        :return:
+        """
+        if role == Config.ADMIN:
+            return None
+        ans = set()
+        # 找到包含用户的角色
+        roles = await session.execute(select(ProjectRole.project_id).where(ProjectRole.user_id == user,
+                                                                           ProjectRole.deleted_at == 0))
+        for r in roles.all():
+            ans.add(r[0])
+        # 找到未删除的项目
+        roles = await session.execute(select(Project.id).where(
+            or_(Project.private == False, Project.owner == user), Project.deleted_at == 0))
+        for r in roles.all():
+            ans.add(r[0])
+        return list(ans)
+
+    @classmethod
     async def is_project_admin(cls, session, project_id: int, user_id: int):
         query = await session.execute(select(Project.owner).where(Project.id == project_id))
         return query.scalars().first() == user_id
