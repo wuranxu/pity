@@ -32,7 +32,7 @@ class PityTestPlanDao(Mapper):
                 else:
                     # 找出用户能看到的项目
                     projects = await ProjectDao.list_project_id_by_user(session, user_id, role)
-                    if len(projects) == 0:
+                    if projects is not None and len(projects) == 0:
                         # 说明用户一个项目都没有，不需要继续查询了
                         return [], 0
                     DatabaseHelper.where(projects, PityTestPlan.project_id.in_(projects), conditions)
