@@ -51,7 +51,7 @@ class ProjectDao(Mapper):
         :return:
         """
         if role == Config.ADMIN:
-            return None
+            return []
         ans = set()
         # 找到包含用户的角色
         roles = await session.execute(select(ProjectRole.project_id).where(ProjectRole.user_id == user,
@@ -63,7 +63,7 @@ class ProjectDao(Mapper):
             or_(Project.private == False, Project.owner == user), Project.deleted_at == 0))
         for r in roles.all():
             ans.add(r[0])
-        return list(ans)
+        return list(ans) if len(ans) > 0 else None
 
     @classmethod
     async def is_project_admin(cls, session, project_id: int, user_id: int):
