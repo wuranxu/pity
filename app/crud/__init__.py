@@ -154,7 +154,7 @@ class Mapper(object):
             raise Exception(f"更新记录失败")
 
     @classmethod
-    async def delete_record_by_id(cls, session, user: int, value: int, log=True, key='id'):
+    async def delete_record_by_id(cls, session, user: int, value: int, log=True, key='id', exists=True):
         """
         逻辑删除
         :param key:
@@ -162,6 +162,7 @@ class Mapper(object):
         :param session: 默认的session，如果传入则使用传入的session
         :param user:
         :param value:
+        :param exists: 是否一定需要记录存在，默认为True
         :return:
         """
         try:
@@ -169,13 +170,15 @@ class Mapper(object):
             result = await session.execute(query)
             original = result.scalars().first()
             if original is None:
-                raise Exception("记录不存在")
+                if exists:
+                    raise Exception("记录不存在")
+                return None
             DatabaseHelper.delete_model(original, user)
             await session.flush()
             session.expunge(original)
             if log:
                 await asyncio.create_task(
-                    cls.insert_log(session, user, Config.OperationType.DELETE, original, key=key))
+                    cls.insert_log(session, user, Config.OperationType.DELETE, original, key=value))
                 return original
         except Exception as e:
             cls.log.exception(f"删除{cls.model.__name__}记录失败: \n")

@@ -68,5 +68,9 @@ class PityResponse(object):
         return dict(code=code, msg=str(msg), data=data)
 
     @staticmethod
+    def forbidden():
+        return dict(code=403, msg="对不起, 你没有权限")
+
+    @staticmethod
     def file(filepath, filename):
         return FileResponse(filepath, filename=filename, background=BackgroundTask(lambda: os.remove(filepath)))

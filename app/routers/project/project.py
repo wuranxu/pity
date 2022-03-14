@@ -86,12 +86,16 @@ def query_project(projectId: int, user_info=Depends(Permission())):
 
 
 @router.delete("/delete", description="删除项目")
-async def query_project(projectId: int, user_info=Depends(Permission(Config.ADMIN)), session=Depends(get_session)):
+async def query_project(projectId: int, user_info=Depends(Permission(Config.MEMBER)), session=Depends(get_session)):
     try:
         async with session.begin():
             # 事务开始
+            owner = await ProjectDao.is_project_admin(session, projectId, user_info["id"])
+            if not owner and user_info["role"] != Config.ADMIN:
+                return PityResponse.forbidden()
             await ProjectDao.delete_record_by_id(session, user_info['id'], projectId)
-            await PityTestPlanDao.delete_record_by_id(session, user_info['id'], projectId, key="project_id")
+            # 有可能项目没有测试计划 2022-03-14 fixed bug
+            await PityTestPlanDao.delete_record_by_id(session, user_info['id'], projectId, key="project_id", exists=False)
         return PityResponse.success()
     except Exception as e:
         return PityResponse.failed(e)

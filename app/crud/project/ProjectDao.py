@@ -45,6 +45,11 @@ class ProjectDao(Mapper):
             return [], 0, f"获取用户: {user}项目列表失败, {e}"
 
     @classmethod
+    async def is_project_admin(cls, session, project_id: int, user_id: int):
+        query = await session.execute(select(Project.owner).where(Project.id == project_id))
+        return query.scalars().first() == user_id
+
+    @classmethod
     async def add_project(cls, name, app, owner, user, private, description, dingtalk_url=''):
         try:
             async with async_session() as session:
