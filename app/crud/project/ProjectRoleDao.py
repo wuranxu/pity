@@ -5,6 +5,7 @@ from typing import List
 from sqlalchemy import select
 
 from app.crud import Mapper
+from app.excpetions.AuthException import AuthException
 from app.models import Session, async_session, DatabaseHelper
 from app.models.project import Project
 from app.models.project_role import ProjectRole
@@ -26,20 +27,21 @@ class ProjectRoleDao(Mapper):
         try:
             with Session() as session:
                 projects = session.query(ProjectRole).filter_by(user_id=user_id, deleted_at=0).all()
-                return [p.id for p in projects], None
+                return [p.project_id for p in projects], None
         except Exception as e:
             ProjectRoleDao.log.error(f"查询用户: {user_id}项目失败, {e}")
             return [], f"查询项目失败, {e}"
 
     @staticmethod
-    def list_role(project_id: int):
+    async def list_role(project_id: int):
         try:
-            with Session() as session:
-                roles = session.query(ProjectRole).filter_by(project_id=project_id, deleted_at=0).all()
-                return roles, None
+            async with async_session() as session:
+                query = await session.execute(
+                    select(ProjectRole).where(ProjectRole.project_id == project_id, ProjectRole.deleted_at == 0))
+                return query.scalars().all()
         except Exception as e:
             ProjectRoleDao.log.error(f"查询项目: {project_id}角色列表失败, {e}")
-            return [], f"查询项目: {project_id}角色列表失败, {e}"
+            raise Exception(f"获取项目角色列表失败")
 
     @staticmethod
     async def judge_permission(session, project_id, user, project_role, project_admin):
@@ -58,6 +60,13 @@ class ProjectRoleDao(Mapper):
             if updater_role is None or updater_role.project_role == Config.MEMBER:
                 return "对不起，你没有权限"
         return None
+
+    @staticmethod
+    async def access(user: int, user_role: int, roles: List[ProjectRole], project: Project = None):
+        if user_role == Config.ADMIN or not project.private or user == project.owner:
+            return
+        if not any([r.user_id == user for r in roles]):
+            raise AuthException("没有权限访问项目")
 
     @staticmethod
     async def read_permission(project_id: int, user: int, user_role: int):
@@ -82,7 +91,7 @@ class ProjectRoleDao(Mapper):
                                                                         ProjectRole.deleted_at == 0))
                 role = query.scalars().first()
                 if role is None:
-                    raise Exception("没有权限访问项目用例")
+                    raise AuthException("没有权限访问项目")
 
     @staticmethod
     async def has_permission(project_id, project_role, user, user_role, project_admin=False, session=None):

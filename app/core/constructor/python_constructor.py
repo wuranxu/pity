@@ -1,7 +1,7 @@
 import json
 
 from awaits.awaitable import awaitable
-from loguru import logger
+
 from app.core.constructor.constructor import ConstructorAbstract
 from app.models.constructor import Constructor
 

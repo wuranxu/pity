@@ -110,6 +110,7 @@ class PityTestPlanDao(Mapper):
                         await asyncio.create_task(
                             cls.insert_log(session, user, Config.OperationType.UPDATE, data, old, plan.id, changed))
         except Exception as e:
+            PityTestPlanDao.log.exception(f"编辑测试计划失败: {str(e)}")
             PityTestPlanDao.log.error(f"编辑测试计划失败: {str(e)}")
             raise Exception(f"编辑失败: {str(e)}")
 

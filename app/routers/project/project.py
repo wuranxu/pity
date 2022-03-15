@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, File, UploadFile
 from app.crud.project.ProjectDao import ProjectDao
 from app.crud.project.ProjectRoleDao import ProjectRoleDao
 from app.crud.test_case.TestPlan import PityTestPlanDao
+from app.excpetions.AuthException import AuthException
 from app.handler.fatcory import PityResponse
 from app.middleware.oss import OssClient
 from app.models.project_role import ProjectRole
@@ -75,12 +76,15 @@ async def update_project(data: ProjectEditForm, user_info=Depends(Permission()))
 
 
 @router.get("/query")
-def query_project(projectId: int, user_info=Depends(Permission())):
+async def query_project(projectId: int, user_info=Depends(Permission())):
     try:
         result = dict()
-        data, roles = ProjectDao.query_project(projectId)
+        data, roles = await ProjectDao.query_project(projectId)
+        await ProjectRoleDao.access(user_info["id"], user_info["role"], roles, data)
         result.update({"project": PityResponse.model_to_dict(data), "roles": PityResponse.model_to_list(roles)})
         return PityResponse.success(result)
+    except AuthException:
+        return PityResponse.forbidden()
     except Exception as e:
         return PityResponse.failed(e)
 
@@ -95,7 +99,8 @@ async def query_project(projectId: int, user_info=Depends(Permission(Config.MEMB
                 return PityResponse.forbidden()
             await ProjectDao.delete_record_by_id(session, user_info['id'], projectId)
             # 有可能项目没有测试计划 2022-03-14 fixed bug
-            await PityTestPlanDao.delete_record_by_id(session, user_info['id'], projectId, key="project_id", exists=False)
+            await PityTestPlanDao.delete_record_by_id(session, user_info['id'], projectId, key="project_id",
+                                                      exists=False)
         return PityResponse.success()
     except Exception as e:
         return PityResponse.failed(e)

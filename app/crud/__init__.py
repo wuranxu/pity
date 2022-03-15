@@ -267,6 +267,8 @@ class Mapper(object):
 
     @classmethod
     async def get_id_list(cls, ids):
+        if ids == "":
+            return []
         if isinstance(ids, int):
             # 说明是多个id
             id_list = [ids]

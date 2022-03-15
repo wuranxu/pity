@@ -9,6 +9,7 @@ from app.crud.test_case.TestCaseDao import TestCaseDao
 from app.crud.test_case.TestCaseDirectory import PityTestcaseDirectoryDao
 from app.crud.test_case.TestReport import TestReportDao
 from app.crud.test_case.TestcaseDataDao import PityTestcaseDataDao
+from app.excpetions.AuthException import AuthException
 from app.handler.fatcory import PityResponse
 from app.models.schema.constructor import ConstructorForm, ConstructorIndex
 from app.models.schema.testcase_data import PityTestcaseDataForm
@@ -237,6 +238,8 @@ async def query_testcase_directory(directory_id: int, user_info=Depends(Permissi
         data = await PityTestcaseDirectoryDao.query_directory(directory_id)
         await ProjectRoleDao.read_permission(data.project_id, user_info["id"], user_info['role'])
         return PityResponse.success(data)
+    except AuthException:
+        return PityResponse.forbidden()
     except Exception as e:
         return PityResponse.failed(e)
 
@@ -302,5 +305,7 @@ async def move_testcase(form: PityMoveTestCaseDto, user_info=Depends(Permission(
         await ProjectRoleDao.read_permission(form.project_id, user_info["id"], user_info['role'])
         await TestCaseDao.update_by_map(user_info['id'], TestCase.id.in_(form.id_list), directory_id=form.directory_id)
         return PityResponse.success()
+    except AuthException:
+        return PityResponse.forbidden()
     except Exception as e:
         return PityResponse.failed(e)

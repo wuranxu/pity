@@ -34,7 +34,7 @@ class ProjectDao(Mapper):
                     if err is not None:
                         raise err
                     # 找出用户能看到的公开项目
-                    search.append(or_(Project.id in project_list, Project.owner == user, Project.private == False))
+                    search.append(or_(Project.id.in_(project_list), Project.owner == user, Project.private == False))
                 if name:
                     search.append(Project.name.ilike("%{}%".format(name)))
                 data = session.query(Project).filter(*search)
@@ -131,15 +131,14 @@ class ProjectDao(Mapper):
         return None
 
     @classmethod
-    def query_project(cls, project_id: int):
+    async def query_project(cls, project_id: int):
         try:
-            with Session() as session:
-                data = session.query(Project).filter_by(id=project_id, deleted_at=0).first()
+            async with async_session() as session:
+                query = await session.execute(select(Project).where(Project.id == project_id, Project.deleted_at == 0))
+                data = query.scalars().first()
                 if data is None:
                     raise Exception("项目不存在")
-                roles, err = ProjectRoleDao.list_role(project_id)
-                if err is not None:
-                    raise err
+                roles = await ProjectRoleDao.list_role(project_id)
                 return data, roles
         except Exception as e:
             cls.log.error(f"查询项目: {project_id}失败, {e}")
