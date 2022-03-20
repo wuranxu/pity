@@ -10,6 +10,7 @@ from typing import Tuple, List
 from sqlalchemy import select, update
 
 from app.models import Base, engine, async_session, DatabaseHelper
+from app.models.address import PityGateway
 from app.models.basic import PityRelationField, init_relation
 from app.models.environment import Environment
 from app.models.operation_log import PityOperationLog
@@ -136,19 +137,19 @@ class Mapper(object):
                 async with session.begin():
                     query = cls.query_wrapper(id=model.id)
                     result = await session.execute(query)
-                    original = result.scalars().first()
-                    if original is None:
+                    now = result.scalars().first()
+                    if now is None:
                         raise Exception("记录不存在")
-                    old = deepcopy(original)
-                    changed = DatabaseHelper.update_model(original, model, user, not_null)
+                    old = deepcopy(now)
+                    changed = DatabaseHelper.update_model(now, model, user, not_null)
                     await session.flush()
-                    session.expunge(original)
+                    session.expunge(now)
                 if log:
                     async with session.begin():
                         await asyncio.create_task(
-                            cls.insert_log(session, user, Config.OperationType.UPDATE, original, old, model.id,
+                            cls.insert_log(session, user, Config.OperationType.UPDATE, now, old, model.id,
                                            changed=changed))
-                return original
+                return now
         except Exception as e:
             cls.log.error(f"更新{cls.model}记录失败, error: {e}")
             raise Exception(f"更新记录失败")
@@ -445,3 +446,5 @@ init_relation(PityTestPlan, PityRelationField(PityTestPlan.env, (Environment.id,
 init_relation(TestCase)
 
 init_relation(TestCaseAsserts, PityRelationField(TestCaseAsserts.case_id, (TestCase.id, TestCase.name)))
+
+init_relation(PityGateway, PityRelationField(PityGateway.env, (Environment.id, Environment.name)))
