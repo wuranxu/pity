@@ -6,7 +6,7 @@ from app.crud.auth.UserDao import UserDao
 from app.excpetions.RequestException import AuthException
 from app.handler.fatcory import PityResponse
 from app.middleware.Jwt import UserToken
-from app.models.schema.user import UserUpdateForm
+from app.schema.user import UserUpdateForm
 from app.routers import Permission, FORBIDDEN
 from app.routers.auth.user_schema import UserDto, UserForm
 from config import Config

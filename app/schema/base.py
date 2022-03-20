@@ -11,3 +11,7 @@ class PityModel(object):
             if not v:
                 raise ParamsError("不能为空")
         return v
+
+    @property
+    def parameters(self):
+        raise NotImplementedError

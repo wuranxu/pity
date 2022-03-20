@@ -1,12 +1,12 @@
 from pydantic import BaseModel, validator
 
-from app.models.schema.base import PityModel
+from app.schema.base import PityModel
 
 
-class OnlineSQLForm(BaseModel):
+class OnlineRedisForm(BaseModel):
     id: int = None
-    sql: str
+    command: str
 
-    @validator("sql", 'id')
+    @validator("command", 'id')
     def name_not_empty(cls, v):
         return PityModel.not_empty(v)

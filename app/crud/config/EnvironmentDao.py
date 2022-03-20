@@ -4,7 +4,7 @@ from sqlalchemy import desc, select
 
 from app.models import Session, DatabaseHelper, async_session
 from app.models.environment import Environment
-from app.models.schema.environment import EnvironmentForm
+from app.schema.environment import EnvironmentForm
 from app.utils.logger import Log
 
 

@@ -2,7 +2,7 @@ from fastapi import Depends
 
 from app.crud.config.GConfigDao import GConfigDao
 from app.handler.fatcory import PityResponse
-from app.models.schema.gconfig import GConfigForm
+from app.schema.gconfig import GConfigForm
 from app.routers import Permission
 from app.routers.config.environment import router
 from config import Config

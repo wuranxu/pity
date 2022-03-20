@@ -11,12 +11,12 @@ from app.crud.test_case.TestReport import TestReportDao
 from app.crud.test_case.TestcaseDataDao import PityTestcaseDataDao
 from app.excpetions.AuthException import AuthException
 from app.handler.fatcory import PityResponse
-from app.models.schema.constructor import ConstructorForm, ConstructorIndex
-from app.models.schema.testcase_data import PityTestcaseDataForm
-from app.models.schema.testcase_directory import PityTestcaseDirectoryForm, PityMoveTestCaseDto
-from app.models.schema.testcase_schema import TestCaseAssertsForm, TestCaseForm
 from app.models.test_case import TestCase
 from app.routers import Permission
+from app.schema.constructor import ConstructorForm, ConstructorIndex
+from app.schema.testcase_data import PityTestcaseDataForm
+from app.schema.testcase_directory import PityTestcaseDirectoryForm, PityMoveTestCaseDto
+from app.schema.testcase_schema import TestCaseAssertsForm, TestCaseForm
 
 router = APIRouter(prefix="/testcase")
 
@@ -212,7 +212,7 @@ async def get_xmind_data(case_id: int, user_info=Depends(Permission())):
 
 # 获取case目录
 @router.get("/directory")
-async def get_testcase_directory(project_id: int, move: bool, user_info=Depends(Permission())):
+async def get_testcase_directory(project_id: int, move: bool = False, user_info=Depends(Permission())):
     try:
         # 如果是move，则不需要禁用树
         tree_data, _ = await PityTestcaseDirectoryDao.get_directory_tree(project_id, move=move)

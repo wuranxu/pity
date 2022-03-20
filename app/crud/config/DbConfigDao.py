@@ -11,7 +11,7 @@ from app.handler.fatcory import PityResponse
 from app.middleware.RedisManager import RedisHelper
 from app.models import async_session, DatabaseHelper, db_helper
 from app.models.database import PityDatabase
-from app.models.schema.database import DatabaseForm
+from app.schema.database import DatabaseForm
 from app.utils.logger import Log
 
 

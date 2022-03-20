@@ -7,7 +7,7 @@ from sqlalchemy import update
 from app.middleware.Jwt import UserToken
 from app.middleware.RedisManager import RedisHelper
 from app.models import Session, async_session, DatabaseHelper
-from app.models.schema.user import UserUpdateForm
+from app.schema.user import UserUpdateForm
 from app.models.user import User
 from app.utils.logger import Log
 from config import Config

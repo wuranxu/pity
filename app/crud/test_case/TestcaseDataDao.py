@@ -5,7 +5,7 @@ from sqlalchemy import select
 
 from app.crud import Mapper
 from app.models import async_session, DatabaseHelper
-from app.models.schema.testcase_data import PityTestcaseDataForm
+from app.schema.testcase_data import PityTestcaseDataForm
 from app.models.testcase_data import PityTestcaseData
 from app.utils.decorator import dao
 from app.utils.logger import Log

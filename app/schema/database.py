@@ -1,6 +1,6 @@
 from pydantic import validator, BaseModel
 
-from app.models.schema.base import PityModel
+from app.schema.base import PityModel
 
 
 class DatabaseForm(BaseModel):

@@ -36,7 +36,7 @@ class ProjectDao(Mapper):
                     # 找出用户能看到的公开项目
                     search.append(or_(Project.id.in_(project_list), Project.owner == user, Project.private == False))
                 if name:
-                    search.append(Project.name.ilike("%{}%".format(name)))
+                    search.append(Project.name.like("%{}%".format(name)))
                 data = session.query(Project).filter(*search)
                 total = data.count()
                 return data.order_by(desc(Project.created_at)).offset((page - 1) * size).limit(size).all(), total, None

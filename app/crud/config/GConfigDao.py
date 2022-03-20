@@ -5,7 +5,7 @@ from sqlalchemy import desc, select
 from app.middleware.RedisManager import RedisHelper
 from app.models import Session, DatabaseHelper, async_session
 from app.models.gconfig import GConfig
-from app.models.schema.gconfig import GConfigForm
+from app.schema.gconfig import GConfigForm
 from app.utils.logger import Log
 
 

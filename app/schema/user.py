@@ -1,7 +1,7 @@
 from pydantic import BaseModel, validator
 
 # 都可以为空，为空则不进行更改
-from app.models.schema.base import PityModel
+from app.schema.base import PityModel
 
 
 class UserUpdateForm(BaseModel):

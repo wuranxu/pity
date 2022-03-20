@@ -14,7 +14,7 @@ from app.crud.test_case.TestcaseDataDao import PityTestcaseDataDao
 from app.middleware.RedisManager import RedisHelper
 from app.models import Session, DatabaseHelper, async_session
 from app.models.constructor import Constructor
-from app.models.schema.testcase_schema import TestCaseForm
+from app.schema.testcase_schema import TestCaseForm
 from app.models.test_case import TestCase
 from app.models.user import User
 from app.utils.decorator import dao

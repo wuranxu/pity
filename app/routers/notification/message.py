@@ -8,7 +8,7 @@ from app.enums.MessageEnum import MessageStateEnum
 from app.handler.fatcory import PityResponse
 from app.models.broadcast_read_user import PityBroadcastReadUser
 from app.models.notification import PityNotification
-from app.models.schema.notification import NotificationForm
+from app.schema.notification import NotificationForm
 from app.routers import Permission, get_session
 
 router = APIRouter(prefix="/notification")

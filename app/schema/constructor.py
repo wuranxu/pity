@@ -1,7 +1,7 @@
 from pydantic import BaseModel, validator
 
 from app.excpetions.ParamsException import ParamsError
-from app.models.schema.base import PityModel
+from app.schema.base import PityModel
 
 
 class ConstructorForm(BaseModel):

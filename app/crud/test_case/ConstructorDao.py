@@ -5,7 +5,7 @@ from sqlalchemy import select
 
 from app.models import Session, async_session, DatabaseHelper
 from app.models.constructor import Constructor
-from app.models.schema.constructor import ConstructorForm, ConstructorIndex
+from app.schema.constructor import ConstructorForm, ConstructorIndex
 from app.models.test_case import TestCase
 from app.utils.logger import Log
 

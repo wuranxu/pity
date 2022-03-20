@@ -6,8 +6,8 @@ from app.handler.fatcory import PityResponse
 from app.middleware.RedisManager import PityRedisManager
 from app.models import DatabaseHelper
 from app.models.redis_config import PityRedis
-from app.models.schema.online_redis import OnlineRedisForm
-from app.models.schema.redis_config import RedisConfigForm
+from app.schema.online_redis import OnlineRedisForm
+from app.schema.redis_config import RedisConfigForm
 from app.routers import Permission, get_session
 from app.routers.config.environment import router
 from config import Config

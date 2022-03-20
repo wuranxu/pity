@@ -1,7 +1,7 @@
 from fastapi import Depends
 
 from app.handler.fatcory import PityResponse
-from app.models.schema.script import PyScriptForm
+from app.schema.script import PyScriptForm
 from app.routers import Permission
 from app.routers.online.sql import router
 

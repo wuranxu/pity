@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 
 from app.crud.config.DbConfigDao import DbConfigDao
 from app.handler.fatcory import PityResponse
-from app.models.schema.online_sql import OnlineSQLForm
+from app.schema.online_sql import OnlineSQLForm
 from app.routers import Permission
 
 router = APIRouter(prefix="/online")

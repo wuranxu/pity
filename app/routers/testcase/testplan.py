@@ -6,7 +6,7 @@ from fastapi import Depends
 from app.core.executor import Executor
 from app.crud.test_case.TestPlan import PityTestPlanDao
 from app.handler.fatcory import PityResponse
-from app.models.schema.test_plan import PityTestPlanForm
+from app.schema.test_plan import PityTestPlanForm
 from app.routers import Permission
 from app.routers.testcase.testcase import router
 from app.utils.scheduler import Scheduler

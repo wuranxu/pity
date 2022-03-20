@@ -669,7 +669,7 @@ class Executor(object):
         try:
             # 设置为running
             await PityTestPlanDao.update_test_plan_state(plan.id, 1)
-            project, _ = ProjectDao.query_project(plan.project_id)
+            project, _ = await ProjectDao.query_project(plan.project_id)
             env = list(map(int, plan.env.split(",")))
             case_list = list(map(int, plan.case_list.split(",")))
             receiver = list(map(int, plan.receiver.split(",")))
@@ -680,7 +680,7 @@ class Executor(object):
                                         plan_id=plan.id, ordered=plan.ordered, report_dict=report_dict) for e in env))
             await PityTestPlanDao.update_test_plan_state(plan.id, 0)
             # await PityTestPlanDao.update_test_plan(plan, plan.update_user)
-            users = await UserDao.list_user_touch(receiver)
+            users = await UserDao.list_user_touch(*receiver)
             await Executor.notice(env, plan, project, report_dict, users)
             if executor != 0:
                 await ws_manage.notify(executor, title="测试计划执行完毕", content=f"请前往测试报告页面查看细节")

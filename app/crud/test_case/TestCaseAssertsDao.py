@@ -2,7 +2,7 @@ from sqlalchemy import asc, select
 
 from app.crud import Mapper
 from app.models import Session, async_session, DatabaseHelper
-from app.models.schema.testcase_schema import TestCaseAssertsForm
+from app.schema.testcase_schema import TestCaseAssertsForm
 from app.models.testcase_asserts import TestCaseAsserts
 from app.utils.decorator import dao
 from app.utils.logger import Log

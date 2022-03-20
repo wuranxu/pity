@@ -9,7 +9,7 @@ from app.crud.project.ProjectDao import ProjectDao
 from app.handler.fatcory import PityResponse
 from app.models import async_session, DatabaseHelper
 from app.models.report import PityReport
-from app.models.schema.test_plan import PityTestPlanForm
+from app.schema.test_plan import PityTestPlanForm
 from app.models.test_plan import PityTestPlan
 from app.models.testplan_follow_user import PityTestPlanFollowUserRel
 from app.utils.decorator import dao

@@ -3,7 +3,7 @@ from fastapi import Depends
 from app.crud.config.DbConfigDao import DbConfigDao
 from app.handler.fatcory import PityResponse
 from app.models import DatabaseHelper, db_helper
-from app.models.schema.database import DatabaseForm
+from app.schema.database import DatabaseForm
 from app.routers import Permission
 from app.routers.config.environment import router
 from config import Config
@@ -48,7 +48,7 @@ async def delete_dbconfig(id: int, user_info=Depends(Permission(Config.ADMIN))):
 
 @router.get("/dbconfig/connect")
 def connect_test(sql_type: int, host: str, port: int, username: str, password: str, database: str,
-                 user_info=Depends(Permission(Config.ADMIN))):
+                 user_info=Depends(Permission(Config.MANAGER))):
     try:
         data = db_helper.get_connection(sql_type, host, port, username, password,
                                         database)

@@ -3,7 +3,7 @@ from datetime import datetime
 from sqlalchemy import Column, INT, String, UniqueConstraint
 
 from app.models.basic import PityBase
-from app.models.schema.testcase_directory import PityTestcaseDirectoryForm
+from app.schema.testcase_directory import PityTestcaseDirectoryForm
 
 
 class PityTestcaseDirectory(PityBase):
