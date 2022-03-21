@@ -155,7 +155,7 @@ class ProConfig(BaseConfig):
     CLIENT_ID = "c46c7ae33442d13498cd"
     SECRET_KEY = "c79fafe58ff45f6b5b51ddde70d2d645209e38b9"
 
-    SERVER_REPORT = "http://121.5.2.74/#/record/report/"
+    SERVER_REPORT = "https://pity.fun/#/record/report/"
 
 
 # 获取pity环境变量

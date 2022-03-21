@@ -50,7 +50,7 @@ $ python main.py
 
 [Documents 🍚](http://pity.readthedocs.org/)
 
-[Demo 🍍](http://121.5.2.74/)
+[Demo 🍍](https://pity.fun/)
 
 ### 😢 About pity 
 
