@@ -2,6 +2,7 @@ from app.core.configuration import SystemConfiguration
 from app.middleware.oss.aliyun import AliyunOss
 from app.middleware.oss.files import OssFile
 from app.middleware.oss.gitee import GiteeOss
+from app.middleware.oss.qiniu import QiniuOss
 from config import Config
 
 
@@ -25,7 +26,10 @@ class OssClient(object):
                 raise Exception("服务器未配置oss信息, 请在configuration.json中添加")
             if oss_config.get("oss_type").lower() == Config.ALIYUN:
                 return AliyunOss(access_key_id, access_key_secret, endpoint, bucket)
-            if oss_config.get("oss_type").lower() == Config.GITEE:
-                return GiteeOss(access_key_secret, bucket, access_key_id)
+            # 放弃gitee
+            # if oss_config.get("oss_type").lower() == Config.GITEE:
+            #     return GiteeOss(access_key_secret, bucket, access_key_id)
+            if oss_config.get("oss_type").lower() == Config.QINIU:
+                return QiniuOss(access_key_id, access_key_secret, bucket)
             raise Exception("不支持的oss类型")
         return OssClient._client

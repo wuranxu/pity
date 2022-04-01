@@ -436,9 +436,10 @@ class Executor(object):
         try:
             if body:
                 data = json.loads(body)
-                for k, v in req_params.items():
-                    if data.get(k) is not None:
-                        data[k] = v
+                if req_params is not None:
+                    for k, v in req_params.items():
+                        if data.get(k) is not None:
+                            data[k] = v
                 return json.dumps(data, ensure_ascii=False)
             self.append(f"body为空, 不进行替换")
         except Exception as e:

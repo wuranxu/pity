@@ -31,4 +31,5 @@ jobs:
           username: ${{ secrets.USERNAME }}
           password: ${{ secrets.PASSWORD }}
           script: |
-            pkill gunicorn;cd /home/tester/pity && sh start.sh
+            pip install -r requirements.txt
+            cd /home/tester/pity && sh start.sh

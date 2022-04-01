@@ -25,3 +25,4 @@ awaits
 aioify
 grpc-requests
 loguru
+qiniu

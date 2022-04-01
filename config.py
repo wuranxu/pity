@@ -64,7 +64,10 @@ class BaseConfig(object):
     SERVER_REPORT = "http://localhost:8000/#/record/report/"
 
     ALIYUN = "aliyun"
-    GITEE = "gitee"
+    # GITEE = "gitee"
+    QINIU = "qiniu"
+
+    OSS_URL = "http://oss.pity.fun"
 
     RELATION = "pity_relation"
     ALIAS = "__alias__"

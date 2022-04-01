@@ -7,11 +7,11 @@ class OssFile(ABC):
     _base_path = "pity"
 
     @abstractmethod
-    async def create_file(self, filepath: str, content: bytes, base_path: str = None) -> (str, int, str):
+    async def create_file(self, filepath: str, content, base_path: str = None) -> (str, int, str):
         pass
 
     @abstractmethod
-    async def update_file(self, filepath: str, content: bytes, base_path: str = None):
+    async def update_file(self, filepath: str, content, base_path: str = None):
         pass
 
     @abstractmethod

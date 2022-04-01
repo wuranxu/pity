@@ -1,5 +1,3 @@
-from mimetypes import guess_type
-
 from fastapi import APIRouter, File, UploadFile, Depends
 
 from app.crud.auth.UserDao import UserDao
@@ -89,18 +87,17 @@ async def update_oss_file(filepath: str, file: UploadFile = File(...), user_info
     except Exception as e:
         return PityResponse.failed(f"删除失败: {e}")
 
-
-@router.get("/download")
-async def download_oss_file(filepath: str):
-    """
-    更新oss文件，路径不能变化
-    :param filepath:
-    :return:
-    """
-    try:
-        client = OssClient.get_oss_client()
-        # 切割获取文件名
-        path, filename = await client.download_file(filepath)
-        return PityResponse.file(path, filename)
-    except Exception as e:
-        return PityResponse.failed(f"下载失败: {e}")
+# @router.get("/download")
+# async def download_oss_file(filepath: str):
+#     """
+#     更新oss文件，路径不能变化
+#     :param filepath:
+#     :return:
+#     """
+#     try:
+#         client = OssClient.get_oss_client()
+#         # 切割获取文件名
+#         path, filename = await client.download_file(filepath)
+#         return PityResponse.file(path, filename)
+#     except Exception as e:
+#         return PityResponse.failed(f"下载失败: {e}")
