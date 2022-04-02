@@ -1,8 +1,9 @@
 import os
 from io import BytesIO
 
+import aiohttp
 from qiniu import Auth, put_stream, BucketManager
-from qiniu.services.cdn.manager import create_timestamp_anti_leech_url
+
 from app.middleware.oss import OssFile
 from config import Config
 
@@ -32,10 +33,11 @@ class QiniuOss(OssFile):
         ret, info = put_stream(token, key, QiniuOss._convert_to_stream(content), file_name, len(content))
         if ret['key'] != key:
             raise Exception("上传失败")
-        return self.get_url(key), len(content), None
+        return QiniuOss.get_url(key), len(content), None
 
-    def get_url(self, key):
-        return f"http://oss.pity.fun/{key}"
+    @staticmethod
+    def get_url(key):
+        return f"https://static.pity.fun/{key}"
 
     async def update_file(self, filepath: str, content: bytes, base_path: str = None):
         token = self.auth.upload_token(self.bucket, filepath, 3600)
@@ -45,19 +47,34 @@ class QiniuOss(OssFile):
         if ret['key'] != key:
             raise Exception("更新失败")
 
-    async def delete_file(self, filepath: str):
-        self.bucket_manager.delete(self.bucket, filepath)
+    async def delete_file(self, filepath: str, base_path: str = None):
+        key = self.get_full_path(filepath, base_path)
+        self.bucket_manager.delete(self.bucket, key)
 
     async def list_file(self):
-        ret, eof, info = self.bucket_manager.list(self.bucket, self._base_path)
-        return ret.get('items')
+        pass
 
-    async def download_file(self, filepath):
+    async def download_file(self, filepath, base_path: str = None):
+        key = self.get_full_path(filepath, base_path)
+        exists, _ = self.bucket_manager.stat(self.bucket, key)
+        if exists is None:
+            raise Exception("文件不存在")
         base_url = '%s/%s/%s' % (Config.OSS_URL, self.bucket, filepath)
         url = self.auth.private_download_url(base_url, expires=3600)
-        # data = self.bucket_manager.fetch(base_url, filepath)
-        print(url)
-        return url, None
+        content, real_name = await self.download_object(key, url)
+        return content, real_name
+
+    async def download_object(self, filepath, url, timeout=15):
+        async with aiohttp.ClientSession() as session:
+            async with session.request("GET", url, timeout=timeout, verify_ssl=False) as resp:
+                if resp.status != 200:
+                    raise Exception("download file failed")
+                real_filename = filepath.split("/")[-1]
+                path = rf'./{self.get_random_filename(real_filename)}'
+                with open(path, 'wb') as f:
+                    data = await resp.content.read()
+                    f.write(data)
+                    return path, real_filename
 
     async def get_file_object(self, filepath):
         pass

@@ -167,20 +167,21 @@ class Mapper(object):
         :return:
         """
         try:
-            query = cls.query_wrapper(**{key: value})
-            result = await session.execute(query)
-            original = result.scalars().first()
-            if original is None:
-                if exists:
-                    raise Exception("记录不存在")
-                return None
-            DatabaseHelper.delete_model(original, user)
-            await session.flush()
-            session.expunge(original)
-            if log:
-                await asyncio.create_task(
-                    cls.insert_log(session, user, Config.OperationType.DELETE, original, key=value))
-                return original
+            async with session.begin():
+                query = cls.query_wrapper(**{key: value})
+                result = await session.execute(query)
+                original = result.scalars().first()
+                if original is None:
+                    if exists:
+                        raise Exception("记录不存在")
+                    return None
+                DatabaseHelper.delete_model(original, user)
+                await session.flush()
+                session.expunge(original)
+                if log:
+                    await asyncio.create_task(
+                        cls.insert_log(session, user, Config.OperationType.DELETE, original, key=value))
+                    return original
         except Exception as e:
             cls.log.exception(f"删除{cls.model.__name__}记录失败: \n")
             cls.log.error(f"删除{cls.model.__name__}记录失败, error: {e}")

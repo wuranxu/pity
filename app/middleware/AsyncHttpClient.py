@@ -33,6 +33,13 @@ class AsyncRequest(object):
                                           resp.headers, resp.request_info.headers, elapsed=cost,
                                           cookies=cookie, json_format=json_format)
 
+    async def download(self):
+        async with aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar(unsafe=True)) as session:
+            async with session.request("GET", self.url, timeout=self.timeout, verify_ssl=False, **self.kwargs) as resp:
+                if resp.status != 200:
+                    raise Exception("download file failed")
+                return resp.content
+
     @staticmethod
     async def client(url: str, body_type: int = Config.BodyType.json, timeout=15, **kwargs):
         if not url.startswith(("http://", "https://")):
