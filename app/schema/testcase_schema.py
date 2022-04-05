@@ -10,6 +10,7 @@ class TestCaseForm(BaseModel):
     url: str
     name: str
     case_type: int = 0
+    base_path: str = None
     tag: str = None
     body: str = None
     body_type: int = 0

@@ -15,6 +15,7 @@ from app.core.msg.dingtalk import DingTalk
 from app.core.msg.mail import Email
 from app.core.ws_connection_manager import ws_manage
 from app.crud.auth.UserDao import UserDao
+from app.crud.config.AddressDao import PityGatewayDao
 from app.crud.config.EnvironmentDao import EnvironmentDao
 from app.crud.config.GConfigDao import GConfigDao
 from app.crud.project.ProjectDao import ProjectDao
@@ -298,8 +299,6 @@ class Executor(object):
             # Step6: 执行前置条件
             await self.execute_constructors(env, path, case_info, case_params, req_params, constructors, asserts)
 
-            response_info["url"] = case_info.url
-
             # Step7: 批量改写主方法参数
             await self.parse_params(case_info, case_params)
 
@@ -315,6 +314,13 @@ class Executor(object):
 
             # Step8: 替换请求参数
             body = self.replace_body(request_param, body, case_info.body_type)
+
+            # Step9: 替换base_path
+            if case_info.base_path:
+                base_path = await PityGatewayDao.query_gateway(env, case_info.base_path)
+                case_info.url = f"{base_path}{case_info.url}"
+
+            response_info["url"] = case_info.url
 
             # Step9: 完成http请求
             request_obj = await AsyncRequest.client(url=case_info.url, body_type=case_info.body_type, headers=headers,

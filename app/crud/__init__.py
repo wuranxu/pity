@@ -75,7 +75,9 @@ class Mapper(object):
         # 遍历参数，当参数不为None的时候传递
         for k, v in kwargs.items():
             # 判断是否是like的情况
-            like = isinstance(v, str) and len(v) > 2 and (v.startswith("%") or v.endswith("%"))
+            like = isinstance(v, str) and (v.startswith("%") or v.endswith("%"))
+            if like and len(v) == 2:
+                continue
             # 如果是like模式，则使用Model.字段.like 否则用 Model.字段 等于
             DatabaseHelper.where(v, getattr(cls.model, k).like(v) if like else getattr(cls.model, k) == v,
                                  conditions)

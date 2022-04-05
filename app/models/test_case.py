@@ -11,6 +11,8 @@ class TestCase(PityBase):
     request_method = Column(String(12), nullable=True, comment="请求方式, 如果非http可为空")
     request_headers = Column(TEXT, comment="请求头，可为空")
     # params = Column(TEXT, comment="请求params")
+    # 2022-04-05 add base_path
+    base_path = Column(String(24), comment="请求base_path")
     body = Column(TEXT, comment="请求body")
     body_type = Column(INT, comment="请求类型, 0: none 1: json 2: form 3: x-form 4: binary 5: GraphQL")
     directory_id = Column(INT, comment="所属目录")
