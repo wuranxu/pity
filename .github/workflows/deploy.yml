@@ -31,5 +31,4 @@ jobs:
           username: ${{ secrets.USERNAME }}
           password: ${{ secrets.PASSWORD }}
           script: |
-            pip3 install -r requirements.txt
-            cd /home/tester/pity && sh start.sh
+            cd /home/tester/pity && pip3 install -r requirements.txt --user && sh start.sh
