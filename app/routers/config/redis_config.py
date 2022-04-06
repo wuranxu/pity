@@ -6,10 +6,10 @@ from app.handler.fatcory import PityResponse
 from app.middleware.RedisManager import PityRedisManager
 from app.models import DatabaseHelper
 from app.models.redis_config import PityRedis
-from app.schema.online_redis import OnlineRedisForm
-from app.schema.redis_config import RedisConfigForm
 from app.routers import Permission, get_session
 from app.routers.config.environment import router
+from app.schema.online_redis import OnlineRedisForm
+from app.schema.redis_config import RedisConfigForm
 from config import Config
 
 
@@ -22,7 +22,7 @@ async def list_redis_config(name: str = '', addr: str = '', env: int = None,
             name=DatabaseHelper.like(name), addr=DatabaseHelper.like(addr),
             env=env, cluster=cluster
         )
-        return PityResponse.success(data=PityResponse.model_to_list(data))
+        return PityResponse.success(data=data)
     except Exception as err:
         return PityResponse.failed(err)
 
@@ -36,7 +36,7 @@ async def insert_redis_config(form: RedisConfigForm,
             raise Exception("数据已存在, 请勿重复添加")
         data = PityRedis(**form.dict(), user=user_info['id'])
         result = await PityRedisConfigDao.insert_record(data, log=True)
-        return PityResponse.success(data=PityResponse.model_to_dict(result))
+        return PityResponse.success(data=result)
     except Exception as err:
         return PityResponse.failed(err)
 
@@ -52,7 +52,7 @@ async def update_redis_config(form: RedisConfigForm,
         else:
             background_tasks.add_task(PityRedisManager.refresh_redis_client,
                                       *(result.id, result.addr, result.password, result.db))
-        return PityResponse.success(data=PityResponse.model_to_dict(result))
+        return PityResponse.success(data=result)
     except Exception as err:
         return PityResponse.failed(err)
 

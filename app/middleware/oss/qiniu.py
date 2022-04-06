@@ -2,6 +2,7 @@ import os
 from io import BytesIO
 
 import aiohttp
+from awaits.awaitable import awaitable
 from qiniu import Auth, put_stream, BucketManager
 
 from app.middleware.oss import OssFile
@@ -76,9 +77,15 @@ class QiniuOss(OssFile):
                     f.write(data)
                     return path, real_filename
 
+    # @awaitable
     async def get_file_object(self, filepath):
-        pass
-        # if not self.bucket.object_exists(filepath):
-        #     raise Exception(f"oss文件: {filepath}不存在")
-        # file_object = self.bucket.get_object(filepath)
-        # return file_object.resp.response.content
+        key = self.get_full_path(filepath, QiniuOss._base_path)
+        exists, _ = self.bucket_manager.stat(self.bucket, key)
+        if exists is None:
+            raise Exception("文件不存在")
+        async with aiohttp.ClientSession() as session:
+            basic_url = '%s/%s/%s' % (Config.OSS_URL, self.bucket, filepath)
+            async with session.request("GET", basic_url, timeout=15, verify_ssl=False) as resp:
+                if resp.status != 200:
+                    raise Exception("download file failed")
+                return await resp.content.read()

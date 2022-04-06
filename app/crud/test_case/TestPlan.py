@@ -220,9 +220,9 @@ class PityTestPlanDao(Mapper):
                 query = await session.execute(select(PityReport).where(PityReport.plan_id == d.id).order_by(
                     PityReport.start_at.desc()).limit(7))
                 for report in query.scalars().all():
-                    reports.append(PityResponse.model_to_dict(report))
+                    reports.append(report)
                 ans.append({
-                    "plan": PityResponse.model_to_dict(d),
+                    "plan": d,
                     "report": reports,
                 })
         return ans

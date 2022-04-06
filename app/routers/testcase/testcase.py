@@ -25,7 +25,7 @@ router = APIRouter(prefix="/testcase")
 async def list_testcase(directory_id: int = None, name: str = "", create_user: str = ''):
     try:
         data = await TestCaseDao.list_test_case(directory_id, name, create_user)
-        return PityResponse.success(PityResponse.model_to_list(data))
+        return PityResponse.success(data)
     except Exception as e:
         return PityResponse.failed(str(e))
 
@@ -48,7 +48,7 @@ async def insert_testcase(data: TestCaseForm, user_info=Depends(Permission())):
 def update_testcase(data: TestCaseForm, user_info=Depends(Permission())):
     try:
         data = TestCaseDao.update_test_case(data, user_info['id'])
-        return PityResponse.success(PityResponse.model_to_dict(data))
+        return PityResponse.success(data)
     except Exception as e:
         return PityResponse.failed(e)
 
@@ -90,7 +90,7 @@ async def query_testcase(caseId: int, user_info=Depends(Permission())):
 async def insert_testcase_asserts(data: TestCaseAssertsForm, user_info=Depends(Permission())):
     try:
         new_assert = await TestCaseAssertsDao.insert_test_case_asserts(data, user=user_info["id"])
-        return PityResponse.success(PityResponse.model_to_dict(new_assert))
+        return PityResponse.success(new_assert)
     except Exception as e:
         return PityResponse.failed(e)
 
@@ -144,18 +144,18 @@ async def update_constructor(id: int, user_info=Depends(Permission())):
 def update_constructor_index(data: List[ConstructorIndex], user_info=Depends(Permission())):
     try:
         ConstructorDao.update_constructor_index(data)
-        return dict(code=0, msg="操作成功")
+        return PityResponse.success()
     except Exception as e:
-        return dict(code=110, msg=str(e))
+        return PityResponse.failed(e)
 
 
 @router.get("/constructor/tree")
 async def get_constructor_tree(suffix: bool, name: str = "", user_info=Depends(Permission())):
     try:
         result = ConstructorDao.get_constructor_tree(name, suffix)
-        return dict(code=0, msg="操作成功", data=result)
+        return PityResponse.success(result)
     except Exception as e:
-        return dict(code=110, msg=str(e))
+        return PityResponse.failed(e)
 
 
 # 获取数据构造器树
@@ -163,9 +163,9 @@ async def get_constructor_tree(suffix: bool, name: str = "", user_info=Depends(P
 async def get_constructor_tree(id: int, user_info=Depends(Permission())):
     try:
         result = ConstructorDao.get_constructor_data(id)
-        return dict(code=0, msg="操作成功", data=result)
+        return PityResponse.success(result)
     except Exception as e:
-        return dict(code=110, msg=str(e))
+        return PityResponse.failed(e)
 
 
 # 获取所有数据构造器
@@ -183,10 +183,9 @@ async def list_case_and_constructor(constructor_type: int, suffix: bool):
 async def query_report(id: int, user_info=Depends(Permission())):
     try:
         report, case_list, plan_name = await TestReportDao.query(id)
-        return dict(code=0, data=dict(report=PityResponse.model_to_dict(report), plan_name=plan_name,
-                                      case_list=PityResponse.model_to_list(case_list)), msg="操作成功")
+        return PityResponse.success(dict(report=report, plan_name=plan_name, case_list=case_list))
     except Exception as e:
-        return dict(code=110, msg=str(e))
+        return PityResponse.failed(e)
 
 
 # 获取构建历史记录
@@ -195,9 +194,9 @@ async def list_report(page: int, size: int, start_time: str, end_time: str, exec
                       user_info=Depends(Permission())):
     try:
         report_list, total = await TestReportDao.list_report(page, size, start_time, end_time, executor)
-        return dict(code=0, data=PityResponse.model_to_list(report_list), msg="操作成功", total=total)
+        return PityResponse.success_with_size(data=report_list, total=total)
     except Exception as e:
-        return dict(code=110, msg=str(e))
+        return PityResponse.failed(e)
 
 
 # 获取脑图数据

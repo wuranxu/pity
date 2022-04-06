@@ -1,8 +1,11 @@
 import os
 from datetime import datetime
+from typing import Any
 
 from starlette.background import BackgroundTask
 from starlette.responses import FileResponse
+
+from app.handler.encoder import jsonable_encoder
 
 
 class PityResponse(object):
@@ -50,8 +53,14 @@ class PityResponse(object):
         return [PityResponse.model_to_dict(x, *ignore) for x in data]
 
     @staticmethod
-    def success(data=None, code=0, msg="操作成功"):
-        return dict(code=code, msg=msg, data=data)
+    def encode_json(data: Any, *exclude: str):
+        return jsonable_encoder(data, exclude=exclude, custom_encoder={
+            datetime: lambda x: x.strftime("%Y-%m-%d %H:%M:%S")
+        })
+
+    @staticmethod
+    def success(data=None, code=0, msg="操作成功", exclude=()):
+        return PityResponse.encode_json(dict(code=code, msg=msg, data=data), *exclude)
 
     @staticmethod
     def records(data: list, code=0, msg="操作成功"):
@@ -60,8 +69,8 @@ class PityResponse(object):
     @staticmethod
     def success_with_size(data=None, code=0, msg="操作成功", total=0):
         if data is None:
-            return dict(code=code, msg=msg, data=list(), total=0)
-        return dict(code=code, msg=msg, data=data, total=total)
+            return PityResponse.encode_json(dict(code=code, msg=msg, data=list(), total=0))
+        return PityResponse.encode_json(dict(code=code, msg=msg, data=data, total=total))
 
     @staticmethod
     def failed(msg, code=110, data=None):

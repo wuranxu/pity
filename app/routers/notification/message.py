@@ -19,7 +19,7 @@ async def list_msg(msg_status: int, msg_type: int, user_info=Depends(Permission(
     try:
         data = await PityNotificationDao.list_messages(msg_type=msg_type, msg_status=msg_status,
                                                        receiver=user_info['id'])
-        return PityResponse.success(PityResponse.model_to_list(data))
+        return PityResponse.success(data)
     except Exception as e:
         return PityResponse.failed(str(e))
 

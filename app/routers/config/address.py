@@ -13,7 +13,7 @@ from config import Config
 async def list_gateway(name: str = '', gateway: str = '', env: int = None,
                        user_info=Depends(Permission(Config.MEMBER))):
     data = await PityGatewayDao.list_record(env=env, gateway=f"%{gateway}%", name=f"%{name}%")
-    return PityResponse.success(PityResponse.model_to_list(data))
+    return PityResponse.success(data)
 
 
 @router.post("/gateway/insert", summary="添加网关地址", description="添加网关地址，只有组长可以操作")

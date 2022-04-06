@@ -27,13 +27,11 @@ def list_project(page: int = 1, size: int = 8, name: str = "", user_info=Depends
     :param user_info:
     :return:
     """
-    # page, size = PageHandler.page()
     user_role, user_id = user_info["role"], user_info["id"]
-    # name = request.args.get("name")
     result, total, err = ProjectDao.list_project(user_id, user_role, page, size, name)
     if err is not None:
-        return dict(code=110, data=result, msg=err)
-    return dict(code=0, data=PityResponse.model_to_list(result), total=total, msg="操作成功")
+        return PityResponse.failed(code=110, data=result, msg=err)
+    return PityResponse.success_with_size(data=result, total=total)
 
 
 @router.post("/insert")
@@ -41,10 +39,10 @@ async def insert_project(data: ProjectForm, user_info=Depends(Permission(Config.
     try:
         err = await ProjectDao.add_project(user=user_info["id"], **data.dict())
         if err is not None:
-            return dict(code=110, msg=err)
-        return dict(code=0, msg="操作成功")
+            return PityResponse.failed(err)
+        return PityResponse.success()
     except Exception as e:
-        return dict(code=110, msg=str(e))
+        return PityResponse.failed(e)
 
 
 @router.post("/avatar/{project_id}")
@@ -69,10 +67,10 @@ async def update_project(data: ProjectEditForm, user_info=Depends(Permission()))
         user_id, role = user_info["id"], user_info["role"]
         err = ProjectDao.update_project(user=user_id, role=role, **data.dict())
         if err is not None:
-            return dict(code=110, msg=err)
-        return dict(code=0, msg="操作成功")
+            return PityResponse.failed(err)
+        return PityResponse.success()
     except Exception as e:
-        return dict(code=110, msg=str(e))
+        return PityResponse.failed(e)
 
 
 @router.get("/query")
@@ -81,7 +79,7 @@ async def query_project(projectId: int, user_info=Depends(Permission())):
         result = dict()
         data, roles = await ProjectDao.query_project(projectId)
         await ProjectRoleDao.access(user_info["id"], user_info["role"], roles, data)
-        result.update({"project": PityResponse.model_to_dict(data), "roles": PityResponse.model_to_list(roles)})
+        result.update({"project": data, "roles": roles})
         return PityResponse.success(result)
     except AuthException:
         return PityResponse.forbidden()
@@ -121,8 +119,8 @@ async def insert_project_role(role: ProjectRoleForm, user_info=Depends(Permissio
         await ProjectRoleDao.insert_record(model, True)
     except Exception as e:
         traceback.print_exc()
-        return dict(code=110, msg=str(e))
-    return dict(code=0, msg="操作成功")
+        return PityResponse.failed(e)
+    return PityResponse.success()
 
 
 @router.post("/role/update")
@@ -130,8 +128,8 @@ async def update_project_role(role: ProjectRoleEditForm, user_info=Depends(Permi
     try:
         await ProjectRoleDao.update_project_role(role, user_info["id"], user_info["role"])
     except Exception as e:
-        return dict(code=110, msg=str(e))
-    return dict(code=0, msg="操作成功")
+        return PityResponse.failed(e)
+    return PityResponse.success()
 
 
 @router.post("/role/delete")
@@ -139,5 +137,5 @@ async def delete_project_role(role: ProjectDelForm, user_info=Depends(Permission
     try:
         await ProjectRoleDao.delete_project_role(role.id, user_info["id"], user_info["role"])
     except Exception as e:
-        return dict(code=110, msg=str(e))
-    return dict(code=0, msg="操作成功")
+        return PityResponse.failed(e)
+    return PityResponse.success()

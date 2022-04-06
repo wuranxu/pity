@@ -15,6 +15,7 @@ from app.routers.request.http_schema import HttpRequestForm
 
 router = APIRouter(prefix="/request")
 
+
 # random_dict = dict()
 
 
@@ -61,7 +62,7 @@ async def execute_case(env: int, case_id: List[int], user_info=Depends(Permissio
     await asyncio.gather(*(run_single(env, c, data) for c in case_id))
     # elapsed = time.perf_counter() - s
     # print(f"async executed in {elapsed:0.2f} seconds.")
-    return dict(code=0, data=data, msg="操作成功")
+    return PityResponse.success()
 
 
 @router.post("/run/sync")

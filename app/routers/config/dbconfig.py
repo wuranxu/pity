@@ -14,7 +14,7 @@ async def list_dbconfig(name: str = '', database: str = '', env: int = None,
                         user_info=Depends(Permission(Config.MEMBER))):
     try:
         data = await DbConfigDao.list_database(name, database, env)
-        return PityResponse.success(data=PityResponse.model_to_list(data))
+        return PityResponse.success(data)
     except Exception as err:
         return PityResponse.failed(err)
 

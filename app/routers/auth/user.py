@@ -6,9 +6,9 @@ from app.crud.auth.UserDao import UserDao
 from app.excpetions.RequestException import AuthException
 from app.handler.fatcory import PityResponse
 from app.middleware.Jwt import UserToken
-from app.schema.user import UserUpdateForm
 from app.routers import Permission, FORBIDDEN
 from app.routers.auth.user_schema import UserDto, UserForm
+from app.schema.user import UserUpdateForm
 from config import Config
 
 router = APIRouter(prefix="/auth")
@@ -30,7 +30,7 @@ async def login(data: UserForm):
         user = await UserDao.login(data.username, data.password)
         user = PityResponse.model_to_dict(user, "password")
         token = UserToken.get_token(user)
-        return dict(code=0, msg="登录成功", data=dict(token=token, user=user))
+        return PityResponse.success(dict(token=token, user=user), msg="登录成功")
     except Exception as e:
         return PityResponse.failed(e)
 
@@ -38,8 +38,7 @@ async def login(data: UserForm):
 @router.get("/listUser")
 async def list_users(user_info=Depends(Permission())):
     try:
-        users = UserDao.list_users()
-        return PityResponse.success(PityResponse.model_to_list(users))
+        return PityResponse.success(UserDao.list_users(), exclude=("password",))
     except Exception as e:
         return PityResponse.failed(str(e))
 
@@ -59,10 +58,10 @@ async def login_with_github(code: str):
                                                      user_info.get("avatar_url"))
             user = PityResponse.model_to_dict(user, "password")
             token = UserToken.get_token(user)
-            return dict(code=0, msg="登录成功", data=dict(token=token, user=user))
+            return PityResponse.success(dict(token=token, user=user), msg="登录成功")
     except:
         # 大部分原因是github出问题，忽略
-        return dict(code=110, msg="登录超时, 请稍后再试")
+        return PityResponse.failed(code=110, msg="登录超时, 请稍后再试")
 
 
 @router.post("/update")
@@ -75,7 +74,7 @@ async def update_user_info(user_info: UserUpdateForm, user=Depends(Permission(Co
             # 如果不是超管，说明是自己改自己，不允许自己改自己的角色
             user_info.role = None
         user = await UserDao.update_user(user_info, user['id'])
-        return PityResponse.success(PityResponse.model_to_dict(user))
+        return PityResponse.success(user, exclude=("password", "phone", "email"))
     except AuthException as e:
         raise e
     except Exception as e:
@@ -89,7 +88,7 @@ async def update_user_info(token: str):
             raise AuthException(status.HTTP_200_OK, "token不存在")
         user_info = UserToken.parse_token(token)
         user = await UserDao.query_user(user_info['id'])
-        return PityResponse.success(PityResponse.model_to_dict(user))
+        return PityResponse.success(user, exclude=("phone", "password", "email"))
     except Exception as e:
         raise AuthException(status.HTTP_200_OK, e)
 
@@ -99,6 +98,6 @@ async def delete_user(id: int, user=Depends(Permission(Config.ADMIN))):
     # 此处要插入操作记录
     try:
         user = await UserDao.delete_user(id, user['id'])
-        return PityResponse.success(PityResponse.model_to_dict(user))
+        return PityResponse.success(user)
     except Exception as e:
         return PityResponse.failed(e)
