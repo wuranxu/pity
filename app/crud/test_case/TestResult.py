@@ -1,10 +1,12 @@
 from datetime import datetime
+from typing import List
 
 from sqlalchemy import asc
 from sqlalchemy.future import select
 
 from app.models import async_session
 from app.models.result import PityTestResult
+from app.models.test_case import TestCase
 from app.utils.logger import Log
 
 
@@ -34,14 +36,20 @@ class TestResultDao(object):
             raise Exception("新增测试结果失败")
 
     @staticmethod
-    async def list(report_id: int) -> None:
+    async def list(report_id: int) -> List[PityTestResult]:
         try:
             async with async_session() as session:
-                sql = select(PityTestResult).where(PityTestResult.report_id == report_id,
-                                                   PityTestResult.deleted_at == None).order_by(
+                sql = select(PityTestResult, TestCase.directory_id).join(TestCase,
+                                                                         TestCase.id == PityTestResult.case_id). \
+                    where(PityTestResult.report_id == report_id,
+                          PityTestResult.deleted_at == None).order_by(
                     asc(PityTestResult.case_id), asc(PityTestResult.start_at))
                 data = await session.execute(sql)
-                return data.scalars().all()
+                ans = []
+                for res, directory_id in data.all():
+                    res.directory_id = directory_id
+                    ans.append(res)
+                return ans
         except Exception as e:
             TestResultDao.log.error(f"获取测试用例执行记录失败, error: {e}")
             raise Exception("获取测试用例执行记录失败")

@@ -82,12 +82,10 @@ class TestReportDao(object):
                 sql = select(PityReport, PityTestPlan.name).outerjoin(PityTestPlan,
                                                                       PityTestPlan.id == PityReport.plan_id
                                                                       ).where(PityReport.id == report_id)
-                print(sql)
                 data = await session.execute(sql)
                 if data is None:
                     raise Exception("报告不存在")
                 report, plan_name = data.first()
-                # report = data.scalars().first()
                 test_data = await TestResultDao.list(report_id)
                 return report, test_data, plan_name
         except Exception as e:

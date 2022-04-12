@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+import traceback
 from pprint import pformat
 
 from fastapi import FastAPI, Request, status
@@ -49,6 +50,7 @@ async def errors_handling(request: Request, call_next):
         await set_body(request, await request.body())
         return await call_next(request)
     except Exception as exc:
+        traceback.print_exc()
         return JSONResponse(
             status_code=status.HTTP_200_OK,
             content=jsonable_encoder({

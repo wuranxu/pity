@@ -12,6 +12,8 @@ class PityTestResult(Base):
     __tablename__ = 'pity_test_result'
     id = Column(INT, primary_key=True)
 
+    directory_id = None
+
     # 报告id
     report_id = Column(INT, index=True)
 

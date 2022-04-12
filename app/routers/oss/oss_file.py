@@ -1,4 +1,4 @@
-from fastapi import APIRouter, File, UploadFile, Depends
+from fastapi import APIRouter, File, Depends, UploadFile, Form
 
 from app.crud.auth.UserDao import UserDao
 from app.crud.oss.PityOssDao import PityOssDao
@@ -31,7 +31,7 @@ async def create_oss_file(filepath: str, file: UploadFile = File(...), user_info
         return PityResponse.failed(f"上传失败: {e}")
 
 
-@router.post("/avatar")
+@router.post("/avatar", summary="上传用户头像")
 async def upload_avatar(file: UploadFile = File(...), user_info=Depends(Permission(Config.MEMBER))):
     try:
         file_content = await file.read()

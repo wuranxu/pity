@@ -1,7 +1,6 @@
 from mimetypes import guess_type
 from os.path import isfile
 
-import uvicorn
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import Request, WebSocket, WebSocketDisconnect, Depends
@@ -159,7 +158,3 @@ async def websocket_endpoint(websocket: WebSocket, user_id: int):
             ws_manage.disconnect(user_id)
     except Exception as e:
         logger.bind(name=None).info(f"websocket: 用户: {user_id} 异常退出: {e}")
-
-
-if __name__ == "__main__":
-    uvicorn.run(app='main:pity', host='0.0.0.0', port=7777, reload=False)

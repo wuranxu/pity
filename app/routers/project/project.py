@@ -45,7 +45,7 @@ async def insert_project(data: ProjectForm, user_info=Depends(Permission(Config.
         return PityResponse.failed(e)
 
 
-@router.post("/avatar/{project_id}")
+@router.post("/avatar/{project_id}", summary="上传项目头像")
 async def update_project_avatar(project_id: int, file: UploadFile = File(...), user_info=Depends(Permission())):
     try:
         file_content = await file.read()
