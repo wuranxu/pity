@@ -82,7 +82,7 @@ $ pip install -r requirements.txt
 6. 启动服务
 
 ```bash
-$ python main.py
+$ python runserver.py
 ```
 
 7. 注册用户

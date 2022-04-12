@@ -33,7 +33,7 @@ $ pip install -r requirements.txt
 6. start server
 
 ```bash
-$ python main.py
+$ python runserver.py
 ```
 
 7. registry
