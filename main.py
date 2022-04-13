@@ -151,7 +151,8 @@ async def websocket_endpoint(websocket: WebSocket, user_id: int):
             await websocket.send_json(WebSocketMessage.msg_count(len(msg_records), True))
         while True:
             data: str = await websocket.receive_text()
-            if (du := data.upper()) in questions_and_answers_map:
+            du = data.upper()
+            if du in questions_and_answers_map:
                 await ws_manage.send_personal_message(message=questions_and_answers_map.get(du), websocket=websocket)
     except WebSocketDisconnect:
         if user_id in ws_manage.active_connections:

@@ -57,7 +57,8 @@ class ConnectionManager:
             dict: sender.send_json,
             bytes: sender.send_bytes
         }
-        if func_push_msg := msg_mapping.get(type(message)):
+        func_push_msg = msg_mapping.get(type(message))
+        if func_push_msg:
             await func_push_msg(message)
         else:
             raise TypeError(F"websocket不能发送{type(message)}的内容！")
