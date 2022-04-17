@@ -20,7 +20,7 @@ class PityTestcaseData(PityBase):
 
     __tablename__ = "pity_testcase_data"
 
-    def __init__(self, env, case_id, name, json_data, user, id=0):
+    def __init__(self, env, case_id, name, json_data, user, id=None):
         super().__init__(user, id)
         self.env = env
         self.case_id = case_id

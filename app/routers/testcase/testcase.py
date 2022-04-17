@@ -12,11 +12,11 @@ from app.crud.test_case.TestcaseDataDao import PityTestcaseDataDao
 from app.excpetions.AuthException import AuthException
 from app.handler.fatcory import PityResponse
 from app.models.test_case import TestCase
-from app.routers import Permission
+from app.routers import Permission, get_session
 from app.schema.constructor import ConstructorForm, ConstructorIndex
 from app.schema.testcase_data import PityTestcaseDataForm
 from app.schema.testcase_directory import PityTestcaseDirectoryForm, PityMoveTestCaseDto
-from app.schema.testcase_schema import TestCaseAssertsForm, TestCaseForm
+from app.schema.testcase_schema import TestCaseAssertsForm, TestCaseForm, TestCaseInfo
 
 router = APIRouter(prefix="/testcase")
 
@@ -42,6 +42,14 @@ async def insert_testcase(data: TestCaseForm, user_info=Depends(Permission())):
         return PityResponse.success(model.id)
     except Exception as e:
         return PityResponse.failed(e)
+
+
+# v2版本创建用例接口
+@router.post("/create", summary="创建接口测试用例")
+async def create_testcase(data: TestCaseInfo, user_info=Depends(Permission()), session=Depends(get_session)):
+    async with session.begin():
+        await TestCaseDao.insert_test_case(session, data, user_info['id'])
+    return PityResponse.success()
 
 
 @router.post("/update")

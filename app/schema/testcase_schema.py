@@ -1,7 +1,11 @@
+from typing import List
+
 from pydantic import BaseModel, validator
 
 from app.excpetions.ParamsException import ParamsError
 from app.schema.base import PityModel
+from app.schema.constructor import ConstructorForm
+from app.schema.testcase_data import PityTestcaseDataForm
 
 
 class TestCaseForm(BaseModel):
@@ -30,11 +34,22 @@ class TestCaseForm(BaseModel):
 class TestCaseAssertsForm(BaseModel):
     id: int = None
     name: str
-    case_id: int
+    case_id: int = None
     assert_type: str
     expected: str
     actually: str
 
-    @validator("name", "case_id", "assert_type", "expected", "actually")
+    @validator("name", "assert_type", "expected", "actually")
+    def name_not_empty(cls, v):
+        return PityModel.not_empty(v)
+
+
+class TestCaseInfo(BaseModel):
+    case: TestCaseForm = None
+    asserts: List[TestCaseAssertsForm] = []
+    data: List[PityTestcaseDataForm] = []
+    constructor: List[ConstructorForm] = []
+
+    @validator("case")
     def name_not_empty(cls, v):
         return PityModel.not_empty(v)

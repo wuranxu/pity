@@ -14,9 +14,11 @@ from app.crud.test_case.TestcaseDataDao import PityTestcaseDataDao
 from app.middleware.RedisManager import RedisHelper
 from app.models import Session, DatabaseHelper, async_session
 from app.models.constructor import Constructor
-from app.schema.testcase_schema import TestCaseForm
 from app.models.test_case import TestCase
+from app.models.testcase_asserts import TestCaseAsserts
+from app.models.testcase_data import PityTestcaseData
 from app.models.user import User
+from app.schema.testcase_schema import TestCaseForm, TestCaseInfo
 from app.utils.decorator import dao
 from app.utils.logger import Log
 from config import Config
@@ -90,6 +92,39 @@ class TestCaseDao(Mapper):
         if err:
             raise err
         return len(data)
+
+    @staticmethod
+    async def _insert(session, case_id: int, user: int, form: TestCaseInfo, **fields: tuple):
+        for field, model_info in fields.items():
+            md, model = model_info
+            field_data = getattr(form, field)
+            for f in field_data:
+                setattr(f, "case_id", case_id)
+                data = model(**f.dict(), user=user)
+                await md.insert_record(data, ss=session)
+
+    @staticmethod
+    async def insert_test_case(session, data: TestCaseInfo, user: int):
+        """
+        测试数据和用户id
+        :param data: 测试用例数据
+        :param session: 异步session
+        :param user: 创建人
+        :return:
+        """
+        query = await session.execute(
+            select(TestCase).where(TestCase.directory_id == data.case.directory_id, TestCase.name == data.case.name,
+                                   TestCase.deleted_at == 0))
+        if query.scalars().first() is not None:
+            raise Exception("用例名称已存在")
+        cs = TestCase(**data.case.dict(), create_user=user)
+        # 添加case，之后添加其他数据
+        session.add(cs)
+        await session.flush()
+        session.expunge(cs)
+        await TestCaseDao._insert(session, cs.id, user, data, constructor=(ConstructorDao, Constructor),
+                                  asserts=(TestCaseAssertsDao, TestCaseAsserts),
+                                  data=(PityTestcaseDataDao, PityTestcaseData))
 
     # @staticmethod
     # def insert_test_case(test_case, user):

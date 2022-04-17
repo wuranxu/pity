@@ -36,7 +36,7 @@ class TestCase(PityBase):
                      case_type="用例类型")
 
     def __init__(self, name, request_type, url, directory_id, status, priority, create_user,
-                 body_type=1,
+                 body_type=1, base_path=None,
                  tag=None, request_headers=None, case_type=0, body=None, request_method=None, id=None):
         super().__init__(create_user, id)
         self.name = name
@@ -53,6 +53,7 @@ class TestCase(PityBase):
         self.body = body
         self.request_headers = request_headers
         self.request_method = request_method
+        self.base_path = base_path
 
     def __str__(self):
         return f"[用例: {self.name}]({self.id}))"

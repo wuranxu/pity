@@ -19,7 +19,7 @@ class PityGateway(PityBase):
     __fields__ = (name, env, gateway)
     __tag__ = "网关"
     __alias__ = dict(name="网关名称", env="环境", gateway="网关地址")
-    __show__ = 3
+    __show__ = 2
 
     def __init__(self, env, name, gateway, user, id=None):
         super().__init__(user, id)

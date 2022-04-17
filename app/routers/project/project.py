@@ -95,10 +95,10 @@ async def query_project(projectId: int, user_info=Depends(Permission(Config.MEMB
             owner = await ProjectDao.is_project_admin(session, projectId, user_info["id"])
             if not owner and user_info["role"] != Config.ADMIN:
                 return PityResponse.forbidden()
-            await ProjectDao.delete_record_by_id(session, user_info['id'], projectId)
+            await ProjectDao.delete_record_by_id(session, user_info['id'], projectId, session_begin=True)
             # 有可能项目没有测试计划 2022-03-14 fixed bug
             await PityTestPlanDao.delete_record_by_id(session, user_info['id'], projectId, key="project_id",
-                                                      exists=False)
+                                                      exists=False, session_begin=True)
         return PityResponse.success()
     except Exception as e:
         return PityResponse.failed(e)

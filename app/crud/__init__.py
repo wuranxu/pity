@@ -103,19 +103,29 @@ class Mapper(object):
             raise Exception(f"查询记录失败")
 
     @classmethod
-    async def insert_record(cls, model, log=False):
+    async def insert_record(cls, model, log=False, ss=None):
         try:
-            async with async_session() as session:
-                async with session.begin():
-                    session.add(model)
-                    await session.flush()
-                    session.expunge(model)
-                if log:
+            if ss is None:
+                async with async_session() as session:
                     async with session.begin():
-                        await asyncio.create_task(
-                            cls.insert_log(session, model.create_user, Config.OperationType.INSERT, model,
-                                           key=model.id))
-                return model
+                        session.add(model)
+                        await session.flush()
+                        session.expunge(model)
+                    if log:
+                        async with session.begin():
+                            await asyncio.create_task(
+                                cls.insert_log(session, model.create_user, Config.OperationType.INSERT, model,
+                                               key=model.id))
+                    # 这里直接return了，不会继续走下面的add
+                    return model
+            ss.add(model)
+            await ss.flush()
+            ss.expunge(model)
+            if log:
+                await asyncio.create_task(
+                    cls.insert_log(ss, model.create_user, Config.OperationType.INSERT, model,
+                                   key=model.id))
+            return model
         except Exception as e:
             cls.log.error(f"添加{cls.model}记录失败, error: {e}")
             raise Exception(f"添加记录失败")
@@ -157,9 +167,28 @@ class Mapper(object):
             raise Exception(f"更新记录失败")
 
     @classmethod
-    async def delete_record_by_id(cls, session, user: int, value: int, log=True, key='id', exists=True):
+    async def _inner_delete(cls, session, user, value, log, key, exists):
+        query = cls.query_wrapper(**{key: value})
+        result = await session.execute(query)
+        original = result.scalars().first()
+        if original is None:
+            if exists:
+                raise Exception("记录不存在")
+            return None
+        DatabaseHelper.delete_model(original, user)
+        await session.flush()
+        session.expunge(original)
+        if log:
+            await asyncio.create_task(
+                cls.insert_log(session, user, Config.OperationType.DELETE, original, key=value))
+            return original
+
+    @classmethod
+    async def delete_record_by_id(cls, session, user: int, value: int, log=True, key='id', exists=True,
+                                  session_begin=False):
         """
         逻辑删除
+        :param session_begin: 事务是否已经开始
         :param key:
         :param log:
         :param session: 默认的session，如果传入则使用传入的session
@@ -169,21 +198,11 @@ class Mapper(object):
         :return:
         """
         try:
+            if session_begin:
+                # 说明在外面已经开启了session
+                return await cls._inner_delete(session, user, value, log, key, exists)
             async with session.begin():
-                query = cls.query_wrapper(**{key: value})
-                result = await session.execute(query)
-                original = result.scalars().first()
-                if original is None:
-                    if exists:
-                        raise Exception("记录不存在")
-                    return None
-                DatabaseHelper.delete_model(original, user)
-                await session.flush()
-                session.expunge(original)
-                if log:
-                    await asyncio.create_task(
-                        cls.insert_log(session, user, Config.OperationType.DELETE, original, key=value))
-                    return original
+                return await cls._inner_delete(session, user, value, log, key, exists)
         except Exception as e:
             cls.log.exception(f"删除{cls.model.__name__}记录失败: \n")
             cls.log.error(f"删除{cls.model.__name__}记录失败, error: {e}")

@@ -19,7 +19,7 @@ class PityOperationLog(Base):
     operate_time = Column(DATETIME)
 
     # 操作title
-    title = Column(String(64), nullable=False)
+    title = Column(String(128), nullable=False)
 
     # 操作描述
     description = Column(TEXT, comment="操作描述")

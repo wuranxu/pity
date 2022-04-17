@@ -3,15 +3,17 @@ from typing import List
 
 from sqlalchemy import select
 
+from app.crud import Mapper
 from app.models import Session, async_session, DatabaseHelper
 from app.models.constructor import Constructor
-from app.schema.constructor import ConstructorForm, ConstructorIndex
 from app.models.test_case import TestCase
+from app.schema.constructor import ConstructorForm, ConstructorIndex
+from app.utils.decorator import dao
 from app.utils.logger import Log
 
 
-class ConstructorDao(object):
-    log = Log("ConstructorDao")
+@dao(Constructor, Log("ConstructorDao"))
+class ConstructorDao(Mapper):
 
     @staticmethod
     async def list_constructor(case_id: int):

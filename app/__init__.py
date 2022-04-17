@@ -45,9 +45,9 @@ async def get_body(request: Request) -> bytes:
 
 @pity.middleware("http")
 async def errors_handling(request: Request, call_next):
-    body = await request.body()
+    # body = await request.body()
     try:
-        await set_body(request, await request.body())
+        # await set_body(request, await request.body())
         return await call_next(request)
     except Exception as exc:
         traceback.print_exc()
@@ -56,7 +56,7 @@ async def errors_handling(request: Request, call_next):
             content=jsonable_encoder({
                 "code": 110,
                 "msg": str(exc),
-                "request_data": body,
+                # "request_data": body,
             })
         )
 
