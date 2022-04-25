@@ -209,26 +209,23 @@ class Mapper(object):
             raise Exception(f"删除失败")
 
     @classmethod
-    async def delete_records(cls, user, id_list: List[int], column="id", log=True):
+    async def delete_records(cls, session, user, id_list: List[int], column="id", log=True):
         try:
-            async with async_session() as session:
-                for id_ in id_list:
-                    async with session.begin():
-                        query = cls.query_wrapper(**{column: id_})
-                        result = await session.execute(query)
-                        original = result.scalars().first()
-                        if original is None:
-                            continue
-                            # raise Exception("记录不存在")
-                        DatabaseHelper.delete_model(original, user)
-                        await session.flush()
-                        session.expunge(original)
-                    if log:
-                        async with session.begin():
-                            await asyncio.create_task(
-                                cls.insert_log(session, user, Config.OperationType.DELETE, original, key=id_))
+            for id_ in id_list:
+                query = cls.query_wrapper(**{column: id_})
+                result = await session.execute(query)
+                original = result.scalars().first()
+                if original is None:
+                    continue
+                    # raise Exception("记录不存在")
+                DatabaseHelper.delete_model(original, user)
+                await session.flush()
+                session.expunge(original)
+                if log:
+                    await asyncio.create_task(
+                        cls.insert_log(session, user, Config.OperationType.DELETE, original, key=id_))
         except Exception as e:
-            cls.log.error(f"删除{cls.model}记录失败, error: {e}")
+            cls.log.exception(f"删除{cls.model}记录失败, error: {e}")
             raise Exception(f"删除记录失败")
 
     @classmethod

@@ -24,7 +24,7 @@ class Constructor(PityBase):
     # 2021-12-18 是否是后置条件
     suffix = Column(BOOLEAN, default=False, comment="是否是后置条件，默认为否")
 
-    def __init__(self, type, name, enable, constructor_json, case_id, public, user, value="", suffix=False, id=None):
+    def __init__(self, type, name, enable, constructor_json, case_id, public, user, value="", suffix=False, id=None, index=0):
         super().__init__(user, id)
         self.type = type
         self.name = name
@@ -34,6 +34,7 @@ class Constructor(PityBase):
         self.public = public
         self.value = value
         self.suffix = suffix
+        self.index = index
 
     @staticmethod
     async def get_index(session, case_id, suffix=False):

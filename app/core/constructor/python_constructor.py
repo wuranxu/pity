@@ -18,7 +18,12 @@ class PythonConstructor(ConstructorAbstract):
             executor.append(f"当前{ConstructorAbstract.get_name(constructor)}类型为python脚本\n{command}")
             loc = dict()
             exec(command, loc)
-            py_data = loc[constructor.value]
+            # 2022-04-25 fix bug: no return value
+            py_data = loc.get(constructor.value)
+            if py_data is None:
+                executor.append(
+                    f"当前{ConstructorAbstract.get_name(constructor)}未返回任何值")
+                return
             if not isinstance(py_data, str):
                 py_data = json.dumps(py_data, ensure_ascii=False)
             params[constructor.value] = py_data

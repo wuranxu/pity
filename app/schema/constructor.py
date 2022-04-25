@@ -9,6 +9,7 @@ class ConstructorForm(BaseModel):
     value: str = ""
     type: int
     name: str
+    index: int = 0
     constructor_json: str
     enable: bool
     case_id: int = None
