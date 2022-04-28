@@ -2,6 +2,7 @@ import dataclasses
 import json
 from collections import defaultdict
 from datetime import datetime
+from decimal import Decimal
 from enum import Enum
 from pathlib import PurePath
 from types import GeneratorType
@@ -22,6 +23,10 @@ class JsonEncoder(json.JSONEncoder):
             return list(o)
         if isinstance(o, datetime):
             return o.strftime("%Y-%m-%d %H:%M:%S")
+        if isinstance(o, Decimal):
+            return str(o)
+        if isinstance(o, bytes):
+            return o.decode(encoding='utf-8')
         return self.default(o)
 
 

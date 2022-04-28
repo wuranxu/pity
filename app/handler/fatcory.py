@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from decimal import Decimal
 from typing import Any
 
 from starlette.background import BackgroundTask
@@ -39,7 +40,19 @@ class PityResponse(object):
 
     @staticmethod
     def json_serialize(obj):
-        return {k: v.strftime("%Y-%m-%d %H:%M:%S") if isinstance(v, datetime) else v for k, v in dict(obj).items()}
+        ans = dict()
+        for k, o in dict(obj).items():
+            if isinstance(o, set):
+                ans[k] = list(o)
+            elif isinstance(o, datetime):
+                ans[k] = o.strftime("%Y-%m-%d %H:%M:%S")
+            elif isinstance(o, Decimal):
+                ans[k] = str(o)
+            elif isinstance(o, bytes):
+                ans[k] = o.decode(encoding='utf-8')
+            else:
+                ans[k] = o
+        return ans
 
     @staticmethod
     def parse_sql_result(data: list):
