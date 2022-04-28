@@ -679,7 +679,7 @@ class Executor(object):
             project, _ = await ProjectDao.query_project(plan.project_id)
             env = list(map(int, plan.env.split(",")))
             case_list = list(map(int, plan.case_list.split(",")))
-            receiver = list(map(int, plan.receiver.split(",")))
+            receiver = list(map(int, plan.receiver.split(",") if plan.receiver else []))
             # 聚合报告dict
             report_dict = dict()
             await asyncio.gather(

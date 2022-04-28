@@ -7,7 +7,7 @@ from app.core.executor import Executor
 from app.crud.test_case.TestPlan import PityTestPlanDao
 from app.handler.fatcory import PityResponse
 from app.schema.test_plan import PityTestPlanForm
-from app.routers import Permission
+from app.routers import Permission, get_session
 from app.routers.testcase.testcase import router
 from app.utils.scheduler import Scheduler
 from config import Config
@@ -49,9 +49,9 @@ async def update_test_plan(form: PityTestPlanForm, user_info=Depends(Permission(
 
 
 @router.get("/plan/delete")
-async def delete_test_plan(id: int, user_info=Depends(Permission(Config.MANAGER))):
+async def delete_test_plan(id: int, user_info=Depends(Permission(Config.MANAGER)), session=Depends(get_session)):
     try:
-        await PityTestPlanDao.delete_record_by_id(user_info['id'], id)
+        await PityTestPlanDao.delete_record_by_id(session, user_info['id'], id)
         Scheduler.remove(id)
     except JobLookupError:
         # 说明没找到job
