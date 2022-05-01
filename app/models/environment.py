@@ -1,31 +1,23 @@
-from datetime import datetime
+from sqlalchemy import Column, String, UniqueConstraint
 
-from sqlalchemy import INT, DATETIME, Column, String, UniqueConstraint
-
-from app.models import Base
+from app.models.basic import PityBase
 
 
-class Environment(Base):
+class Environment(PityBase):
     __tablename__ = 'pity_environment'
-    id = Column(INT, primary_key=True)
     # 环境名称
     name = Column(String(10))
-    created_at = Column(DATETIME, nullable=False)
-    updated_at = Column(DATETIME, nullable=False)
-    deleted_at = Column(DATETIME)
-    create_user = Column(INT, nullable=True)
-    update_user = Column(INT, nullable=True)
     remarks = Column(String(200))
 
     __table_args__ = (
         UniqueConstraint('name', 'deleted_at'),
     )
 
-    def __init__(self, name, remarks, user, id=0):
-        self.id = id
-        self.create_user = user
+    __fields__ = ("name",)
+    __tag__ = "环境"
+    __alias__ = dict(name="名称", remarks="备注")
+
+    def __init__(self, name, remarks, user):
+        super().__init__(user)
         self.name = name
         self.remarks = remarks
-        self.created_at = datetime.now()
-        self.updated_at = datetime.now()
-        self.update_user = user

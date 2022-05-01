@@ -1,96 +1,39 @@
-from datetime import datetime
+from sqlalchemy import select
 
-from sqlalchemy import desc, select
-
+from app.crud import Mapper
 from app.middleware.RedisManager import RedisHelper
-from app.models import Session, DatabaseHelper, async_session
+from app.models import async_session
 from app.models.gconfig import GConfig
 from app.schema.gconfig import GConfigForm
+from app.utils.decorator import dao
 from app.utils.logger import Log
 
 
-class GConfigDao(object):
-    log = Log("GConfigDao")
+@dao(GConfig, Log("GConfigDao"))
+class GConfigDao(Mapper):
 
-    @staticmethod
-    def insert_gconfig(data: GConfigForm, user):
+    @classmethod
+    async def insert_gconfig(cls, form: GConfigForm, user_id: int) -> None:
         try:
-            with Session() as session:
-                query = session.query(GConfig).filter_by(env=data.env, key=data.key, deleted_at=None).first()
-                if query is not None:
-                    return f"变量: {data.key}已存在"
-                config = GConfig(**data.dict(), user=user)
-                session.add(config)
-                session.commit()
+            async with async_session() as session:
+                async with session.begin():
+                    query = await session.execute(
+                        select(GConfig).where(GConfig.env == form.env, GConfig.key == form.key,
+                                              GConfig.deleted_at == 0))
+                    data = query.scalars().first()
+                    if data is not None:
+                        raise Exception(f"变量: {data.key}已存在")
+                    config = GConfig(**form.dict(), user=user_id)
+                    session.add(config)
         except Exception as e:
-            GConfigDao.log.error(f"新增变量: {data.key}失败, {e}")
-            return f"新增变量: {data.key}失败, {str(e)}"
-        return None
-
-    @staticmethod
-    def update_gconfig(data: GConfigForm, user):
-        try:
-            with Session() as session:
-                query = session.query(GConfig).filter_by(id=data.id, deleted_at=None).first()
-                if query is None:
-                    return f"变量{data.key}不存在"
-                DatabaseHelper.update_model(query, data, user)
-                session.commit()
-        except Exception as e:
-            GConfigDao.log.error(f"编辑变量失败: {str(e)}")
-            return f"编辑变量失败: {str(e)}"
-        return None
-
-    @staticmethod
-    def list_gconfig(page, size, env=None, key=None):
-        try:
-            search = [GConfig.deleted_at == None]
-            with Session() as session:
-                if env:
-                    search.append(GConfig.env == env)
-                if key:
-                    search.append(GConfig.key.ilike("%{}%".format(key)))
-                data = session.query(GConfig).filter(*search)
-                total = data.count()
-                return data.order_by(desc(GConfig.created_at)).offset((page - 1) * size).limit(
-                    size).all(), total, None
-        except Exception as e:
-            GConfigDao.log.error(f"获取变量列表失败, {str(e)}")
-            return [], 0, f"获取变量列表失败, {str(e)}"
-
-    @staticmethod
-    def delete_gconfig(id, user):
-        try:
-            with Session() as session:
-                query = session.query(GConfig).filter_by(id=id).first()
-                if query is None:
-                    return f"变量{id}不存在"
-                query.deleted_at = datetime.now()
-                query.update_user = user
-                session.commit()
-        except Exception as e:
-            GConfigDao.log.error(f"删除变量失败: {str(e)}")
-            return f"删除变量失败: {str(e)}"
-        return None
-
-    @staticmethod
-    def get_gconfig_by_key(key: str, env: int = None) -> GConfig:
-        try:
-            filters = [GConfig.key == key, GConfig.deleted_at == None, GConfig.enable == True]
-            if env:
-                filters.append(GConfig.env == env)
-            with Session() as session:
-                return session.query(GConfig).filter(*filters).first()
-        except Exception as e:
-            raise Exception(f"查询全局变量失败: {str(e)}")
+            cls.log.error(f"新增变量: {data.key}失败, {e}")
+            raise Exception(f"新增变量: {data.key}失败")
 
     @staticmethod
     @RedisHelper.cache("gconfig", 1800, True)
     async def async_get_gconfig_by_key(key: str, env: int = None) -> GConfig:
         try:
-            filters = [GConfig.key == key, GConfig.deleted_at == None, GConfig.enable == True]
-            if env:
-                filters.append(GConfig.env == env)
+            filters = [GConfig.key == key, GConfig.deleted_at == 0, GConfig.enable == True, GConfig.env == env]
             async with async_session() as session:
                 sql = select(GConfig).where(*filters)
                 result = await session.execute(sql)

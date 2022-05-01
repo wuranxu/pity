@@ -3,15 +3,13 @@ redis客户端Manager
 """
 import asyncio
 import functools
-import json
+import pickle
 
 from awaits.awaitable import awaitable
 from redis import ConnectionPool, StrictRedis
 from rediscluster import RedisCluster, ClusterConnectionPool
 
 from app.excpetions.RedisException import RedisException
-from app.handler.encoder import JsonEncoder
-from app.handler.fatcory import PityResponse
 from config import Config
 
 
@@ -129,11 +127,10 @@ class RedisHelper(object):
         return f"{RedisHelper.pity_prefix}:{key}"
 
     @staticmethod
-    def cache(key: str, expired_time=3 * 60, model=False, args_key=True):
+    def cache(key: str, expired_time=3 * 60, args_key=True):
         """
         自动缓存装饰器
         :param args_key:
-        :param model:
         :param key: 被缓存的key
         :param expired_time: 默认key过期时间
         :return:
@@ -148,19 +145,11 @@ class RedisHelper(object):
                     data = RedisHelper.pity_redis_client.get(redis_key)
                     # 缓存已存在
                     if data is not None:
-                        return json.loads(data)
+                        return pickle.loads(bytes.fromhex(data))
                     # 获取最新数据
                     new_data = await func(*args, **kwargs)
-                    # 针对func有多个返回值的时候，需要先判断一下是否是元祖
-                    if isinstance(new_data, tuple) and len(new_data) > 1:
-                        new_data = list(new_data)
-                    if model:
-                        if isinstance(new_data, list):
-                            new_data = PityResponse.model_to_list(new_data)
-                        else:
-                            new_data = PityResponse.model_to_dict(new_data)
-                    info = json.dumps(new_data, cls=JsonEncoder, ensure_ascii=False)
-                    RedisHelper.pity_redis_client.set(redis_key, info, ex=expired_time)
+                    info = pickle.dumps(new_data)
+                    RedisHelper.pity_redis_client.set(redis_key, info.hex(), ex=expired_time)
                     return new_data
 
                 return wrapper
@@ -171,16 +160,11 @@ class RedisHelper(object):
                     data = RedisHelper.pity_redis_client.get(redis_key)
                     # 缓存已存在
                     if data is not None:
-                        return json.loads(data)
+                        return pickle.loads(bytes.fromhex(data))
                     # 获取最新数据
                     new_data = func(*args, **kwargs)
-                    if model:
-                        if isinstance(new_data, list):
-                            new_data = PityResponse.model_to_list(new_data)
-                        else:
-                            new_data = PityResponse.model_to_dict(new_data)
-                    info = json.dumps(new_data, ensure_ascii=False)
-                    RedisHelper.pity_redis_client.set(redis_key, info, ex=expired_time)
+                    info = pickle.dumps(new_data)
+                    RedisHelper.pity_redis_client.set(redis_key, info.hex(), ex=expired_time)
                     return new_data
 
                 return wrapper

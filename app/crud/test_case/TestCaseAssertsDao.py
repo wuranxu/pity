@@ -1,27 +1,35 @@
+from typing import List
+
 from sqlalchemy import asc, select
 
 from app.crud import Mapper
-from app.models import Session, async_session, DatabaseHelper
-from app.schema.testcase_schema import TestCaseAssertsForm
+from app.models import async_session, DatabaseHelper
 from app.models.testcase_asserts import TestCaseAsserts
+from app.schema.testcase_schema import TestCaseAssertsForm
 from app.utils.decorator import dao
 from app.utils.logger import Log
 
 
 @dao(TestCaseAsserts, Log("TestCaseAssertsDao"))
 class TestCaseAssertsDao(Mapper):
-    # log = Log("TestCaseAssertsDao")
 
-    @staticmethod
-    def list_test_case_asserts(case_id: int):
+    @classmethod
+    async def list_test_case_asserts(cls, case_id: int) -> List[TestCaseAsserts]:
+        """
+        通过用例id获取断言数据
+        :param case_id:
+        :return:
+        """
         try:
-            with Session() as session:
-                case_list = session.query(TestCaseAsserts).filter_by(case_id=case_id, deleted_at=None).order_by(
-                    asc(TestCaseAsserts.name)).all()
-                return case_list, None
+            async with async_session() as session:
+                query = await session.execute(select(TestCaseAsserts)
+                                              .where(TestCaseAsserts.case_id == case_id,
+                                                     TestCaseAsserts.deleted_at == 0)).order_by(
+                    asc(TestCaseAsserts.name))
+                return query.scalars().all()
         except Exception as e:
-            TestCaseAssertsDao.log.error(f"获取用例断言失败: {str(e)}")
-            return [], f"获取用例断言失败: {str(e)}"
+            cls.log.error(f"获取用例断言失败: {str(e)}")
+            raise Exception("获取用例断言失败")
 
     @classmethod
     async def async_list_test_case_asserts(cls, case_id: int):
@@ -30,13 +38,13 @@ class TestCaseAssertsDao(Mapper):
                 sql = select(TestCaseAsserts).where(TestCaseAsserts.case_id == case_id,
                                                     TestCaseAsserts.deleted_at == 0).order_by(TestCaseAsserts.name)
                 case_list = await session.execute(sql)
-                return case_list.scalars().all(), None
+                return case_list.scalars().all()
         except Exception as e:
             cls.log.error(f"获取用例断言失败: {str(e)}")
-            return [], f"获取用例断言失败: {str(e)}"
+            raise Exception(f"获取用例断言失败: {str(e)}")
 
     @staticmethod
-    async def insert_test_case_asserts(form: TestCaseAssertsForm, user: int):
+    async def insert_test_case_asserts(form: TestCaseAssertsForm, user_id: int):
         try:
             ans = None
             async with async_session() as session:
@@ -48,7 +56,7 @@ class TestCaseAssertsDao(Mapper):
                     data = result.scalars().first()
                     if data is not None:
                         raise Exception("断言信息已存在, 请检查")
-                    new_assert = TestCaseAsserts(**form.dict(), user=user)
+                    new_assert = TestCaseAsserts(**form.dict(), user=user_id)
                     session.add(new_assert)
                     await session.flush()
                     await session.refresh(new_assert)
@@ -59,8 +67,14 @@ class TestCaseAssertsDao(Mapper):
             TestCaseAssertsDao.log.error(f"新增用例断言失败, error: {e}")
             raise Exception(f"新增用例断言失败, {e}")
 
-    @staticmethod
-    async def update_test_case_asserts(form: TestCaseAssertsForm, user: int):
+    @classmethod
+    async def update_test_case_asserts(cls, form: TestCaseAssertsForm, user_id: int) -> TestCaseAsserts:
+        """
+        更新用例断言
+        :param form:
+        :param user_id:
+        :return:
+        """
         try:
             async with async_session() as session:
                 async with session.begin():
@@ -70,16 +84,16 @@ class TestCaseAssertsDao(Mapper):
                     data = result.scalars().first()
                     if data is None:
                         raise Exception("断言信息不存在, 请检查")
-                    DatabaseHelper.update_model(data, form, user)
+                    DatabaseHelper.update_model(data, form, user_id)
                     await session.flush()
                     session.expunge(data)
                     return data
         except Exception as e:
-            TestCaseAssertsDao.log.error(f"编辑用例断言失败, error: {e}")
+            cls.log.error(f"编辑用例断言失败, error: {e}")
             raise Exception(f"编辑用例断言失败, {e}")
 
-    @staticmethod
-    async def delete_test_case_asserts(id: int, user: int):
+    @classmethod
+    async def delete_test_case_asserts(cls, id: int, user_id: int) -> None:
         try:
             async with async_session() as session:
                 async with session.begin():
@@ -89,8 +103,7 @@ class TestCaseAssertsDao(Mapper):
                     data = result.scalars().first()
                     if data is None:
                         raise Exception("断言信息不存在, 请检查")
-                    DatabaseHelper.delete_model(data, user)
-                    await session.flush()
+                    DatabaseHelper.delete_model(data, user_id)
         except Exception as e:
-            TestCaseAssertsDao.log.error(f"编辑用例断言失败, error: {e}")
+            cls.log.error(f"编辑用例断言失败, error: {e}")
             raise Exception(f"编辑用例断言失败, {e}")

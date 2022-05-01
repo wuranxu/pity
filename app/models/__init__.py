@@ -15,7 +15,8 @@ engine = create_engine(Config.SQLALCHEMY_DATABASE_URI, pool_recycle=1500)
 # 异步engine
 async_engine = create_async_engine(Config.ASYNC_SQLALCHEMY_URI, pool_recycle=1500)
 
-Session = sessionmaker(engine)
+# 2022-05-01 彻底摆脱同步session
+# Session = sessionmaker(engine)
 
 async_session = sessionmaker(async_engine, class_=AsyncSession)
 
@@ -43,11 +44,11 @@ class DatabaseHelper(object):
         if jdbc_url is None:
             return None
         # 创建异步引擎
-        eg = create_engine(jdbc_url, pool_recycle=1500)
-        # eg = create_async_engine(jdbc_url, pool_recycle=1500)
+        # eg = create_engine(jdbc_url, pool_recycle=1500)
+        eg = create_async_engine(jdbc_url, pool_recycle=1500)
         # 拿到session方法
-        ss = sessionmaker(bind=eg, autocommit=True)
-        # ss = sessionmaker(bind=eg, class_=AsyncSession)
+        # ss = sessionmaker(bind=eg, autocommit=True)
+        ss = sessionmaker(bind=eg, class_=AsyncSession)
         # 将数据缓存起来
         data = dict(engine=eg, session=ss)
         self.connections[key] = data
@@ -69,8 +70,8 @@ class DatabaseHelper(object):
     def get_jdbc_url(sql_type: int, host: str, port: int, username: str, password: str, database: str):
         if sql_type == 0:
             # mysql模式
-            # return f'mysql+aiomysql://{username}:{password}@{host}:{port}/{database}'
-            return f'mysql+mysqlconnector://{username}:{password}@{host}:{port}/{database}'
+            return f'mysql+aiomysql://{username}:{password}@{host}:{port}/{database}'
+            # return f'mysql+mysqlconnector://{username}:{password}@{host}:{port}/{database}'
         elif sql_type == 1:
             return f'postgresql+psycopg2://{username}:{password}@{host}:{port}/{database}'
         return None

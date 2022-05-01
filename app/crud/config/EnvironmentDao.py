@@ -1,15 +1,15 @@
-from datetime import datetime
+from sqlalchemy import select
 
-from sqlalchemy import desc, select
-
-from app.models import Session, DatabaseHelper, async_session
+from app.crud import Mapper
+from app.models import async_session
 from app.models.environment import Environment
 from app.schema.environment import EnvironmentForm
+from app.utils.decorator import dao
 from app.utils.logger import Log
 
 
-class EnvironmentDao(object):
-    log = Log("EnvironmentDao")
+@dao(Environment, Log("EnvironmentDao"))
+class EnvironmentDao(Mapper):
 
     @staticmethod
     async def query_env(id: int):
@@ -19,69 +19,44 @@ class EnvironmentDao(object):
         :return:
         """
         async with async_session() as session:
-            ans = await session.execute(select(Environment).where(Environment.id == id))
+            ans = await session.execute(select(Environment).where(Environment.id == id, Environment.deleted_at == 0))
             if ans is None:
                 raise Exception(f"环境: {id}不存在")
             return ans.scalars().first()
 
-    @staticmethod
-    def insert_env(data: EnvironmentForm, user):
+    @classmethod
+    async def insert_env(cls, data: EnvironmentForm, user):
         try:
-            with Session() as session:
-                query = session.query(Environment).filter_by(name=data.name, deleted_at=None).first()
-                if query is not None:
-                    return f"环境{data.name}已存在"
-                env = Environment(**data.dict(), user=user)
-                session.add(env)
-                session.commit()
+            async with async_session() as session:
+                async with session.begin():
+                    query = await session.execute(
+                        select(Environment).where(Environment.name == data.name, Environment.deleted_at == 0))
+                    if query.scalars().first() is not None:
+                        raise Exception(f"环境已存在")
+                    env = Environment(**data.dict(), user=user)
+                    session.add(env)
         except Exception as e:
             EnvironmentDao.log.error(f"新增环境: {data.name}失败, {e}")
-            return f"新增环境: {data.name}失败, {str(e)}"
-        return None
+            raise Exception(f"添加失败: {str(e)}")
 
-    @staticmethod
-    def update_env(data: EnvironmentForm, user):
+    @classmethod
+    async def list_env(cls, page, size, name=None, exactly=False):
         try:
-            with Session() as session:
-                query = session.query(Environment).filter_by(id=data.id, deleted_at=None).first()
-                if query is None:
-                    return f"环境{data.name}不存在"
-                DatabaseHelper.update_model(query, data, user)
-                session.commit()
-        except Exception as e:
-            EnvironmentDao.log.error(f"编辑环境失败: {str(e)}")
-            return f"编辑环境失败: {str(e)}"
-        return None
-
-    @staticmethod
-    def list_env(page, size, name=None, exactly=False):
-        try:
-            search = [Environment.deleted_at == None]
-            with Session() as session:
+            search = [Environment.deleted_at == 0]
+            async with async_session() as session:
                 if name:
-                    search.append(Environment.name.ilike("%{}%".format(name)))
+                    search.append(Environment.name.like("%{}%".format(name)))
+                sql = select(Environment).where(*search)
+                query = await session.execute(sql)
                 if exactly:
-                    data = session.query(Environment).filter(*search).all()
-                    return data, len(data), None
-                data = session.query(Environment).filter(*search)
-                total = data.count()
-                return data.order_by(desc(Environment.created_at)).offset((page - 1) * size).limit(
-                    size).all(), total, None
+                    data = query.scalars().all()
+                    return data, len(data)
+                total = query.raw.rowcount
+                if total == 0:
+                    return [], 0
+                sql = sql.offset((page - 1) * size).limit(size)
+                data = await session.execute(sql)
+                return data.scalars().all(), total
         except Exception as e:
-            EnvironmentDao.log.error(f"获取环境列表失败, {str(e)}")
-            return [], 0, f"获取环境列表失败, {str(e)}"
-
-    @staticmethod
-    def delete_env(id, user):
-        try:
-            with Session() as session:
-                query = session.query(Environment).filter_by(id=id).first()
-                if query is None:
-                    return f"环境{id}不存在"
-                query.deleted_at = datetime.now()
-                query.update_user = user
-                session.commit()
-        except Exception as e:
-            EnvironmentDao.log.error(f"删除环境失败: {str(e)}")
-            return f"删除环境失败: {str(e)}"
-        return None
+            cls.log.error(f"获取环境列表失败, {str(e)}")
+            raise Exception(f"获取环境数据失败: {str(e)}")

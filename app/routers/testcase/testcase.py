@@ -23,11 +23,8 @@ router = APIRouter(prefix="/testcase")
 
 @router.get("/list")
 async def list_testcase(directory_id: int = None, name: str = "", create_user: str = ''):
-    try:
-        data = await TestCaseDao.list_test_case(directory_id, name, create_user)
-        return PityResponse.success(data)
-    except Exception as e:
-        return PityResponse.failed(str(e))
+    data = await TestCaseDao.list_test_case(directory_id, name, create_user)
+    return PityResponse.success(data)
 
 
 @router.post("/insert")
@@ -38,7 +35,6 @@ async def insert_testcase(data: TestCaseForm, user_info=Depends(Permission())):
             return PityResponse.failed("用例已存在")
         model = TestCase(**data.dict(), create_user=user_info['id'])
         model = await TestCaseDao.insert_record(model, True)
-        # case_id = TestCaseDao.insert_test_case(data.dict(), user_info['id'])
         return PityResponse.success(model.id)
     except Exception as e:
         return PityResponse.failed(e)
@@ -53,9 +49,9 @@ async def create_testcase(data: TestCaseInfo, user_info=Depends(Permission()), s
 
 
 @router.post("/update")
-def update_testcase(data: TestCaseForm, user_info=Depends(Permission())):
+async def update_testcase(data: TestCaseForm, user_info=Depends(Permission())):
     try:
-        data = TestCaseDao.update_test_case(data, user_info['id'])
+        data = await TestCaseDao.update_test_case(data, user_info['id'])
         return PityResponse.success(data)
     except Exception as e:
         return PityResponse.failed(e)
@@ -98,7 +94,7 @@ async def query_testcase(caseId: int, user_info=Depends(Permission())):
 @router.post("/asserts/insert")
 async def insert_testcase_asserts(data: TestCaseAssertsForm, user_info=Depends(Permission())):
     try:
-        new_assert = await TestCaseAssertsDao.insert_test_case_asserts(data, user=user_info["id"])
+        new_assert = await TestCaseAssertsDao.insert_test_case_asserts(data, user_id=user_info["id"])
         return PityResponse.success(new_assert)
     except Exception as e:
         return PityResponse.failed(e)
@@ -107,126 +103,90 @@ async def insert_testcase_asserts(data: TestCaseAssertsForm, user_info=Depends(P
 @router.post("/asserts/update")
 async def insert_testcase_asserts(data: TestCaseAssertsForm, user_info=Depends(Permission())):
     try:
-        updated = await TestCaseAssertsDao.update_test_case_asserts(data, user=user_info["id"])
-        return PityResponse.success(PityResponse.model_to_dict(updated))
+        updated = await TestCaseAssertsDao.update_test_case_asserts(data, user_id=user_info["id"])
+        return PityResponse.success(updated)
     except Exception as e:
         return PityResponse.failed(e)
 
 
 @router.get("/asserts/delete")
 async def insert_testcase_asserts(id: int, user_info=Depends(Permission())):
-    try:
-        await TestCaseAssertsDao.delete_test_case_asserts(id, user=user_info["id"])
-        return PityResponse.success()
-    except Exception as e:
-        return PityResponse.failed(e)
+    await TestCaseAssertsDao.delete_test_case_asserts(id, user_id=user_info["id"])
+    return PityResponse.success()
 
 
 @router.post("/constructor/insert")
 async def insert_constructor(data: ConstructorForm, user_info=Depends(Permission())):
-    try:
-        await ConstructorDao.insert_constructor(data, user=user_info["id"])
-        return PityResponse.success()
-    except Exception as e:
-        return PityResponse.failed(e)
+    await ConstructorDao.insert_constructor(data, user_id=user_info["id"])
+    return PityResponse.success()
 
 
 @router.post("/constructor/update")
 async def update_constructor(data: ConstructorForm, user_info=Depends(Permission())):
-    try:
-        await ConstructorDao.update_constructor(data, user=user_info["id"])
-        return PityResponse.success()
-    except Exception as e:
-        return PityResponse.failed(e)
+    await ConstructorDao.update_constructor(data, user_id=user_info["id"])
+    return PityResponse.success()
 
 
 @router.get("/constructor/delete")
 async def update_constructor(id: int, user_info=Depends(Permission())):
-    try:
-        await ConstructorDao.delete_constructor(id, user=user_info["id"])
-        return PityResponse.success()
-    except Exception as e:
-        return PityResponse.failed(e)
+    await ConstructorDao.delete_constructor(id, user_id=user_info["id"])
+    return PityResponse.success()
 
 
 @router.post("/constructor/order")
-def update_constructor_index(data: List[ConstructorIndex], user_info=Depends(Permission())):
-    try:
-        ConstructorDao.update_constructor_index(data)
-        return PityResponse.success()
-    except Exception as e:
-        return PityResponse.failed(e)
+async def update_constructor_index(data: List[ConstructorIndex], user_info=Depends(Permission())):
+    await ConstructorDao.update_constructor_index(data)
+    return PityResponse.success()
 
 
 @router.get("/constructor/tree")
 async def get_constructor_tree(suffix: bool, name: str = "", user_info=Depends(Permission())):
-    try:
-        result = ConstructorDao.get_constructor_tree(name, suffix)
-        return PityResponse.success(result)
-    except Exception as e:
-        return PityResponse.failed(e)
+    result = await ConstructorDao.get_constructor_tree(name, suffix)
+    return PityResponse.success(result)
 
 
 # 获取数据构造器树
 @router.get("/constructor")
 async def get_constructor_tree(id: int, user_info=Depends(Permission())):
-    try:
-        result = ConstructorDao.get_constructor_data(id)
-        return PityResponse.success(result)
-    except Exception as e:
-        return PityResponse.failed(e)
+    result = await ConstructorDao.get_constructor_data(id)
+    return PityResponse.success(result)
 
 
 # 获取所有数据构造器
 @router.get("/constructor/list")
 async def list_case_and_constructor(constructor_type: int, suffix: bool):
-    try:
-        ans = await ConstructorDao.get_case_and_constructor(constructor_type, suffix)
-        return PityResponse.success(ans)
-    except Exception as e:
-        return PityResponse.failed(str(e))
+    ans = await ConstructorDao.get_case_and_constructor(constructor_type, suffix)
+    return PityResponse.success(ans)
 
 
 # 根据id查询具体报告内容
 @router.get("/report")
 async def query_report(id: int, user_info=Depends(Permission())):
-    try:
-        report, case_list, plan_name = await TestReportDao.query(id)
-        return PityResponse.success(dict(report=report, plan_name=plan_name, case_list=case_list))
-    except Exception as e:
-        return PityResponse.failed(e)
+    report, case_list, plan_name = await TestReportDao.query(id)
+    return PityResponse.success(dict(report=report, plan_name=plan_name, case_list=case_list))
 
 
 # 获取构建历史记录
 @router.get("/report/list")
 async def list_report(page: int, size: int, start_time: str, end_time: str, executor: int = None,
                       user_info=Depends(Permission())):
-    try:
-        report_list, total = await TestReportDao.list_report(page, size, start_time, end_time, executor)
-        return PityResponse.success_with_size(data=report_list, total=total)
-    except Exception as e:
-        return PityResponse.failed(e)
+    report_list, total = await TestReportDao.list_report(page, size, start_time, end_time, executor)
+    return PityResponse.success_with_size(data=report_list, total=total)
 
 
 # 获取脑图数据
 @router.get("/xmind")
 async def get_xmind_data(case_id: int, user_info=Depends(Permission())):
-    try:
-        tree_data = await TestCaseDao.get_xmind_data(case_id)
-        return PityResponse.success(tree_data)
-    except Exception as e:
-        return PityResponse.failed(e)
+    tree_data = await TestCaseDao.get_xmind_data(case_id)
+    return PityResponse.success(tree_data)
 
 
 # 获取case目录
 @router.get("/directory")
 async def get_testcase_directory(project_id: int, move: bool = False, user_info=Depends(Permission())):
-    try:
-        # 如果是move，则不需要禁用树
-        tree_data, _ = await PityTestcaseDirectoryDao.get_directory_tree(project_id, move=move)
-        return PityResponse.success(tree_data)
-    except Exception as e:
-        return PityResponse.failed(e)
+    # 如果是move，则不需要禁用树
+    tree_data, _ = await PityTestcaseDirectoryDao.get_directory_tree(project_id, move=move)
+    return PityResponse.success(tree_data)
 
 
 # 获取case目录+case

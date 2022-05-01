@@ -1,10 +1,10 @@
 from collections import defaultdict
 from typing import List
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from app.crud import Mapper
-from app.models import Session, async_session, DatabaseHelper
+from app.models import async_session, DatabaseHelper
 from app.models.constructor import Constructor
 from app.models.test_case import TestCase
 from app.schema.constructor import ConstructorForm, ConstructorIndex
@@ -16,7 +16,12 @@ from app.utils.logger import Log
 class ConstructorDao(Mapper):
 
     @staticmethod
-    async def list_constructor(case_id: int):
+    async def list_constructor(case_id: int) -> List[Constructor]:
+        """
+        根据用例id获取数据构造器列表（包括前后置条件）
+        :param case_id:
+        :return:
+        """
         try:
             async with async_session() as session:
                 sql = select(Constructor).where(Constructor.case_id == case_id, Constructor.deleted_at == 0) \
@@ -28,7 +33,7 @@ class ConstructorDao(Mapper):
             raise Exception(f"获取初始化数据失败, {e}")
 
     @staticmethod
-    async def insert_constructor(data: ConstructorForm, user):
+    async def insert_constructor(data: ConstructorForm, user_id: int) -> None:
         try:
             async with async_session() as session:
                 async with session.begin():
@@ -37,7 +42,7 @@ class ConstructorDao(Mapper):
                     result = await session.execute(sql)
                     if result.scalars().first() is not None:
                         raise Exception(f"{data.name}已存在")
-                    constructor = Constructor(**data.dict(), user=user)
+                    constructor = Constructor(**data.dict(), user=user_id)
                     constructor.index = await constructor.get_index(session, data.case_id)
                     session.add(constructor)
         except Exception as e:
@@ -45,7 +50,13 @@ class ConstructorDao(Mapper):
             raise Exception(f"新增前/后置条件失败, {e}")
 
     @staticmethod
-    async def update_constructor(data: ConstructorForm, user):
+    async def update_constructor(data: ConstructorForm, user_id: int) -> None:
+        """
+        更新前后置条件
+        :param data:
+        :param user_id:
+        :return:
+        """
         try:
             async with async_session() as session:
                 async with session.begin():
@@ -54,13 +65,19 @@ class ConstructorDao(Mapper):
                     query = result.scalars().first()
                     if query is None:
                         raise Exception(f"{data.name}不存在")
-                    DatabaseHelper.update_model(query, data, user)
+                    DatabaseHelper.update_model(query, data, user_id)
         except Exception as e:
-            ConstructorDao.log.error(f"编辑前/后置条件: {data.name}失败, {e}")
-            raise Exception(f"编辑前/后置条件失败, {e}")
+            ConstructorDao.log.error(f"编辑前后置条件: {data.name}失败, {e}")
+            raise Exception(f"编辑前后置条件失败, {e}")
 
-    @staticmethod
-    async def delete_constructor(id: int, user):
+    @classmethod
+    async def delete_constructor(cls, id: int, user_id: int) -> None:
+        """
+        删除前后置条件
+        :param id:
+        :param user_id:
+        :return:
+        """
         try:
             async with async_session() as session:
                 async with session.begin():
@@ -68,44 +85,47 @@ class ConstructorDao(Mapper):
                     result = await session.execute(sql)
                     query = result.scalars().first()
                     if query is None:
-                        raise Exception(f"前/后置条件{id}不存在")
-                    DatabaseHelper.delete_model(query, user)
+                        raise Exception(f"前后置条件{id}不存在")
+                    DatabaseHelper.delete_model(query, user_id)
         except Exception as e:
-            ConstructorDao.log.error(f"删除前/后置条件: {id}失败, {e}")
-            raise Exception(f"删除前/后置条件失败, {e}")
+            cls.log.error(f"删除前后置条件: {id}失败, {e}")
+            raise Exception(f"删除前后置条件失败, {e}")
 
-    @staticmethod
-    def update_constructor_index(data: List[ConstructorIndex]):
+    @classmethod
+    async def update_constructor_index(cls, data: List[ConstructorIndex]) -> None:
+        """
+        更改前后置条件顺序
+        :param data:
+        :return:
+        """
         try:
-            with Session() as session:
-                mappings = [{"id": item.id, "index": item.index} for item in data]
-                session.bulk_update_mappings(Constructor, mappings)
-                session.commit()
+            async with async_session() as session:
+                async with session.begin():
+                    for item in data:
+                        await session.execute(
+                            update(Constructor).where(Constructor.id == item.id).values(index=item.index))
         except Exception as e:
-            ConstructorDao.log.error(f"更新数据构造器顺序失败, {e}")
-            raise Exception("更新数据构造器顺序失败")
+            cls.log.error(f"更新前后置条件顺序失败, {e}")
+            raise Exception("更新前后置条件顺序失败")
 
-    @staticmethod
-    def get_constructor_tree(name: str, suffix: bool):
+    @classmethod
+    async def get_constructor_tree(cls, name: str, suffix: bool) -> List[dict]:
         try:
-            with Session() as session:
+            async with async_session() as session:
                 # 获取所有构造参数
+                search = [Constructor.public == True, Constructor.suffix == suffix, Constructor.deleted_at == 0]
                 if name:
-                    constructor = session.query(Constructor).filter(Constructor.public == True,
-                                                                    Constructor.suffix == suffix,
-                                                                    Constructor.name.ilike("%{}%".format(name)),
-                                                                    Constructor.deleted_at == 0).all()
-                else:
-                    constructor = session.query(Constructor).filter(Constructor.public == True,
-                                                                    Constructor.suffix == suffix,
-                                                                    Constructor.deleted_at == 0).all()
+                    search.append(Constructor.name.like("%{}%".format(name)))
+                query = await session.execute(select(Constructor).where(*search))
+                constructor = query.scalars().all()
                 if not constructor:
                     return []
                 temp = defaultdict(list)
                 # 建立caseID -> constructor的map
                 for c in constructor:
                     temp[c.case_id].append(c)
-                testcases = session.query(TestCase).filter(TestCase.id.in_(temp.keys())).all()
+                query = await session.execute(select(TestCase).where(TestCase.id.in_(temp.keys())))
+                testcases = query.scalars().all()
                 testcase_info = {t.id: t for t in testcases}
                 result = []
                 for k, v in temp.items():
@@ -119,20 +139,31 @@ class ConstructorDao(Mapper):
                     })
                 return result
         except Exception as e:
-            ConstructorDao.log.error(f"获取构造数据树失败, {e}")
-            raise Exception("获取构造数据失败")
+            cls.log.error(f"获取前后置条件树失败, {e}")
+            raise Exception("获取前后置条件失败")
 
     @staticmethod
-    def get_constructor_data(id_: int):
-        with Session() as session:
-            data = session.query(Constructor).filter_by(id=id_, deleted_at=0).first()
+    async def get_constructor_data(id_: int) -> Constructor:
+        """
+        根据构造方法id获取构造方法数据
+        :param id_:
+        :return:
+        """
+        async with async_session() as session:
+            query = await session.execute(select(Constructor).where(Constructor.id == id_, Constructor.deleted_at == 0))
+            data = query.scalars().first()
             if data is None:
-                raise Exception("构造数据不存在")
+                raise Exception("前后置条件不存在")
             return data
 
     @staticmethod
-    async def get_case_and_constructor(constructor_type: int, suffix: bool):
-        # 最终返回结果树
+    async def get_case_and_constructor(constructor_type: int, suffix: bool) -> List[dict]:
+        """
+        根据构造类型返回构造方法树
+        :param constructor_type:
+        :param suffix:
+        :return:
+        """
         ans = list()
         async with async_session() as session:
             # 此处存放case_id => 前置条件的映射

@@ -6,9 +6,9 @@ from sqlalchemy import update
 
 from app.middleware.Jwt import UserToken
 from app.middleware.RedisManager import RedisHelper
-from app.models import Session, async_session, DatabaseHelper
-from app.schema.user import UserUpdateForm
+from app.models import async_session, DatabaseHelper
 from app.models.user import User
+from app.schema.user import UserUpdateForm
 from app.utils.logger import Log
 from config import Config
 
@@ -105,7 +105,6 @@ class UserDao(object):
     @staticmethod
     async def register_user(username: str, name: str, password: str, email: str):
         """
-
         :param username: 用户名
         :param name: 姓名
         :param password: 密码
@@ -162,22 +161,22 @@ class UserDao(object):
             raise e
 
     @staticmethod
-    @RedisHelper.cache("user_list", 3 * 3600, True)
-    # TODO 先不改，里面有redis相关内容
-    def list_users():
+    @RedisHelper.cache("user_list", 3 * 3600)
+    async def list_users():
         try:
-            with Session() as session:
-                return session.query(User).all()
+            async with async_session() as session:
+                query = await session.execute(select(User))
+                return query.scalars().all()
         except Exception as e:
             UserDao.log.error(f"获取用户列表失败: {str(e)}")
             raise Exception("获取用户列表失败")
 
     @staticmethod
+    @RedisHelper.cache("user_detail", 3600)
     async def query_user(id: int):
         async with async_session() as session:
             query = await session.execute(select(User).where(User.id == id))
-            result = query.scalars().first()
-            return result
+            return query.scalars().first()
 
     @staticmethod
     @RedisHelper.cache("user_touch", 3600)

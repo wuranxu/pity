@@ -1,5 +1,3 @@
-import traceback
-
 from fastapi import APIRouter, Depends, File, UploadFile
 
 from app.crud.project.ProjectDao import ProjectDao
@@ -18,7 +16,7 @@ router = APIRouter(prefix="/project")
 
 
 @router.get("/list")
-def list_project(page: int = 1, size: int = 8, name: str = "", user_info=Depends(Permission())):
+async def list_project(page: int = 1, size: int = 8, name: str = "", user_info=Depends(Permission())):
     """
     获取项目列表
     :param name: 项目名称
@@ -28,21 +26,14 @@ def list_project(page: int = 1, size: int = 8, name: str = "", user_info=Depends
     :return:
     """
     user_role, user_id = user_info["role"], user_info["id"]
-    result, total, err = ProjectDao.list_project(user_id, user_role, page, size, name)
-    if err is not None:
-        return PityResponse.failed(code=110, data=result, msg=err)
+    result, total = await ProjectDao.list_project(user_id, user_role, page, size, name)
     return PityResponse.success_with_size(data=result, total=total)
 
 
 @router.post("/insert")
 async def insert_project(data: ProjectForm, user_info=Depends(Permission(Config.MANAGER))):
-    try:
-        err = await ProjectDao.add_project(user=user_info["id"], **data.dict())
-        if err is not None:
-            return PityResponse.failed(err)
-        return PityResponse.success()
-    except Exception as e:
-        return PityResponse.failed(e)
+    await ProjectDao.add_project(user_id=user_info["id"], **data.dict())
+    return PityResponse.success()
 
 
 @router.post("/avatar/{project_id}", summary="上传项目头像")
@@ -63,14 +54,9 @@ async def update_project_avatar(project_id: int, file: UploadFile = File(...), u
 
 @router.post("/update")
 async def update_project(data: ProjectEditForm, user_info=Depends(Permission())):
-    try:
-        user_id, role = user_info["id"], user_info["role"]
-        err = ProjectDao.update_project(user=user_id, role=role, **data.dict())
-        if err is not None:
-            return PityResponse.failed(err)
-        return PityResponse.success()
-    except Exception as e:
-        return PityResponse.failed(e)
+    user_id, role = user_info["id"], user_info["role"]
+    await ProjectDao.update_project(user_id=user_id, role=role, **data.dict())
+    return PityResponse.success()
 
 
 @router.get("/query")
@@ -111,31 +97,21 @@ async def insert_project_role(role: ProjectRoleForm, user_info=Depends(Permissio
                                                   deleted_at=0)
         if query is not None:
             raise Exception("该用户已存在")
-        user = user_info['id']
-        err = await ProjectRoleDao.has_permission(role.project_id, role.project_role, user, user_info['role'])
-        if err is not None:
-            raise Exception(err)
-        model = ProjectRole(**role.dict(), create_user=user)
+        await ProjectRoleDao.has_permission(role.project_id, role.project_role, user_info['id'], user_info['role'])
+        model = ProjectRole(**role.dict(), create_user=user_info['id'])
         await ProjectRoleDao.insert_record(model, True)
     except Exception as e:
-        traceback.print_exc()
         return PityResponse.failed(e)
     return PityResponse.success()
 
 
 @router.post("/role/update")
 async def update_project_role(role: ProjectRoleEditForm, user_info=Depends(Permission())):
-    try:
-        await ProjectRoleDao.update_project_role(role, user_info["id"], user_info["role"])
-    except Exception as e:
-        return PityResponse.failed(e)
+    await ProjectRoleDao.update_project_role(role, user_info["id"], user_info["role"])
     return PityResponse.success()
 
 
 @router.post("/role/delete")
 async def delete_project_role(role: ProjectDelForm, user_info=Depends(Permission())):
-    try:
-        await ProjectRoleDao.delete_project_role(role.id, user_info["id"], user_info["role"])
-    except Exception as e:
-        return PityResponse.failed(e)
+    await ProjectRoleDao.delete_project_role(role.id, user_info["id"], user_info["role"])
     return PityResponse.success()

@@ -78,12 +78,12 @@ class Executor(object):
             self.logger.append(content, end)
 
     @case_log
-    async def parse_gconfig(self, data, type_, *fields):
+    async def parse_gconfig(self, data, type_, env, *fields):
         """
         解析全局变量
         """
         for f in fields:
-            await self.parse_field(data, f, Config.GconfigType.value(type_))
+            await self.parse_field(data, f, Config.GconfigType.value(type_), env)
 
     @case_log
     def get_parser(self, key_type):
@@ -97,7 +97,7 @@ class Executor(object):
             return YamlGConfigParser.parse
         raise Exception(f"全局变量类型: {key_type}不合法, 请检查!")
 
-    async def parse_field(self, data, field, name):
+    async def parse_field(self, data, field, name, env):
         """
         解析字段
         """
@@ -107,7 +107,7 @@ class Executor(object):
             variables = self.get_el_expression(field_origin)
             for v in variables:
                 key = v.split(".")[0]
-                cf = await GConfigDao.async_get_gconfig_by_key(key)
+                cf = await GConfigDao.async_get_gconfig_by_key(key, env)
                 if cf is not None:
                     # 解析变量
                     parse = self.get_parser(cf.get("key_type"))
@@ -274,7 +274,7 @@ class Executor(object):
             response_info["request_method"] = method
 
             # Step1: 替换全局变量
-            await self.parse_gconfig(case_info, Config.GconfigType.case, *Executor.fields)
+            await self.parse_gconfig(case_info, Config.GconfigType.case, env, *Executor.fields)
 
             self.append("解析全局变量", True)
 
@@ -283,15 +283,13 @@ class Executor(object):
 
             #  Step3: 解析前后置条件的全局变量
             for c in constructors:
-                await self.parse_gconfig(c, Config.GconfigType.constructor, "constructor_json")
+                await self.parse_gconfig(c, Config.GconfigType.constructor, env, "constructor_json")
 
             # Step4: 获取断言
-            asserts, err = await TestCaseAssertsDao.async_list_test_case_asserts(case_id)
-            if err:
-                return response_info, err
+            asserts = await TestCaseAssertsDao.async_list_test_case_asserts(case_id)
 
-            for a in asserts:
-                await self.parse_gconfig(a, Config.GconfigType.asserts, "expected", "actually")
+            for ast in asserts:
+                await self.parse_gconfig(ast, Config.GconfigType.asserts, env, "expected", "actually")
 
             # Step5: 替换参数
             self.replace_args(req_params, case_info, constructors, asserts)
@@ -698,60 +696,61 @@ class Executor(object):
     @staticmethod
     async def run_multiple(executor: int, env: int, case_list: List[int], mode=0, plan_id: int = None, ordered=False,
                            report_dict: dict = None):
-        current_env = await EnvironmentDao.query_env(env)
-        if current_env.deleted_at:
-            return
-        if executor != 0:
-            # 说明不是系统执行
-            user = await UserDao.query_user(executor)
-            name = user.name if user is not None else "未知"
-        else:
-            name = "CPU"
-        st = time.perf_counter()
-        # step1: 新增测试报告数据
-        report_id = await TestReportDao.start(executor, env, mode, plan_id=plan_id)
-        # step2: 开始执行用例
-        result_data = defaultdict(list)
-        # step3: 将报告改为 running状态
-        await TestReportDao.update(report_id, 1)
-        # step4: 执行用例并搜集数据
-        if not ordered:
-            await asyncio.gather(*(Executor.run_single(env, result_data, report_id, c) for c in case_list))
-        else:
-            # 顺序执行
-            for c in case_list:
-                await Executor.run_single(env, result_data, report_id, c)
-        ok, fail, skip, error = 0, 0, 0, 0
-        for case_id, status in result_data.items():
-            for s in status:
-                if s == 0:
-                    ok += 1
-                elif s == 1:
-                    fail += 1
-                elif s == 2:
-                    error += 1
-                else:
-                    skip += 1
-        cost = time.perf_counter() - st
-        cost = "%.2f" % cost
-        # step5: 回写数据到报告
-        report = await TestReportDao.end(report_id, ok, fail, error, skip, 3, cost)
-        if report_dict is not None:
-            report_dict[env] = {
-                "report_url": f"{Config.SERVER_REPORT}{report_id}",
-                "start_time": report.start_at.strftime("%Y-%m-%d %H:%M:%S"),
-                "end_time": report.finished_at.strftime("%Y-%m-%d %H:%M:%S"),
-                "success": ok,
-                "failed": fail,
-                "total": ok + fail + error + skip,
-                "error": error,
-                "skip": skip,
-                "executor": name,
-                "cost": cost,
-                "plan_result": "通过" if ok + fail + error + skip > 0 and fail + error == 0 else '未通过',
-                "env": current_env.name,
-            }
-        return report_id
+        try:
+            current_env = await EnvironmentDao.query_env(env)
+            if executor != 0:
+                # 说明不是系统执行
+                user = await UserDao.query_user(executor)
+                name = user.name if user is not None else "未知"
+            else:
+                name = "CPU"
+            st = time.perf_counter()
+            # step1: 新增测试报告数据
+            report_id = await TestReportDao.start(executor, env, mode, plan_id=plan_id)
+            # step2: 开始执行用例
+            result_data = defaultdict(list)
+            # step3: 将报告改为 running状态
+            await TestReportDao.update(report_id, 1)
+            # step4: 执行用例并搜集数据
+            if not ordered:
+                await asyncio.gather(*(Executor.run_single(env, result_data, report_id, c) for c in case_list))
+            else:
+                # 顺序执行
+                for c in case_list:
+                    await Executor.run_single(env, result_data, report_id, c)
+            ok, fail, skip, error = 0, 0, 0, 0
+            for case_id, status in result_data.items():
+                for s in status:
+                    if s == 0:
+                        ok += 1
+                    elif s == 1:
+                        fail += 1
+                    elif s == 2:
+                        error += 1
+                    else:
+                        skip += 1
+            cost = time.perf_counter() - st
+            cost = "%.2f" % cost
+            # step5: 回写数据到报告
+            report = await TestReportDao.end(report_id, ok, fail, error, skip, 3, cost)
+            if report_dict is not None:
+                report_dict[env] = {
+                    "report_url": f"{Config.SERVER_REPORT}{report_id}",
+                    "start_time": report.start_at.strftime("%Y-%m-%d %H:%M:%S"),
+                    "end_time": report.finished_at.strftime("%Y-%m-%d %H:%M:%S"),
+                    "success": ok,
+                    "failed": fail,
+                    "total": ok + fail + error + skip,
+                    "error": error,
+                    "skip": skip,
+                    "executor": name,
+                    "cost": cost,
+                    "plan_result": "通过" if ok + fail + error + skip > 0 and fail + error == 0 else '未通过',
+                    "env": current_env.name,
+                }
+            return report_id
+        except Exception as e:
+            raise Exception(f"批量执行用例失败: {e}")
 
 
 if __name__ == "__main__":

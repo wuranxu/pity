@@ -92,7 +92,7 @@ class PityTestcaseDirectoryDao(object):
             raise Exception(f"删除目录失败: {e}")
 
     @staticmethod
-    async def get_directory_tree(project_id: int, case_node=None, move: bool = False):
+    async def get_directory_tree(project_id: int, case_node=None, move: bool = False) -> (list, dict):
         """
         通过项目获取目录树
         :param project_id:

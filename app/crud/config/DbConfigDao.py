@@ -124,7 +124,7 @@ class DbConfigDao(object):
             # 返回树图, 最外层是环境
             result = []
             env_index = dict()
-            env_data, _, _ = EnvironmentDao.list_env(1, 1, exactly=True)
+            env_data, _ = await EnvironmentDao.list_env(1, 1, exactly=True)
             env_map = {env.id: env.name for env in env_data}
             # 获取数据库相关的信息
             table_map = defaultdict(set)
@@ -138,22 +138,37 @@ class DbConfigDao(object):
                         result.append(dict(title=name, key=f"env_{name}", children=list()))
                         idx = len(result) - 1
                         env_index[name] = idx
-                    DbConfigDao.get_tables(table_map, d, result[idx]['children'])
+                    await DbConfigDao.get_tables(table_map, d, result[idx]['children'])
                 return result, table_map
         except Exception as err:
             DbConfigDao.log.error(f"获取数据库配置详情失败, error: {err}")
             raise Exception(f"获取数据库配置详情失败: {err}")
 
     @staticmethod
-    def get_tables(table_map: dict, data: PityDatabase, children: List):
+    async def get_tables(table_map: dict, data: PityDatabase, children: List):
         conn = db_helper.get_connection(data.sql_type, data.host, data.port, data.username, data.password,
                                         data.database)
         database_child = list()
         dbs = dict(title=f"{data.database}（{data.host}:{data.port}）", key=f"database_{data.id}",
                    children=database_child, sql_type=data.sql_type)
         eng = conn.get('engine')
-        meta = MetaData()
-        meta.reflect(bind=eng)
+        async with eng.connect() as conn:
+            await conn.run_sync(DbConfigDao.load_table, table_map, data, database_child, children, dbs)
+
+    @staticmethod
+    def load_table(conn, table_map, data, database_child, children, dbs):
+        """
+        异步加载table及字段
+        :param conn:
+        :param table_map:
+        :param data:
+        :param database_child:
+        :param children:
+        :param dbs:
+        :return:
+        """
+        meta = MetaData(bind=conn)
+        meta.reflect()
         for t in meta.sorted_tables:
             table_map[data.id].add(str(t))
             temp = []
@@ -186,17 +201,17 @@ class DbConfigDao(object):
         row_count = 0
         try:
             session = conn.get("session")
-            with session() as s:
-                result = s.execute(sql)
-                row_count = result.rowcount
-                ans = result.mappings().all()
-                return ans
-            # async with session() as s:
-            #     async with s.begin():
-            #         result = await s.execute(sql)
-            #         row_count = result.rowcount
-            #         ans = result.mappings().all()
-            #         return ans
+            # with session() as s:
+            #     result = s.execute(sql)
+            #     row_count = result.rowcount
+            #     ans = result.mappings().all()
+            #     return ans
+            async with session() as s:
+                async with s.begin():
+                    result = await s.execute(sql)
+                    row_count = result.rowcount
+                    ans = result.mappings().all()
+                    return ans
         except ResourceClosedError:
             # 说明是update或其他语句
             return [{"rowCount": row_count}]

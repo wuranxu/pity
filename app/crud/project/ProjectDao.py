@@ -1,10 +1,11 @@
 from datetime import datetime
+from typing import List
 
-from sqlalchemy import or_, desc, select
+from sqlalchemy import or_, select, desc
 
 from app.crud import Mapper
 from app.crud.project.ProjectRoleDao import ProjectRoleDao
-from app.models import Session, async_session
+from app.models import async_session
 from app.models.project import Project
 from app.models.project_role import ProjectRole
 from app.utils.decorator import dao
@@ -16,33 +17,35 @@ from config import Config
 class ProjectDao(Mapper):
 
     @classmethod
-    def list_project(cls, user, role, page, size, name=None):
+    async def list_project(cls, user_id: int, role: int, page: int,
+                           size: int, name: str = None) -> (List[Project], int):
         """
         查询/获取项目列表
-        :param user: 当前用户
+        :param user_id: 当前用户
         :param role: 当前用户角色
         :param page: 当前页码
         :param size: 当前size
         :param name: 项目名称
-        :return:
+        :return: 项目列表和总数
         """
         try:
             search = [Project.deleted_at == 0]
-            with Session() as session:
+            async with async_session() as session:
                 if role != Config.ADMIN:
-                    project_list, err = ProjectRoleDao.list_project_by_user(user)
-                    if err is not None:
-                        raise err
+                    project_list = await ProjectRoleDao.list_project_by_user(user_id)
                     # 找出用户能看到的公开项目
-                    search.append(or_(Project.id.in_(project_list), Project.owner == user, Project.private == False))
+                    search.append(or_(Project.id.in_(project_list), Project.owner == user_id, Project.private == False))
                 if name:
                     search.append(Project.name.like("%{}%".format(name)))
-                data = session.query(Project).filter(*search)
-                total = data.count()
-                return data.order_by(desc(Project.created_at)).offset((page - 1) * size).limit(size).all(), total, None
+                sql = select(Project).where(*search).order_by(desc(Project.updated_at))
+                data = await session.execute(sql)
+                sql = sql.offset((page - 1) * size).limit(size)
+                total = data.raw.rowcount
+                data = await session.execute(sql)
+                return data.scalars().all(), total
         except Exception as e:
-            cls.log.error(f"获取用户: {user}项目列表失败, {e}")
-            return [], 0, f"获取用户: {user}项目列表失败, {e}"
+            cls.log.error(f"获取用户: {user_id}项目列表失败, {e}")
+            raise Exception(f"获取用户: {user_id}项目列表失败")
 
     @classmethod
     async def list_project_id_by_user(cls, session, user, role):
@@ -71,19 +74,18 @@ class ProjectDao(Mapper):
         return query.scalars().first() == user_id
 
     @classmethod
-    async def add_project(cls, name, app, owner, user, private, description, dingtalk_url=''):
+    async def add_project(cls, name, app, owner, user_id, private, description, dingtalk_url=''):
         try:
             async with async_session() as session:
                 async with session.begin():
                     data = await session.execute(select(Project).where(Project.name == name, Project.deleted_at == 0))
                     if data.scalars().first() is not None:
-                        return "项目已存在"
-                    pr = Project(name, app, owner, user, description, private, dingtalk_url)
+                        raise Exception("项目已存在")
+                    pr = Project(name, app, owner, user_id, description, private, dingtalk_url)
                     session.add(pr)
         except Exception as e:
             cls.log.error(f"新增项目: {name}失败, {e}")
-            return f"新增项目: {name}失败, {e}"
-        return None
+            raise Exception(f"新增项目: {name}失败, {e}")
 
     @classmethod
     async def update_avatar(cls, project_id: int, user_id: int, user_role: int, file_url: str):
@@ -107,31 +109,45 @@ class ProjectDao(Mapper):
         return None
 
     @classmethod
-    def update_project(cls, id, user, role, name, app, owner, private, description, dingtalk_url=''):
+    async def update_project(cls, id: int, user_id, role: int, name: str, app: str, owner: int, private: bool,
+                             description: str, dingtalk_url: str = '') -> None:
+        """
+        修改项目
+        :param id:
+        :param user_id: 修改人
+        :param role: 修改者角色
+        :param name:
+        :param app:
+        :param owner:
+        :param private:
+        :param description:
+        :param dingtalk_url:
+        :return:
+        """
         try:
-            with Session() as session:
-                data = session.query(Project).filter_by(id=id, deleted_at=0).first()
-                if data is None:
-                    return "项目不存在"
-                data.name = name
-                data.app = app
-                # 如果修改人不是owner或者超管
-                if data.owner != owner and role < Config.ADMIN and user != data.owner:
-                    return "您没有权限修改项目负责人"
-                data.owner = owner
-                data.private = private
-                data.description = description
-                data.updated_at = datetime.now()
-                data.update_user = user
-                data.dingtalk_url = dingtalk_url
-                session.commit()
+            async with async_session() as session:
+                async with session.begin():
+                    query = await session.execute(select(Project).where(Project.id == id, Project.deleted_at == 0))
+                    data = query.scalars().first()
+                    if data is None:
+                        raise Exception("项目不存在")
+                    data.name = name
+                    data.app = app
+                    # 如果修改人不是owner或者超管
+                    if data.owner != owner and role < Config.ADMIN and user_id != data.owner:
+                        raise Exception("您没有权限修改项目负责人")
+                    data.owner = owner
+                    data.private = private
+                    data.description = description
+                    data.updated_at = datetime.now()
+                    data.update_user = user_id
+                    data.dingtalk_url = dingtalk_url
         except Exception as e:
             cls.log.error(f"编辑项目: {name}失败, {e}")
-            return f"编辑项目: {name}失败, {e}"
-        return None
+            raise Exception(f"编辑项目: {name}失败, {e}")
 
     @classmethod
-    async def query_project(cls, project_id: int):
+    async def query_project(cls, project_id: int) -> (List[Project], List[ProjectRole]):
         try:
             async with async_session() as session:
                 query = await session.execute(select(Project).where(Project.id == project_id, Project.deleted_at == 0))
@@ -147,7 +163,6 @@ class ProjectDao(Mapper):
     @staticmethod
     async def query_user_project(user_id: int) -> int:
         """
-        created by woody at 2022-02-13 12:05
         查询用户有多少项目
         :param user_id: 用户id
         :return: 返回项目数量

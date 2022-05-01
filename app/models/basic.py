@@ -1,4 +1,6 @@
+import json
 from datetime import datetime
+from decimal import Decimal
 
 from sqlalchemy import INT, DATETIME, Column, BIGINT
 
@@ -26,6 +28,27 @@ class PityBase(Base):
         self.update_user = user
         self.deleted_at = 0
         self.id = id
+
+    def serialize(self, *ignore):
+        """
+        dump self
+        :return:
+        """
+        data = dict()
+        for c in self.__table__.columns:
+            if c.name in ignore:
+                # 如果字段忽略, 则不进行转换
+                continue
+            val = getattr(self, c.name)
+            if isinstance(val, datetime):
+                data[c.name] = val.strftime("%Y-%m-%d %H:%M:%S")
+            elif isinstance(val, Decimal):
+                data[c.name] = str(val)
+            elif isinstance(val, bytes):
+                data[c.name] = val.decode(encoding='utf-8')
+            else:
+                data[c.name] = val
+        return json.dumps(data, ensure_ascii=False)
 
 
 class PityRelationField(object):

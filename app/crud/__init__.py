@@ -13,6 +13,7 @@ from app.models import Base, engine, async_session, DatabaseHelper
 from app.models.address import PityGateway
 from app.models.basic import PityRelationField, init_relation
 from app.models.environment import Environment
+from app.models.gconfig import GConfig
 from app.models.operation_log import PityOperationLog
 from app.models.project import Project
 from app.models.project_role import ProjectRole, ProjectRoleEnum
@@ -143,7 +144,7 @@ class Mapper(object):
             raise Exception("更新数据失败")
 
     @classmethod
-    async def update_record_by_id(cls, user, model, not_null=False, log=False):
+    async def update_record_by_id(cls, user: int, model, not_null=False, log=False):
         try:
             async with async_session() as session:
                 async with session.begin():
@@ -151,7 +152,7 @@ class Mapper(object):
                     result = await session.execute(query)
                     now = result.scalars().first()
                     if now is None:
-                        raise Exception("记录不存在")
+                        raise Exception("数据不存在")
                     old = deepcopy(now)
                     changed = DatabaseHelper.update_model(now, model, user, not_null)
                     await session.flush()
@@ -164,7 +165,7 @@ class Mapper(object):
                 return now
         except Exception as e:
             cls.log.error(f"更新{cls.model}记录失败, error: {e}")
-            raise Exception(f"更新记录失败")
+            raise Exception(f"更新数据失败")
 
     @classmethod
     async def _inner_delete(cls, session, user, value, log, key, exists):
@@ -467,3 +468,5 @@ init_relation(TestCase)
 init_relation(TestCaseAsserts, PityRelationField(TestCaseAsserts.case_id, (TestCase.id, TestCase.name)))
 
 init_relation(PityGateway, PityRelationField(PityGateway.env, (Environment.id, Environment.name)))
+
+init_relation(GConfig, PityRelationField(GConfig.env, (Environment.id, Environment.name)))

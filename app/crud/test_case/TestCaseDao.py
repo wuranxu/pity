@@ -1,5 +1,4 @@
 import json
-from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import List, Dict
 
@@ -12,8 +11,9 @@ from app.crud.test_case.TestCaseAssertsDao import TestCaseAssertsDao
 from app.crud.test_case.TestCaseDirectory import PityTestcaseDirectoryDao
 from app.crud.test_case.TestcaseDataDao import PityTestcaseDataDao
 from app.middleware.RedisManager import RedisHelper
-from app.models import Session, DatabaseHelper, async_session
+from app.models import DatabaseHelper, async_session
 from app.models.constructor import Constructor
+from app.models.project import Project
 from app.models.test_case import TestCase
 from app.models.testcase_asserts import TestCaseAsserts
 from app.models.testcase_data import PityTestcaseData
@@ -64,33 +64,29 @@ class TestCaseDao(Mapper):
             TestCaseDao.log.error(f"获取测试用例失败: {str(e)}")
             raise Exception(f"获取测试用例失败: {str(e)}")
 
-    @staticmethod
-    def get_tree(case_list):
-        result = defaultdict(list)
-        # 获取目录->用例的映射关系
-        for cs in case_list:
-            result[cs.catalogue].append(cs)
+    # @staticmethod
+    # async def get_tree(case_list):
+    #     result = defaultdict(list)
+    #     # 获取目录->用例的映射关系
+    #     for cs in case_list:
+    #         result[cs.catalogue].append(cs)
+    #
+    #     keys = sorted(result.keys())
+    #     tree = [dict(key=f"cat_{key}",
+    #                  children=[{"key": f"case_{child.id}", "title": child.name,
+    #                             "total": await TestCaseDao.get_case_children_length(child.id),
+    #                             "children": await TestCaseDao.get_case_children(child.id)} for child in result[key]],
+    #                  title=key, total=len(result[key])) for key in keys]
+    #     return tree
 
-        keys = sorted(result.keys())
-        tree = [dict(key=f"cat_{key}",
-                     children=[{"key": f"case_{child.id}", "title": child.name,
-                                "total": TestCaseDao.get_case_children_length(child.id),
-                                "children": TestCaseDao.get_case_children(child.id)} for child in result[key]],
-                     title=key, total=len(result[key])) for key in keys]
-        return tree
-
     @staticmethod
-    def get_case_children(case_id: int):
-        data, err = TestCaseAssertsDao.list_test_case_asserts(case_id)
-        if err:
-            raise err
+    async def get_case_children(case_id: int):
+        data = await TestCaseAssertsDao.list_test_case_asserts(case_id)
         return [dict(key=f"asserts_{d.id}", title=d.name, case_id=case_id) for d in data]
 
     @staticmethod
-    def get_case_children_length(case_id: int):
-        data, err = TestCaseAssertsDao.list_test_case_asserts(case_id)
-        if err:
-            raise err
+    async def get_case_children_length(case_id: int):
+        data = await TestCaseAssertsDao.list_test_case_asserts(case_id)
         return len(data)
 
     @staticmethod
@@ -126,49 +122,29 @@ class TestCaseDao(Mapper):
                                   asserts=(TestCaseAssertsDao, TestCaseAsserts),
                                   data=(PityTestcaseDataDao, PityTestcaseData))
 
-    # @staticmethod
-    # def insert_test_case(test_case, user):
-    #     """
-    #
-    #     :param user: 创建人
-    #     :param test_case: 测试用例
-    #     :return:
-    #     """
-    #     try:
-    #         with Session() as session:
-    #             data = session.query(TestCase).filter_by(name=test_case.get("name"),
-    #                                                      directory_id=test_case.get("directory_id"),
-    #                                                      deleted_at=0).first()
-    #             if data is not None:
-    #                 raise Exception("用例已存在")
-    #             cs = TestCase(**test_case, create_user=user)
-    #             session.add(cs)
-    #             session.commit()
-    #             session.refresh(cs)
-    #             return cs.id
-    #     except Exception as e:
-    #         TestCaseDao.log.error(f"添加用例失败: {str(e)}")
-    #         raise Exception(f"添加用例失败: {str(e)}")
-
-    @staticmethod
-    def update_test_case(test_case: TestCaseForm, user):
+    @classmethod
+    async def update_test_case(cls, test_case: TestCaseForm, user_id: int) -> TestCase:
         """
-
-        :param user: 修改人
+        更新测试用例
+        :param user_id: 修改人
         :param test_case: 测试用例
         :return:
         """
         try:
-            with Session() as session:
-                data = session.query(TestCase).filter_by(id=test_case.id, deleted_at=0).first()
-                if data is None:
-                    raise Exception("用例不存在")
-                DatabaseHelper.update_model(data, test_case, user)
-                session.commit()
-                session.refresh(data)
-                return data
+            async with async_session() as session:
+                async with session.begin():
+                    query = await session.execute(
+                        select(TestCase).where(TestCase.id == test_case.id, TestCase.deleted_at == 0))
+                    data = query.scalars().first()
+                    if data is None:
+                        raise Exception("用例不存在")
+                    DatabaseHelper.update_model(data, test_case, user_id)
+                    await session.flush()
+                    # 释放你的sql数据
+                    session.expunge(data)
+                    return data
         except Exception as e:
-            TestCaseDao.log.error(f"编辑用例失败: {str(e)}")
+            cls.log.error(f"编辑用例失败: {str(e)}")
             raise Exception(f"编辑用例失败: {str(e)}")
 
     @staticmethod
@@ -181,7 +157,7 @@ class TestCaseDao(Mapper):
                 if data is None:
                     raise Exception("用例不存在")
                 # 获取断言部分
-                asserts, _ = await TestCaseAssertsDao.async_list_test_case_asserts(data.id)
+                asserts = await TestCaseAssertsDao.async_list_test_case_asserts(data.id)
                 # 获取数据构造器
                 constructors = await ConstructorDao.list_constructor(case_id)
                 constructors_case = await TestCaseDao.query_test_case_by_constructors(constructors)
@@ -220,8 +196,8 @@ class TestCaseDao(Mapper):
             TestCaseDao.log.error(f"查询用例失败: {str(e)}")
             return None, f"查询用例失败: {str(e)}"
 
-    @staticmethod
-    def list_testcase_tree(projects) -> [List, dict]:
+    @classmethod
+    async def list_testcase_tree(cls, projects: List[Project]) -> [List, dict]:
         try:
             result = []
             project_map = {}
@@ -235,10 +211,12 @@ class TestCaseDao(Mapper):
                     "children": [],
                 })
                 project_index[p.id] = len(result) - 1
-            with Session() as session:
-                data = session.query(TestCase).filter(TestCase.project_id.in_(project_map.keys()),
-                                                      TestCase.deleted_at == 0).all()
-
+            async with async_session() as session:
+                query = await session.execute(select(TestCase).where(
+                    TestCase.project_id.in_(project_map.keys()),
+                    TestCase.deleted_at == 0
+                ))
+                data = query.scalars().all()
                 for d in data:
                     result[project_index[d.project_id]]["children"].append({
                         "label": d.name,
@@ -247,21 +225,23 @@ class TestCaseDao(Mapper):
                     })
                 return result
         except Exception as e:
-            TestCaseDao.log.error(f"获取用例列表失败: {str(e)}")
+            cls.log.error(f"获取用例列表失败: {str(e)}")
             raise Exception("获取用例列表失败")
 
     @staticmethod
-    def select_constructor(case_id: int):
+    async def select_constructor(case_id: int) -> List[Constructor]:
         """
         通过case_id获取用例构造数据
         :param case_id:
         :return:
         """
         try:
-            with Session() as session:
-                data = session.query(Constructor).filter_by(case_id=case_id, deleted_at=0).order_by(
-                    desc(Constructor.created_at)).all()
-                return data
+            async with async_session() as session:
+                query = await session.execute(select(Constructor).where(Constructor.case_id == case_id,
+                                                                        Constructor.deleted_at == 0
+                                                                        )).order_by(
+                    desc(Constructor.created_at))
+                return query.scalars().all()
         except Exception as e:
             TestCaseDao.log.error(f"查询构造数据失败: {str(e)}")
 
@@ -325,9 +305,7 @@ class TestCaseDao(Mapper):
 
     @staticmethod
     async def collect_asserts(case_id, parent):
-        asserts, err = await TestCaseAssertsDao.async_list_test_case_asserts(case_id)
-        if err:
-            raise Exception("获取断言数据失败")
+        asserts = await TestCaseAssertsDao.async_list_test_case_asserts(case_id)
         for a in asserts:
             temp = dict(id=f"assert_{a.id}", label=f"{a.name}", children=list())
             parent.get("children").append(temp)
