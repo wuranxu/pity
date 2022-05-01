@@ -17,7 +17,7 @@ class Environment(PityBase):
     __tag__ = "环境"
     __alias__ = dict(name="名称", remarks="备注")
 
-    def __init__(self, name, remarks, user):
-        super().__init__(user)
+    def __init__(self, name, remarks, user, id=None):
+        super().__init__(user, id)
         self.name = name
         self.remarks = remarks
