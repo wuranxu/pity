@@ -45,6 +45,8 @@ class PityTestResult(Base):
 
     data_name = Column(String(24))
 
+    data_id = Column(INT)
+
     request_method = Column(String(12), nullable=True)
 
     request_headers = Column(TEXT)
@@ -66,7 +68,7 @@ class PityTestResult(Base):
                  url: str, body: str, request_method: str, request_headers: str, cost: str,
                  asserts: str, response_headers: str, response: str,
                  status_code: int, cookies: str, retry: int = None,
-                 request_params: str = '', data_name: str = ''
+                 request_params: str = '', data_name: str = '', data_id: int = None
                  ):
         self.report_id = report_id
         self.case_id = case_id
@@ -89,4 +91,5 @@ class PityTestResult(Base):
         self.cookies = cookies
         self.request_params = request_params
         self.data_name = data_name
+        self.data_id = data_id
         self.deleted_at = 0

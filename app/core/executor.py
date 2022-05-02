@@ -385,7 +385,7 @@ class Executor(object):
 
     @staticmethod
     async def run_with_test_data(env, data, report_id, case_id, params_pool: dict = None,
-                                 request_param: dict = None, path='主case', name: str = ""):
+                                 request_param: dict = None, path='主case', name: str = "", data_id: int = None):
         start_at = datetime.now()
         executor = Executor()
         result, err = await executor.run(env, case_id, params_pool, request_param, path)
@@ -394,10 +394,7 @@ class Executor(object):
         if err is not None:
             status = 2
         else:
-            if result.get("status"):
-                status = 0
-            else:
-                status = 1
+            status = 0 if result.get("status") else 1
         asserts = result.get("asserts")
         url = result.get("url")
         case_logs = result.get("logs")
@@ -415,7 +412,7 @@ class Executor(object):
                                    case_logs, start_at, finished_at,
                                    url, body, request_method, request_headers, cost,
                                    asserts, response_headers, response,
-                                   status_code, cookies, 0, req, name)
+                                   status_code, cookies, 0, req, name, data_id)
 
     @staticmethod
     async def run_single(env: int, data, report_id, case_id, params_pool: dict = None, path="主case"):
@@ -427,8 +424,7 @@ class Executor(object):
             return
         await asyncio.gather(
             *(Executor.run_with_test_data(env, data, report_id, case_id, params_pool, Executor.get_dict(x.json_data),
-                                          path,
-                                          x.name)
+                                          path, x.name, x.id)
               for x in test_data))
 
     @case_log

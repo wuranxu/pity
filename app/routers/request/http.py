@@ -36,9 +36,6 @@ async def execute_case(env: int, case_id: int, _=Depends(Permission())):
     try:
         executor = Executor()
         test_data = await PityTestcaseDataDao.list_testcase_data_by_env(env, case_id)
-        # if not test_data:
-        #     # 说明该环境下没有测试数据
-        #     return PityResponse.failed("此环境无测试数据, 请进入用例添加🎨")
         ans = dict()
         if not test_data:
             result, _ = await executor.run(env, case_id)
@@ -53,6 +50,18 @@ async def execute_case(env: int, case_id: int, _=Depends(Permission())):
         return PityResponse.failed("测试数据不为合法的JSON")
     except Exception as e:
         return PityResponse.failed(e)
+
+
+@router.get("/retry", summary="根据测试数据重新运行测试用例")
+async def re_run_case(env: int, case_id: int, data_id: int, _=Depends(Permission())):
+    try:
+        executor = Executor()
+        test_data = await PityTestcaseDataDao.query_record(id=data_id)
+        params = json.loads(test_data.json_data)
+        result, _ = await executor.run(env, case_id, request_param=params)
+        return PityResponse.success(result)
+    except JSONDecodeError:
+        return PityResponse.failed("测试数据不为合法的JSON")
 
 
 @router.post("/run/async")

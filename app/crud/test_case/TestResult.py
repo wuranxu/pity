@@ -19,7 +19,7 @@ class TestResultDao(object):
                      url: str, body: str, request_method: str, request_headers: str, cost: str,
                      asserts: str, response_headers: str, response: str,
                      status_code: int, cookies: str, retry: int = None,
-                     request_params: str = '', data_name: str = ''
+                     request_params: str = '', data_name: str = '', data_id: int = None,
                      ) -> None:
         try:
             async with async_session() as session:
@@ -27,8 +27,8 @@ class TestResultDao(object):
                     result = PityTestResult(report_id, case_id, case_name, status,
                                             case_log, start_at, finished_at,
                                             url, body, request_method, request_headers, cost,
-                                            asserts, response_headers, response,
-                                            status_code, cookies, retry, request_params, data_name)
+                                            asserts, response_headers, response, status_code,
+                                            cookies, retry, request_params, data_name, data_id)
                     session.add(result)
                     await session.flush()
         except Exception as e:
