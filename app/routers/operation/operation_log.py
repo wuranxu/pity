@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends
 from sqlalchemy import desc
 
@@ -13,8 +15,10 @@ router = APIRouter(prefix="/operation")
 @router.get("/list")
 async def list_user_operation(start_time: str, end_time: str, user_id: int, tag: str = None, _=Depends(Permission())):
     try:
+        start = datetime.strptime(start_time, "%Y-%m-%d")
+        end = datetime.strptime(end_time, "%Y-%m-%d")
         records = await PityOperationDao.list_record(user_id=user_id, tag=tag, condition=[
-            PityOperationLog.operate_time.between(start_time, end_time)], desc=[desc(PityOperationLog.operate_time)])
+            PityOperationLog.operate_time.between(start, end)], desc=[desc(PityOperationLog.operate_time)])
         return PityResponse.records(records)
     except Exception as e:
         return PityResponse.failed(e)
@@ -24,12 +28,14 @@ async def list_user_operation(start_time: str, end_time: str, user_id: int, tag:
 @router.get("/count")
 async def list_user_activities(user_id: int, start_time: str, end_time: str, _=Depends(Permission())):
     try:
-        records = await PityOperationDao.count_user_activities(user_id, start_time, end_time)
+        start = datetime.strptime(start_time, "%Y-%m-%d")
+        end = datetime.strptime(end_time, "%Y-%m-%d")
+        records = await PityOperationDao.count_user_activities(user_id, start, end)
         ans = list()
         for r in records:
             # 解包日期和数量
             date, count = r
-            ans.append(dict(date=date, count=count))
+            ans.append(dict(date=date.strftime("%Y-%m-%d"), count=count))
         return PityResponse.success(ans)
     except Exception as e:
         return PityResponse.failed(e)

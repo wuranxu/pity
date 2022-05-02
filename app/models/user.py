@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Column, String, INT, DATETIME, Boolean
+from sqlalchemy import Column, String, INT, TIMESTAMP, Boolean, BIGINT
 
 from app.models import Base
 
@@ -15,11 +15,11 @@ class User(Base):
     email = Column(String(64), unique=True, nullable=False)
     role = Column(INT, default=0, comment="0: 普通用户 1: 组长 2: 超级管理员")
     phone = Column(String(12), unique=True)
-    created_at = Column(DATETIME, nullable=False)
-    updated_at = Column(DATETIME, nullable=False)
-    deleted_at = Column(DATETIME)
+    created_at = Column(TIMESTAMP, nullable=False)
+    updated_at = Column(TIMESTAMP, nullable=False)
+    deleted_at = Column(BIGINT, nullable=False, default=0)
     update_user = Column(INT, nullable=True)  # 修改人
-    last_login_at = Column(DATETIME)
+    last_login_at = Column(TIMESTAMP)
     avatar = Column(String(128), nullable=True, default=None)
     # 管理员可以禁用某个用户，当他离职后
     is_valid = Column(Boolean, nullable=False, default=True, comment="是否合法")
@@ -35,3 +35,4 @@ class User(Base):
         self.phone = phone
         self.avatar = avatar
         self.is_valid = is_valid
+        self.deleted_at = 0

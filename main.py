@@ -12,6 +12,7 @@ from starlette.templating import Jinja2Templates
 from app import pity, init_logging
 from app.core.msg.wss_msg import WebSocketMessage
 from app.core.ws_connection_manager import ws_manage
+from app.crud import create_table
 from app.crud.notification.NotificationDao import PityNotificationDao
 from app.enums.MessageEnum import MessageStateEnum, MessageTypeEnum
 from app.routers.auth import user
@@ -27,16 +28,8 @@ from app.routers.workspace import router as workspace_router
 from app.utils.scheduler import Scheduler
 from config import Config, PITY_ENV, BANNER
 
-# def bind_logger(logger):
-#     for v in logger._core.handlers.values():
-#         if v._filter is None:
-#             return v
-#     return logger
-
-
 logger = init_logging()
 
-# log = bind_logger(logger)
 logger.bind(name=None).opt(ansi=True).info(f"pity is running at <red>{PITY_ENV}</red>")
 logger.bind(name=None).info(BANNER)
 
@@ -117,6 +110,10 @@ async def get_site_static(filename):
 
 @pity.on_event('startup')
 def init_scheduler():
+    """
+    初始化定时任务
+    :return:
+    """
     # SQLAlchemyJobStore指定存储链接
     job_store = {
         'default': SQLAlchemyJobStore(url=Config.SQLALCHEMY_DATABASE_URI, engine_options={"pool_recycle": 1500},
@@ -126,6 +123,15 @@ def init_scheduler():
     Scheduler.init(scheduler)
     Scheduler.configure(jobstores=job_store)
     Scheduler.start()
+
+
+@pity.on_event('startup')
+async def init_database():
+    """
+    初始化数据库，建表
+    :return:
+    """
+    await create_table()
 
 
 @pity.on_event('shutdown')

@@ -7,7 +7,6 @@ class BaseConfig(object):
     ROOT = os.path.dirname(os.path.abspath(__file__))
     LOG_DIR = os.path.join(ROOT, 'logs')
     LOG_NAME = os.path.join(LOG_DIR, 'pity.log')
-    # JSON_AS_ASCII = False  # Flask jsonify编码问题
 
     # MySQL连接信息
     MYSQL_HOST = "127.0.0.1"
@@ -147,12 +146,19 @@ class ProConfig(BaseConfig):
     # Redis连接信息
     REDIS_NODES = [{"host": REDIS_HOST, "port": REDIS_PORT, "db": REDIS_DB, "password": REDIS_PASSWORD}]
 
-    # sqlalchemy
-    SQLALCHEMY_DATABASE_URI = 'mysql+mysqlconnector://{}:{}@{}:{}/{}'.format(
+    # sqlalchemy for apscheduler
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://{}:{}@{}:{}/{}'.format(
         MYSQL_USER, MYSQL_PWD, MYSQL_HOST, MYSQL_PORT, DBNAME)
 
     # 异步URI
     ASYNC_SQLALCHEMY_URI = f'mysql+aiomysql://{MYSQL_USER}:{MYSQL_PWD}@{MYSQL_HOST}:{MYSQL_PORT}/{DBNAME}'
+
+    # pg数据库 apscheduler配置参考 需要安装psycopg2
+    # SQLALCHEMY_DATABASE_URI = f'postgresql+psycopg2://postgres:woody@127.0.0.1:5433/pity'
+
+    # pg数据库 异步配置参考 需要安装asyncpg
+    # ASYNC_SQLALCHEMY_URI = f'postgresql+asyncpg://postgres:woody@127.0.0.1:5433/pity'
+
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     CLIENT_ID = "c46c7ae33442d13498cd"

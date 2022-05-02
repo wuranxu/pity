@@ -9,7 +9,7 @@ from typing import Tuple, List
 
 from sqlalchemy import select, update
 
-from app.models import Base, engine, async_session, DatabaseHelper
+from app.models import Base, async_session, DatabaseHelper, async_engine
 from app.models.address import PityGateway
 from app.models.basic import PityRelationField, init_relation
 from app.models.environment import Environment
@@ -205,8 +205,7 @@ class Mapper(object):
             async with session.begin():
                 return await cls._inner_delete(session, user, value, log, key, exists)
         except Exception as e:
-            cls.log.exception(f"删除{cls.model.__name__}记录失败: \n")
-            cls.log.error(f"删除{cls.model.__name__}记录失败, error: {e}")
+            cls.log.exception(f"删除{cls.model.__name__}记录失败: \n{e}")
             raise Exception(f"删除失败")
 
     @classmethod
@@ -449,7 +448,11 @@ for path in dao_path_list:
             # 动态导包进去
             importlib.import_module(py)
 
-Base.metadata.create_all(engine)
+
+async def create_table():
+    async with async_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
 
 # 设置项目角色映射关系
 init_relation(ProjectRole, PityRelationField(ProjectRole.user_id, (User.id, User.name)),

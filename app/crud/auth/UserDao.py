@@ -1,4 +1,5 @@
 import random
+import time
 from datetime import datetime
 
 from sqlalchemy import or_, select, func
@@ -72,7 +73,7 @@ class UserDao(object):
                     if user.role == Config.ADMIN:
                         raise Exception("你不能删除超级管理员")
                     user.update_user = user_id
-                    user.deleted_at = datetime.now()
+                    user.deleted_at = int(time.time() * 1000)
         except Exception as e:
             UserDao.log.error(f"修改用户信息失败: {str(e)}")
             raise Exception(e)
@@ -145,7 +146,7 @@ class UserDao(object):
                     # 查询用户名/密码匹配且没有被删除的用户
                     query = await session.execute(
                         select(User).where(User.username == username, User.password == pwd,
-                                           User.deleted_at == None))
+                                           User.deleted_at == 0))
                     user = query.scalars().first()
                     if user is None:
                         raise Exception("用户名或密码错误")
@@ -185,7 +186,7 @@ class UserDao(object):
             if not user:
                 return []
             async with async_session() as session:
-                query = await session.execute(select(User).where(User.id.in_(user), User.deleted_at == None))
+                query = await session.execute(select(User).where(User.id.in_(user), User.deleted_at == 0))
                 return [{"email": q.email, "phone": q.phone} for q in query.scalars().all()]
         except Exception as e:
             UserDao.log.error(f"获取用户联系方式失败: {str(e)}")

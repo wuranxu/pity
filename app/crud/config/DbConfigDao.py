@@ -1,4 +1,5 @@
 import json
+import time
 from collections import defaultdict
 from datetime import datetime
 from typing import List
@@ -30,7 +31,7 @@ class DbConfigDao(object):
         """
         try:
             async with async_session() as session:
-                query = [PityDatabase.deleted_at == None]
+                query = [PityDatabase.deleted_at == 0]
                 if name:
                     query.append(PityDatabase.name.like(f'%{name}%'))
                 if database:
@@ -49,7 +50,7 @@ class DbConfigDao(object):
             async with async_session() as session:
                 async with session.begin():
                     result = await session.execute(
-                        select(PityDatabase).where(PityDatabase.name == data.name, PityDatabase.deleted_at == None,
+                        select(PityDatabase).where(PityDatabase.name == data.name, PityDatabase.deleted_at == 0,
                                                    PityDatabase.env == data.env))
                     query = result.scalars().first()
                     if query is not None:
@@ -80,11 +81,11 @@ class DbConfigDao(object):
             async with async_session() as session:
                 async with session.begin():
                     result = await session.execute(
-                        select(PityDatabase).where(id == PityDatabase.id, PityDatabase.deleted_at == None))
+                        select(PityDatabase).where(id == PityDatabase.id, PityDatabase.deleted_at == 0))
                     query = result.scalars().first()
                     if query is None:
                         raise Exception("数据库配置不存在或已删除")
-                    query.deleted_at = datetime.now()
+                    query.deleted_at = int(time.time() * 1000)
                     query.update_user = user
         except Exception as e:
             DbConfigDao.log.error(f"删除数据库配置: {id}失败, {e}")
@@ -95,7 +96,7 @@ class DbConfigDao(object):
         try:
             async with async_session() as session:
                 result = await session.execute(
-                    select(PityDatabase).where(PityDatabase.id == id, PityDatabase.deleted_at == None))
+                    select(PityDatabase).where(PityDatabase.id == id, PityDatabase.deleted_at == 0))
                 return result.scalars().first()
         except Exception as e:
             DbConfigDao.log.error(f"获取数据库配置失败, error: {e}")
@@ -107,7 +108,7 @@ class DbConfigDao(object):
             async with async_session() as session:
                 result = await session.execute(
                     select(PityDatabase).where(PityDatabase.env == env, PityDatabase.name == name,
-                                               PityDatabase.deleted_at == None))
+                                               PityDatabase.deleted_at == 0))
                 return result.scalars().first()
         except Exception as e:
             DbConfigDao.log.error(f"获取数据库配置失败, error: {e}")
@@ -129,7 +130,7 @@ class DbConfigDao(object):
             # 获取数据库相关的信息
             table_map = defaultdict(set)
             async with async_session() as session:
-                query = await session.execute(select(PityDatabase).where(PityDatabase.deleted_at == None))
+                query = await session.execute(select(PityDatabase).where(PityDatabase.deleted_at == 0))
                 data = query.scalars().all()
                 for d in data:
                     name = env_map[d.env]
@@ -146,7 +147,7 @@ class DbConfigDao(object):
 
     @staticmethod
     async def get_tables(table_map: dict, data: PityDatabase, children: List):
-        conn = db_helper.get_connection(data.sql_type, data.host, data.port, data.username, data.password,
+        conn = await db_helper.get_connection(data.sql_type, data.host, data.port, data.username, data.password,
                                         data.database)
         database_child = list()
         dbs = dict(title=f"{data.database}（{data.host}:{data.port}）", key=f"database_{data.id}",
@@ -189,7 +190,7 @@ class DbConfigDao(object):
             query = await DbConfigDao.query_database(id)
             if query is None:
                 raise Exception("未找到对应的数据库配置")
-            data = db_helper.get_connection(query.sql_type, query.host, query.port, query.username, query.password,
+            data = await db_helper.get_connection(query.sql_type, query.host, query.port, query.username, query.password,
                                             query.database)
             return await DbConfigDao.execute(data, sql)
         except Exception as e:
@@ -225,7 +226,7 @@ class DbConfigDao(object):
             query = await DbConfigDao.query_database_by_env_and_name(env, name)
             if query is None:
                 raise Exception("未找到对应的数据库配置")
-            data = db_helper.get_connection(query.sql_type, query.host, query.port, query.username, query.password,
+            data = await db_helper.get_connection(query.sql_type, query.host, query.port, query.username, query.password,
                                             query.database)
             result = await DbConfigDao.execute(data, sql)
             _, result = PityResponse.parse_sql_result(result)

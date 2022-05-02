@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Column, INT, DATETIME, String, SMALLINT, TEXT
+from sqlalchemy import Column, INT, TIMESTAMP, String, SMALLINT, TEXT
 
 from app.models import Base
 
@@ -16,7 +16,7 @@ class PityOperationLog(Base):
     user_id = Column(INT, index=True)
 
     # 操作时间
-    operate_time = Column(DATETIME)
+    operate_time = Column(TIMESTAMP)
 
     # 操作title
     title = Column(String(128), nullable=False)

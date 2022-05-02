@@ -348,15 +348,15 @@ class TestCaseDao(Mapper):
         ans = dict()
         async with async_session() as session:
             async with session.begin():
-                date_ = func.date_format(TestCase.created_at, "%Y-%m-%d")
-                sql = select(date_, func.count(TestCase.id)).where(
+                # date_ = func.date_format(TestCase.created_at, "%Y-%m-%d")
+                sql = select(TestCase.created_at, func.count(TestCase.id)).where(
                     TestCase.create_user == user_id,
                     TestCase.deleted_at == 0, TestCase.created_at.between(start_time, end_time)).group_by(
-                    date_).order_by(asc(date_))
+                    TestCase.created_at).order_by(asc(TestCase.created_at))
                 query = await session.execute(sql)
                 for i, q in enumerate(query.all()):
                     date, count = q
-                    ans[date] = count
+                    ans[date.strftime("%Y-%m-%d")] = count
         return await TestCaseDao.fill_data(start_time, end_time, ans)
 
     @staticmethod

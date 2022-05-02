@@ -42,7 +42,7 @@ class TestResultDao(object):
                 sql = select(PityTestResult, TestCase.directory_id).join(TestCase,
                                                                          TestCase.id == PityTestResult.case_id). \
                     where(PityTestResult.report_id == report_id,
-                          PityTestResult.deleted_at == None).order_by(
+                          PityTestResult.deleted_at == 0).order_by(
                     asc(PityTestResult.case_id), asc(PityTestResult.start_at))
                 data = await session.execute(sql)
                 ans = []

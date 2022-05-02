@@ -3,9 +3,9 @@ from fastapi import Depends
 from app.crud.config.DbConfigDao import DbConfigDao
 from app.handler.fatcory import PityResponse
 from app.models import DatabaseHelper, db_helper
-from app.schema.database import DatabaseForm
 from app.routers import Permission
 from app.routers.config.environment import router
+from app.schema.database import DatabaseForm
 from config import Config
 
 
@@ -37,7 +37,7 @@ async def update_dbconfig(form: DatabaseForm, user_info=Depends(Permission(Confi
         return PityResponse.failed(err)
 
 
-@router.get("/dbconfig/delete")
+@router.get("/dbconfig/delete", summary="删除数据库配置")
 async def delete_dbconfig(id: int, user_info=Depends(Permission(Config.ADMIN))):
     try:
         await DbConfigDao.delete_database(id, user_info['id'])
@@ -46,17 +46,14 @@ async def delete_dbconfig(id: int, user_info=Depends(Permission(Config.ADMIN))):
         return PityResponse.failed(err)
 
 
-@router.get("/dbconfig/connect")
-def connect_test(sql_type: int, host: str, port: int, username: str, password: str, database: str,
-                 user_info=Depends(Permission(Config.MANAGER))):
+@router.get("/dbconfig/connect", summary="测试数据库连接")
+async def connect_test(sql_type: int, host: str, port: int, username: str, password: str, database: str,
+                       _=Depends(Permission(Config.MANAGER))):
     try:
-        data = db_helper.get_connection(sql_type, host, port, username, password,
-                                        database)
+        data = await db_helper.get_connection(sql_type, host, port, username, password, database)
         if data is None:
             raise Exception("测试连接失败")
-        err = DatabaseHelper.test_connection(data.get("session"))
-        if err:
-            return PityResponse.failed(msg=err)
+        await DatabaseHelper.test_connection(data.get("session"))
         return PityResponse.success(msg="连接成功")
     except Exception as e:
         return PityResponse.failed(str(e))

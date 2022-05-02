@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List
 
 from fastapi import APIRouter, Depends
@@ -169,8 +170,10 @@ async def query_report(id: int, user_info=Depends(Permission())):
 # 获取构建历史记录
 @router.get("/report/list")
 async def list_report(page: int, size: int, start_time: str, end_time: str, executor: int = None,
-                      user_info=Depends(Permission())):
-    report_list, total = await TestReportDao.list_report(page, size, start_time, end_time, executor)
+                      _=Depends(Permission())):
+    start = datetime.strptime(start_time, "%Y-%m-%d %H:%M:%S")
+    end = datetime.strptime(end_time, "%Y-%m-%d %H:%M:%S")
+    report_list, total = await TestReportDao.list_report(page, size, start, end, executor)
     return PityResponse.success_with_size(data=report_list, total=total)
 
 

@@ -1,9 +1,8 @@
 from datetime import datetime
 
-from sqlalchemy import INT, Column, DATETIME, String
+from sqlalchemy import INT, Column, TIMESTAMP, String, BIGINT
 from sqlalchemy import SMALLINT
 from sqlalchemy import TEXT
-from sqlalchemy.dialects.mysql import LONGTEXT
 
 from app.models import Base
 
@@ -26,9 +25,9 @@ class PityTestResult(Base):
     status = Column(SMALLINT, comment="对应状态 0: 成功 1: 失败 2: 出错 3: 跳过")
 
     # 开始时间
-    start_at = Column(DATETIME, nullable=False)
+    start_at = Column(TIMESTAMP, nullable=False)
     # 结束时间
-    finished_at = Column(DATETIME, nullable=False)
+    finished_at = Column(TIMESTAMP, nullable=False)
 
     case_log = Column(TEXT)
 
@@ -56,11 +55,11 @@ class PityTestResult(Base):
 
     response_headers = Column(TEXT)
 
-    response = Column(LONGTEXT)
+    response = Column(TEXT)
 
     cookies = Column(TEXT)
 
-    deleted_at = Column(DATETIME, index=True)
+    deleted_at = Column(BIGINT, nullable=False, default=0)
 
     def __init__(self, report_id: int, case_id: int, case_name: str, status: int,
                  case_log: str, start_at: datetime, finished_at: datetime,
@@ -88,6 +87,6 @@ class PityTestResult(Base):
         self.response_headers = response_headers
         self.asserts = asserts
         self.cookies = cookies
-        self.deleted_at = None
         self.request_params = request_params
         self.data_name = data_name
+        self.deleted_at = 0

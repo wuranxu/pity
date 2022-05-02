@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import INT, Column, DATETIME, String
+from sqlalchemy import INT, Column, TIMESTAMP, String, BIGINT
 from sqlalchemy.dialects.mysql import SMALLINT
 
 from app.models import Base
@@ -19,9 +19,9 @@ class PityReport(Base):
     # 测试集合id，预留字段
     plan_id = Column(INT, index=True, nullable=True)
     # 开始时间
-    start_at = Column(DATETIME, nullable=False)
+    start_at = Column(TIMESTAMP, nullable=False)
     # 结束时间
-    finished_at = Column(DATETIME)
+    finished_at = Column(TIMESTAMP)
     # 成功数量
     success_count = Column(INT, nullable=False, default=0)
     error_count = Column(INT, nullable=False, default=0)
@@ -34,7 +34,7 @@ class PityReport(Base):
     # case执行模式
     mode = Column(SMALLINT, default=0, comment="0: 普通, 1: 测试集, 2: pipeline, 3: 其他")
 
-    deleted_at = Column(DATETIME, index=True)
+    deleted_at = Column(BIGINT, nullable=False, default=0)
 
     def __init__(self, executor: int, env: int, success_count: int = 0, failed_count: int = 0,
                  error_count: int = 0, skipped_count: int = 0, status: int = 0, mode: int = 0,
@@ -52,4 +52,4 @@ class PityReport(Base):
         self.status = status
         self.plan_id = plan_id
         self.finished_at = finished_at
-        self.deleted_at = None
+        self.deleted_at = 0

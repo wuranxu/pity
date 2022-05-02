@@ -2,20 +2,19 @@ import time
 from datetime import datetime
 from typing import List
 
-from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
+from app.enums.DatabaseEnum import DatabaseEnum
 from config import Config
 
 # 同步engine
-engine = create_engine(Config.SQLALCHEMY_DATABASE_URI, pool_recycle=1500)
+# engine = create_engine(Config.SQLALCHEMY_DATABASE_URI, pool_recycle=1500)
 # 异步engine
 async_engine = create_async_engine(Config.ASYNC_SQLALCHEMY_URI, pool_recycle=1500)
 
-# 2022-05-01 彻底摆脱同步session
 # Session = sessionmaker(engine)
 
 async_session = sessionmaker(async_engine, class_=AsyncSession)
@@ -23,7 +22,8 @@ async_session = sessionmaker(async_engine, class_=AsyncSession)
 # 创建对象的基类:
 Base = declarative_base()
 
-Base.metadata.create_all(engine)
+
+# Base.metadata.create_all(engine)
 
 
 class DatabaseHelper(object):
@@ -32,7 +32,7 @@ class DatabaseHelper(object):
         # cache
         self.connections = dict()
 
-    def get_connection(self, sql_type: int, host: str, port: int, username: str, password: str, database: str):
+    async def get_connection(self, sql_type: int, host: str, port: int, username: str, password: str, database: str):
         # 拼接key
         key = f"{host}:{port}:{database}:{username}:{password}:{database}"
         connection = self.connections.get(key)
@@ -44,10 +44,7 @@ class DatabaseHelper(object):
         if jdbc_url is None:
             return None
         # 创建异步引擎
-        # eg = create_engine(jdbc_url, pool_recycle=1500)
         eg = create_async_engine(jdbc_url, pool_recycle=1500)
-        # 拿到session方法
-        # ss = sessionmaker(bind=eg, autocommit=True)
         ss = sessionmaker(bind=eg, class_=AsyncSession)
         # 将数据缓存起来
         data = dict(engine=eg, session=ss)
@@ -55,26 +52,20 @@ class DatabaseHelper(object):
         return data
 
     @staticmethod
-    def test_connection(ss):
+    async def test_connection(ss):
         if ss is None:
-            return "暂不支持的数据库类型"
-        try:
-            with ss() as session:
-                with session.begin():
-                    session.execute("select 1")
-        except Exception as e:
-            return str(e)
-        return None
+            raise Exception("暂不支持的数据库类型")
+        async with ss() as session:
+            await session.execute("select 1")
 
     @staticmethod
     def get_jdbc_url(sql_type: int, host: str, port: int, username: str, password: str, database: str):
-        if sql_type == 0:
+        if sql_type == DatabaseEnum.MYSQL:
             # mysql模式
             return f'mysql+aiomysql://{username}:{password}@{host}:{port}/{database}'
-            # return f'mysql+mysqlconnector://{username}:{password}@{host}:{port}/{database}'
-        elif sql_type == 1:
-            return f'postgresql+psycopg2://{username}:{password}@{host}:{port}/{database}'
-        return None
+        if sql_type == DatabaseEnum.POSTGRESQL:
+            return f'postgresql+asyncpg://{username}:{password}@{host}:{port}/{database}'
+        raise Exception("未知的数据库类型")
 
     def remove_connection(self, host: str, port: int, username: str, password: str, database: str):
         key = f"{host}:{port}:{database}:{username}:{password}:{database}"

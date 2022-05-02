@@ -93,7 +93,7 @@ class TestReportDao(object):
             raise Exception(f"查询报告失败: {e}")
 
     @staticmethod
-    async def list_report(page: int, size: int, start_time: str, end_time: str, executor: int = None):
+    async def list_report(page: int, size: int, start_time: datetime, end_time: datetime, executor: int = None):
         """
         获取报告列表
         :param size:
