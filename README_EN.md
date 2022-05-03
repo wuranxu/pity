@@ -42,7 +42,7 @@ $ python runserver.py
 
   First people will be `ADMIN`
 
-![](https://gitee.com/woodywrx/picture/raw/master/2022-1-2/1641092636428-image.png)
+![](https://static.pity.fun/picture/2022-1-2/1641092636428-image.png)
 
   Sign in and enjoy `pity`！
 
@@ -95,4 +95,4 @@ I hope pity can help someone still uses robotframework or writes script for apit
 
   you can ask anything in my wechat group.
 
-![](https://gitee.com/woodywrx/picture/raw/master/2022-1-2/1641097484952-ddff5bf23bdccaaf23fa227aa2e9957.jpg)
+![](https://static.pity.fun/picture/2022-1-2/1641097484952-ddff5bf23bdccaaf23fa227aa2e9957.jpg)

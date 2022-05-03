@@ -11,29 +11,29 @@
 
 #### 工作台
 
-![](https://gitee.com/woodywrx/picture/raw/master/2022-2-28/1646063228180-image.png)
+![](https://static.pity.fun/picture/2022-2-28/1646063228180-image.png)
 
 
 #### 测试计划
 
-![](https://gitee.com/woodywrx/picture/raw/master/2022-2-25/1645803999678-image.png)
+![](https://static.pity.fun/picture/2022-2-25/1645803999678-image.png)
 
 #### 测试报告
 
-![](https://gitee.com/woodywrx/picture/raw/master/2022-2-25/1645804075353-image.png)
+![](https://static.pity.fun/picture/2022-2-25/1645804075353-image.png)
 
 #### 测试用例
 
-![](https://gitee.com/woodywrx/picture/raw/master/2022-2-25/1645804276470-image.png)
+![](https://static.pity.fun/picture/2022-2-25/1645804276470-image.png)
 
 
 #### SQL客户端
 
-![](https://gitee.com/woodywrx/picture/raw/master/2022-2-25/1645804151559-image.png)
+![](https://static.pity.fun/picture/2022-2-25/1645804151559-image.png)
 
 #### 项目管理
 
-![](https://gitee.com/woodywrx/picture/raw/master/2022-2-26/1645854332681-image.png)
+![](https://static.pity.fun/picture/2022-2-26/1645854332681-image.png)
 
 ## ✉ 使用文档
 
@@ -91,7 +91,7 @@ $ python runserver.py
 
 点击注册按钮，第一个注册的用户会成为`超级管理员`，拥有一切权限。
 
-![](https://gitee.com/woodywrx/picture/raw/master/2022-1-2/1641092636428-image.png)
+![](https://static.pity.fun/picture/2022-1-2/1641092636428-image.png)
 
 登录后就可以开启pity之旅啦！
 
@@ -103,7 +103,7 @@ $ python runserver.py
 
     个人技术公众号: `米洛的测开日记`，欢迎大家关注我，掌握最新测试开发知识。
 
-![](https://gitee.com/woodywrx/picture/raw/master/2022-1-1/1641020334827-qrcode_for_gh_f52fb2135f68_430.jpg)
+![](https://static.pity.fun/picture/2022-1-1/1641020334827-qrcode_for_gh_f52fb2135f68_430.jpg)
 
 
 ### ❤️ 平台初心
@@ -163,4 +163,4 @@ $ python runserver.py
 
 ## 🎨 微信交流群
 
-![](https://gitee.com/woodywrx/picture/raw/master/2022-1-2/1641097484952-ddff5bf23bdccaaf23fa227aa2e9957.jpg)
+![](https://static.pity.fun/picture/2022-1-2/1641097484952-ddff5bf23bdccaaf23fa227aa2e9957.jpg)
