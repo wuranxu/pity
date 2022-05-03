@@ -15,8 +15,8 @@ class User(Base):
     email = Column(String(64), unique=True, nullable=False)
     role = Column(INT, default=0, comment="0: 普通用户 1: 组长 2: 超级管理员")
     phone = Column(String(12), unique=True)
-    created_at = Column(TIMESTAMP, nullable=False)
-    updated_at = Column(TIMESTAMP, nullable=False)
+    created_at = Column(TIMESTAMP, nullable=False, default=datetime.now())
+    updated_at = Column(TIMESTAMP, nullable=False, default=datetime.now())
     deleted_at = Column(BIGINT, nullable=False, default=0)
     update_user = Column(INT, nullable=True)  # 修改人
     last_login_at = Column(TIMESTAMP)

@@ -11,8 +11,8 @@ from config import Config
 
 class PityBase(Base):
     id = Column(INT, primary_key=True)
-    created_at = Column(TIMESTAMP, nullable=False)
-    updated_at = Column(TIMESTAMP, nullable=False)
+    created_at = Column(TIMESTAMP, nullable=False, default=datetime.now())
+    updated_at = Column(TIMESTAMP, nullable=False, default=datetime.now())
     deleted_at = Column(BIGINT, nullable=False, default=0)
     create_user = Column(INT, nullable=False)
     update_user = Column(INT, nullable=False)
