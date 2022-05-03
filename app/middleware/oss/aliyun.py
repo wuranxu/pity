@@ -7,9 +7,9 @@ from app.middleware.oss.files import OssFile
 class AliyunOss(OssFile):
 
     def __init__(self, access_key_id: str, access_key_secret: str, endpoint: str, bucket: str):
-        # auth = oss2.Auth(access_key_id=access_key_id,
-        #                  access_key_secret=access_key_secret)
-        auth = oss2.AnonymousAuth()
+        auth = oss2.Auth(access_key_id=access_key_id,
+                         access_key_secret=access_key_secret)
+        # auth = oss2.AnonymousAuth()
         self.bucket = oss2.Bucket(auth, endpoint, bucket)
 
     @awaitable
