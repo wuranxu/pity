@@ -17,46 +17,42 @@ class QiniuOss(OssFile):
         self.bucket = bucket
         self.bucket_manager = BucketManager(self.auth)
 
-    def get_full_path(self, filepath, base_path: str = None):
-        base_path = base_path if base_path is not None else self._base_path
-        return f"{base_path}/{filepath}"
-
     @staticmethod
     def _convert_to_stream(content):
         stream = BytesIO()
         stream.write(content)
         return stream
 
-    async def create_file(self, filepath: str, content: bytes, base_path: str = None):
-        key = self.get_full_path(filepath, base_path)
+    @awaitable
+    def create_file(self, filepath: str, content: bytes, base_path: str = None):
+        key = self.get_real_path(filepath, base_path)
         token = self.auth.upload_token(self.bucket, key, 3600)
         file_name = os.path.basename(filepath)
         ret, info = put_stream(token, key, QiniuOss._convert_to_stream(content), file_name, len(content))
         if ret['key'] != key:
             raise Exception("上传失败")
-        return QiniuOss.get_url(key), len(content), None
+        return QiniuOss.get_url(key), len(content)
 
     @staticmethod
     def get_url(key):
-        return f"https://static.pity.fun/{key}"
+        return f"{Config.QINIU_URL}/{key}"
 
-    async def update_file(self, filepath: str, content: bytes, base_path: str = None):
+    @awaitable
+    def update_file(self, filepath: str, content: bytes, base_path: str = None):
         token = self.auth.upload_token(self.bucket, filepath, 3600)
         file_name = os.path.basename(filepath)
-        key = self.get_full_path(filepath, base_path)
+        key = self.get_real_path(filepath, base_path)
         ret, info = put_stream(token, key, content, file_name, len(content))
         if ret['key'] != key:
             raise Exception("更新失败")
 
-    async def delete_file(self, filepath: str, base_path: str = None):
-        key = self.get_full_path(filepath, base_path)
+    @awaitable
+    def delete_file(self, filepath: str, base_path: str = None):
+        key = self.get_real_path(filepath, base_path)
         self.bucket_manager.delete(self.bucket, key)
 
-    async def list_file(self):
-        pass
-
     async def download_file(self, filepath, base_path: str = None):
-        key = self.get_full_path(filepath, base_path)
+        key = self.get_real_path(filepath, base_path)
         exists, _ = self.bucket_manager.stat(self.bucket, key)
         if exists is None:
             raise Exception("文件不存在")
@@ -77,9 +73,8 @@ class QiniuOss(OssFile):
                     f.write(data)
                     return path, real_filename
 
-    # @awaitable
     async def get_file_object(self, filepath):
-        key = self.get_full_path(filepath, QiniuOss._base_path)
+        key = self.get_real_path(filepath, QiniuOss._base_path)
         exists, _ = self.bucket_manager.stat(self.bucket, key)
         if exists is None:
             raise Exception("文件不存在")

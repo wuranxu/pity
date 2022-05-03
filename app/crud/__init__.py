@@ -156,7 +156,7 @@ class Mapper(object):
                     old = deepcopy(now)
                     changed = DatabaseHelper.update_model(now, model, user, not_null)
                     await session.flush()
-                    session.expunge(now)
+                    session.expunge_all()
                 if log:
                     async with session.begin():
                         await asyncio.create_task(

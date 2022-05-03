@@ -62,10 +62,6 @@ class BaseConfig(object):
 
     SERVER_REPORT = "http://localhost:8000/#/record/report/"
 
-    ALIYUN = "aliyun"
-    # GITEE = "gitee"
-    QINIU = "qiniu"
-
     OSS_URL = "http://oss.pity.fun"
 
     RELATION = "pity_relation"
@@ -168,6 +164,9 @@ class ProConfig(BaseConfig):
     SECRET_KEY = "a13c22377318291d5932bc5b62c1885b344355a0"
 
     SERVER_REPORT = "https://pity.fun/#/record/report/"
+
+    # 七牛云链接地址，如果采用七牛oss，需要自行替换
+    QINIU_URL = "https://static.pity.fun"
 
 
 # 获取pity环境变量

@@ -60,6 +60,7 @@ class AsyncRequest(object):
         elif body_type == Config.BodyType.form:
             try:
                 body = kwargs.get("body")
+                form_data = None
                 if body:
                     form_data = FormData()
                     # 因为存储的是字符串，所以需要反序列化
@@ -72,8 +73,6 @@ class AsyncRequest(object):
                             client = OssClient.get_oss_client()
                             file_object = await client.get_file_object(item.get("value"))
                             form_data.add_field(item.get("key"), file_object)
-                else:
-                    form_data = None
                 r = AsyncRequest(url, headers=headers, data=form_data, timeout=timeout)
             except Exception as e:
                 raise Exception(f"解析form-data失败: {str(e)}")

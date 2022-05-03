@@ -15,7 +15,7 @@ class PityOssFile(PityBase):
     file_path = Column(String(64), nullable=False, index=True, comment="文件路径")
     view_url = Column(String(256), nullable=False, comment="文件预览url")
     file_size = Column(String(16), comment="文件大小")
-    sha = Column(String(128), comment="gitee独有，sha代表一个文件的标识，gitee必须存这个变量")
+
     __tablename__ = "pity_oss_file"
     __fields__ = (file_path, view_url, file_size)
     __tag__ = "oss"
@@ -25,10 +25,9 @@ class PityOssFile(PityBase):
         UniqueConstraint('file_path', 'deleted_at'),
     )
 
-    def __init__(self, user, file_path, view_url, file_size, sha=None, id=None):
+    def __init__(self, user, file_path, view_url, file_size, id=None):
         super().__init__(user, id)
         self.file_path = file_path
-        self.sha = sha
         self.view_url = view_url
         self.file_size = file_size
 

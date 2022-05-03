@@ -96,17 +96,16 @@ class ProjectDao(Mapper):
                         select(Project).where(Project.id == project_id, Project.deleted_at == 0))
                     data = query.scalars().first()
                     if data is None:
-                        return "项目不存在"
+                        raise Exception("项目不存在")
                     if data.owner != user_id and user_role < Config.ADMIN:
-                        return "您没有权限修改项目头像"
+                        raise Exception("你没有权限修改项目头像")
                     # 如果修改人不是owner或者超管
                     data.avatar = file_url
                     data.updated_at = datetime.now()
                     data.update_user = user_id
         except Exception as e:
             cls.log.error(f"修改项目头像失败, 项目: {project_id}, error: {e}")
-            return "修改头像失败"
-        return None
+            raise Exception(e)
 
     @classmethod
     async def update_project(cls, id: int, user_id, role: int, name: str, app: str, owner: int, private: bool,

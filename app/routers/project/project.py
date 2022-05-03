@@ -43,13 +43,11 @@ async def update_project_avatar(project_id: int, file: UploadFile = File(...), u
         suffix = file.filename.split(".")[-1]
         filepath = f"project_{project_id}.{suffix}"
         client = OssClient.get_oss_client()
-        file_url, _, _ = await client.create_file(filepath, file_content, base_path="avatar")
-        err = await ProjectDao.update_avatar(project_id, user_info['id'], user_info['role'], file_url)
-        if err:
-            return PityResponse.failed(err)
+        file_url, _ = await client.create_file(filepath, file_content, base_path="avatar")
+        await ProjectDao.update_avatar(project_id, user_info['id'], user_info['role'], file_url)
         return PityResponse.success(file_url)
     except Exception as e:
-        return PityResponse.failed(f"上传头像失败: {e}")
+        return PityResponse.failed(e)
 
 
 @router.post("/update")

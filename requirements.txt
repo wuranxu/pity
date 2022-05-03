@@ -1,4 +1,4 @@
-loguru
+loguru~=0.6.0
 pyjwt==2.1.0
 mysql-connector-python~=8.0.26
 requests~=2.23.0
@@ -11,7 +11,7 @@ PyYAML~=5.3.1
 starlette~=0.17.1
 aiohttp==3.7.4
 aiomysql
-Jinja2
+Jinja2~=3.0.3
 aiofiles
 psycopg2-binary
 APScheduler~=3.8.0
@@ -19,10 +19,13 @@ redis~=3.5.3
 redis-py-cluster
 redlock~=1.2.0
 yagmail
-oss2
+oss2~=2.15.0
 python-multipart
-awaits
-aioify
+awaits~=0.0.1
+aioify~=0.4.1
 grpc-requests
 loguru
-qiniu
+qiniu~=7.6.0
+cos-python-sdk-v5
+asyncpg
+pymysql

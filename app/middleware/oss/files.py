@@ -1,36 +1,29 @@
 import random
 import time
-from abc import ABC, abstractmethod
 
 
-class OssFile(ABC):
+class OssFile(object):
     _base_path = "pity"
 
-    @abstractmethod
-    async def create_file(self, filepath: str, content, base_path: str = None) -> (str, int, str):
-        pass
+    async def create_file(self, filepath: str, content, base_path: str = None) -> (str, int):
+        raise NotImplementedError
 
-    @abstractmethod
-    async def update_file(self, filepath: str, content, base_path: str = None):
-        pass
+    # async def update_file(self, filepath: str, content, base_path: str = None):
+    #     raise NotImplementedError
 
-    @abstractmethod
-    async def delete_file(self, filepath: str):
-        pass
+    async def delete_file(self, filepath: str, base_path: str = None):
+        raise NotImplementedError
 
-    @abstractmethod
-    async def list_file(self):
-        pass
+    # async def list_file(self):
+    #     raise NotImplementedError
 
-    @abstractmethod
-    async def download_file(self, filepath):
-        pass
+    async def download_file(self, filepath, base_path: str = None):
+        raise NotImplementedError
 
-    @abstractmethod
     async def get_file_object(self, filepath):
-        pass
+        raise NotImplementedError
 
-    async def get_real_path(self, filepath, base_path=None):
+    def get_real_path(self, filepath, base_path=None):
         return f"{self._base_path if base_path is None else base_path}/{filepath}"
 
     @staticmethod

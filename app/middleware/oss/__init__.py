@@ -1,9 +1,9 @@
 from app.core.configuration import SystemConfiguration
+from app.enums.OssEnum import OssEnum
 from app.middleware.oss.aliyun import AliyunOss
 from app.middleware.oss.files import OssFile
-from app.middleware.oss.gitee import GiteeOss
 from app.middleware.oss.qiniu import QiniuOss
-from config import Config
+from app.middleware.oss.tencent import TencentCos
 
 
 class OssClient(object):
@@ -24,12 +24,11 @@ class OssClient(object):
             endpoint = oss_config.get("endpoint")
             if oss_config is None:
                 raise Exception("服务器未配置oss信息, 请在configuration.json中添加")
-            if oss_config.get("oss_type").lower() == Config.ALIYUN:
+            if oss_config.get("oss_type").lower() == OssEnum.ALIYUN.value:
                 return AliyunOss(access_key_id, access_key_secret, endpoint, bucket)
-            # 放弃gitee
-            # if oss_config.get("oss_type").lower() == Config.GITEE:
-            #     return GiteeOss(access_key_secret, bucket, access_key_id)
-            if oss_config.get("oss_type").lower() == Config.QINIU:
+            if oss_config.get("oss_type").lower() == OssEnum.QINIU.value:
                 return QiniuOss(access_key_id, access_key_secret, bucket)
+            if oss_config.get("oss_type").lower() == OssEnum.TENCENT.value:
+                return TencentCos(access_key_id, access_key_secret, endpoint, bucket)
             raise Exception("不支持的oss类型")
         return OssClient._client

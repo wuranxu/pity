@@ -133,3 +133,6 @@ dmypy.json
 .DS_Store
 
 */.DS_Store
+
+.qiniu_pythonsdk_hostscache.json
+

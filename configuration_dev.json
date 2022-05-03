@@ -1,17 +1,17 @@
 {
-    "email": {
-        "sender": "wuranxu1993@126.com",
-        "password": "PQDGGXFWKYGZYQBU",
-        "host": "smtp.126.com",
-        "to": "测试报告收件人"
-    },
-    "yapi": {
-        "token": "ff"
-    },
-    "oss": {
-        "oss_type": "gitee",
-        "access_key_id": "56a5797a2fb4a3cdfca439082da7dee1",
-        "access_key_secret": "woodywrx",
-        "bucket": "oss"
-    }
+  "email": {
+    "sender": "wuranxu1993@126.com",
+    "password": "PQDGGXFWKYGZYQBU",
+    "host": "smtp.126.com",
+    "to": "测试报告收件人"
+  },
+  "yapi": {
+    "token": "ff"
+  },
+  "oss": {
+    "oss_type": "gitee",
+    "access_key_id": "56a5797a2fb4a3cdfca439082da7dee1",
+    "access_key_secret": "woodywrx",
+    "bucket": "oss"
+  }
 }
