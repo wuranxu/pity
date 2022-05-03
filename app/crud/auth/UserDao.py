@@ -96,8 +96,8 @@ class UserDao(object):
                         random_pwd = random.randint(100000, 999999)
                         user = User(username, name, UserToken.add_salt(str(random_pwd)), email, avatar)
                         session.add(user)
-                        await session.flush()
-                        session.expunge(user)
+                    await session.flush()
+                    session.expunge(user)
                     return user
         except Exception as e:
             UserDao.log.error(f"Github用户登录失败: {str(e)}")

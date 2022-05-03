@@ -384,48 +384,55 @@ class Executor(object):
             self.replace_cls(params, a, "expected", "actually")
 
     @staticmethod
-    async def run_with_test_data(env, data, report_id, case_id, params_pool: dict = None,
-                                 request_param: dict = None, path='主case', name: str = "", data_id: int = None):
-        start_at = datetime.now()
-        executor = Executor()
-        result, err = await executor.run(env, case_id, params_pool, request_param, path)
-        finished_at = datetime.now()
-        cost = "{}s".format((finished_at - start_at).seconds)
-        if err is not None:
-            status = 2
-        else:
-            status = 0 if result.get("status") else 1
-        asserts = result.get("asserts")
-        url = result.get("url")
-        case_logs = result.get("logs")
-        body = result.get("request_data")
-        status_code = result.get("status_code")
-        request_method = result.get("request_method")
-        request_headers = result.get("request_headers")
-        response = result.get("response")
-        case_name = result.get("case_name")
-        response_headers = result.get("response_headers")
-        cookies = result.get("cookies")
-        req = json.dumps(request_param, ensure_ascii=False)
-        data[case_id].append(status)
-        await TestResultDao.insert(report_id, case_id, case_name, status,
-                                   case_logs, start_at, finished_at,
-                                   url, body, request_method, request_headers, cost,
-                                   asserts, response_headers, response,
-                                   status_code, cookies, 0, req, name, data_id)
+    async def run_with_test_data(env, data, report_id, case_id, params_pool: dict = None, request_param: dict = None,
+                                 path='主case', name: str = "", data_id: int = None, retry_minutes: int = 0):
+        retry_times = Config.RETRY_TIMES if retry_minutes > 0 else 0
+        for i in range(retry_times + 1):
+            start_at = datetime.now()
+            executor = Executor()
+            result, err = await executor.run(env, case_id, params_pool, request_param, path)
+            finished_at = datetime.now()
+            cost = "{}s".format((finished_at - start_at).seconds)
+            if err is not None:
+                status = 2
+            else:
+                status = 0 if result.get("status") else 1
+            # 若status不为0，代表case执行失败，走重试逻辑
+            if status != 0 and i < retry_times:
+                await asyncio.sleep(60 * retry_minutes)
+                continue
+            asserts = result.get("asserts")
+            url = result.get("url")
+            case_logs = result.get("logs")
+            body = result.get("request_data")
+            status_code = result.get("status_code")
+            request_method = result.get("request_method")
+            request_headers = result.get("request_headers")
+            response = result.get("response")
+            case_name = result.get("case_name")
+            response_headers = result.get("response_headers")
+            cookies = result.get("cookies")
+            req = json.dumps(request_param, ensure_ascii=False)
+            data[case_id].append(status)
+            await TestResultDao.insert(report_id, case_id, case_name, status,
+                                       case_logs, start_at, finished_at,
+                                       url, body, request_method, request_headers, cost,
+                                       asserts, response_headers, response,
+                                       status_code, cookies, 0, req, name, data_id)
+            break
 
     @staticmethod
-    async def run_single(env: int, data, report_id, case_id, params_pool: dict = None, path="主case"):
-
+    async def run_single(env: int, data, report_id, case_id, params_pool: dict = None, path="主case", retry_minutes=0):
         test_data = await PityTestcaseDataDao.list_testcase_data_by_env(env, case_id)
         if not test_data:
             await Executor.run_with_test_data(env, data, report_id, case_id, params_pool, dict(), path,
-                                              "默认数据")
-            return
-        await asyncio.gather(
-            *(Executor.run_with_test_data(env, data, report_id, case_id, params_pool, Executor.get_dict(x.json_data),
-                                          path, x.name, x.id)
-              for x in test_data))
+                                              "默认数据", retry_minutes=retry_minutes)
+        else:
+            await asyncio.gather(
+                *(Executor.run_with_test_data(env, data, report_id, case_id, params_pool,
+                                              Executor.get_dict(x.json_data),
+                                              path, x.name, x.id, retry_minutes=retry_minutes)
+                  for x in test_data))
 
     @case_log
     def replace_body(self, req_params, body, body_type=1):
@@ -677,7 +684,7 @@ class Executor(object):
             # 聚合报告dict
             report_dict = dict()
             await asyncio.gather(
-                *(Executor.run_multiple(executor, int(e), case_list, mode=1,
+                *(Executor.run_multiple(executor, int(e), case_list, mode=1, retry_minutes=plan.retry_minutes,
                                         plan_id=plan.id, ordered=plan.ordered, report_dict=report_dict) for e in env))
             await PityTestPlanDao.update_test_plan_state(plan.id, 0)
             # await PityTestPlanDao.update_test_plan(plan, plan.update_user)
@@ -691,7 +698,7 @@ class Executor(object):
 
     @staticmethod
     async def run_multiple(executor: int, env: int, case_list: List[int], mode=0, plan_id: int = None, ordered=False,
-                           report_dict: dict = None):
+                           report_dict: dict = None, retry_minutes: int = 0):
         try:
             current_env = await EnvironmentDao.query_env(env)
             if executor != 0:
@@ -709,11 +716,13 @@ class Executor(object):
             await TestReportDao.update(report_id, 1)
             # step4: 执行用例并搜集数据
             if not ordered:
-                await asyncio.gather(*(Executor.run_single(env, result_data, report_id, c) for c in case_list))
+                await asyncio.gather(
+                    *(Executor.run_single(env, result_data, report_id, c, retry_minutes=retry_minutes) for c in
+                      case_list))
             else:
                 # 顺序执行
                 for c in case_list:
-                    await Executor.run_single(env, result_data, report_id, c)
+                    await Executor.run_single(env, result_data, report_id, c, retry_minutes=retry_minutes)
             ok, fail, skip, error = 0, 0, 0, 0
             for case_id, status in result_data.items():
                 for s in status:

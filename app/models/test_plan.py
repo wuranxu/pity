@@ -31,7 +31,7 @@ class PityTestPlan(PityBase):
     # 通知方式 0: 邮件 1: 钉钉 2: 企业微信 3: 飞书 支持多选
     msg_type = Column(TEXT)
     # 单次case失败重试间隔，默认2分钟
-    retry_minutes = Column(SMALLINT, default=2)
+    retry_minutes = Column(SMALLINT, nullable=False, default=0)
     # 测试计划是否正在执行中
     state = Column(SMALLINT, default=0, comment="0: 未开始 1: 运行中")
 
@@ -47,7 +47,7 @@ class PityTestPlan(PityBase):
                      pass_rate="通过率", msg_type="通知类型", retry_minutes="重试时间", receiver="通知人", case_list="用例列表")
 
     def __init__(self, project_id, env, case_list, name, priority, cron, ordered, pass_rate, receiver, msg_type,
-                 retry_minutes, user, state=0, id=None):
+                 user, state=0, retry_minutes=0, id=None):
         super().__init__(user, id)
         self.env = ",".join(map(str, env))
         self.case_list = ",".join(map(str, case_list))

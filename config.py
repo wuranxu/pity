@@ -43,10 +43,10 @@ class BaseConfig(object):
     GITHUB_USER = "https://api.github.com/user"
 
     # client_id
-    CLIENT_ID = "0f4fc0a875de30614a6a"
+    CLIENT_ID = "c46c7ae33442d13498cd"
 
     # SECRET
-    SECRET_KEY = "a13c22377318291d5932bc5b62c1885b344355a0"
+    SECRET_KEY = "6cb53ad7d135bb91a07f2deb7203d484741f1644"
 
     # 测试报告路径
     REPORT_PATH = os.path.join(ROOT, "templates", "report.html")
@@ -75,6 +75,9 @@ class BaseConfig(object):
     FIELD = "__fields__"
     SHOW_FIELD = "__show__"
     IGNORE_FIELDS = ('created_at', "updated_at", "deleted_at", "create_user", "update_user")
+
+    # 测试计划中，case默认重试次数
+    RETRY_TIMES = 1
 
     # 请求类型
     class BodyType(IntEnum):
@@ -161,8 +164,8 @@ class ProConfig(BaseConfig):
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    CLIENT_ID = "c46c7ae33442d13498cd"
-    SECRET_KEY = "c79fafe58ff45f6b5b51ddde70d2d645209e38b9"
+    CLIENT_ID = "0f4fc0a875de30614a6a"
+    SECRET_KEY = "a13c22377318291d5932bc5b62c1885b344355a0"
 
     SERVER_REPORT = "https://pity.fun/#/record/report/"
 

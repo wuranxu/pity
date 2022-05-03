@@ -47,6 +47,7 @@ async def list_users(user_info=Depends(Permission())):
 @router.get("/github/login")
 async def login_with_github(code: str):
     try:
+        code = code.rstrip("#/")
         with requests.Session() as session:
             r = session.get(Config.GITHUB_ACCESS, params=dict(client_id=Config.CLIENT_ID,
                                                               client_secret=Config.SECRET_KEY,
