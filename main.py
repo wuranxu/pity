@@ -16,6 +16,7 @@ from app.core.ws_connection_manager import ws_manage
 from app.crud import create_table
 from app.crud.notification.NotificationDao import PityNotificationDao
 from app.enums.MessageEnum import MessageStateEnum, MessageTypeEnum
+from app.proxy import start_proxy
 from app.routers.auth import user
 from app.routers.config import router as config_router
 from app.routers.notification import router as msg_router
@@ -28,7 +29,6 @@ from app.routers.testcase import router as testcase_router
 from app.routers.workspace import router as workspace_router
 from app.utils.scheduler import Scheduler
 from config import Config, PITY_ENV, BANNER
-from proxy.mock import start_proxy
 
 logger = init_logging()
 
@@ -128,8 +128,8 @@ def init_scheduler():
 
 
 @pity.on_event('startup')
-async def init_proxy():
-    await asyncio.create_task(start_proxy())
+def init_proxy():
+    asyncio.create_task(start_proxy())
 
 
 @pity.on_event('startup')
