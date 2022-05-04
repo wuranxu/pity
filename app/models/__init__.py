@@ -41,8 +41,6 @@ class DatabaseHelper(object):
             return connection
         # 获取sqlalchemy需要的jdbc url
         jdbc_url = DatabaseHelper.get_jdbc_url(sql_type, host, port, username, password, database)
-        if jdbc_url is None:
-            return None
         # 创建异步引擎
         eg = create_async_engine(jdbc_url, pool_recycle=1500)
         ss = sessionmaker(bind=eg, class_=AsyncSession)

@@ -1,10 +1,9 @@
 import json
 import time
 from collections import defaultdict
-from datetime import datetime
 from typing import List
 
-from sqlalchemy import select, MetaData
+from sqlalchemy import select, MetaData, text
 from sqlalchemy.exc import ResourceClosedError
 
 from app.crud.config.EnvironmentDao import EnvironmentDao
@@ -148,7 +147,7 @@ class DbConfigDao(object):
     @staticmethod
     async def get_tables(table_map: dict, data: PityDatabase, children: List):
         conn = await db_helper.get_connection(data.sql_type, data.host, data.port, data.username, data.password,
-                                        data.database)
+                                              data.database)
         database_child = list()
         dbs = dict(title=f"{data.database}（{data.host}:{data.port}）", key=f"database_{data.id}",
                    children=database_child, sql_type=data.sql_type)
@@ -190,8 +189,8 @@ class DbConfigDao(object):
             query = await DbConfigDao.query_database(id)
             if query is None:
                 raise Exception("未找到对应的数据库配置")
-            data = await db_helper.get_connection(query.sql_type, query.host, query.port, query.username, query.password,
-                                            query.database)
+            data = await db_helper.get_connection(query.sql_type, query.host, query.port, query.username,
+                                                  query.password, query.database)
             return await DbConfigDao.execute(data, sql)
         except Exception as e:
             DbConfigDao.log.error(f"查询数据库配置失败, error: {e}")
@@ -200,25 +199,20 @@ class DbConfigDao(object):
     @staticmethod
     async def execute(conn, sql):
         row_count = 0
-        try:
-            session = conn.get("session")
-            # with session() as s:
-            #     result = s.execute(sql)
-            #     row_count = result.rowcount
-            #     ans = result.mappings().all()
-            #     return ans
-            async with session() as s:
-                async with s.begin():
-                    result = await s.execute(sql)
+        session = conn.get("session")
+        async with session() as s:
+            async with s.begin():
+                try:
+                    result = await s.execute(text(sql))
                     row_count = result.rowcount
                     ans = result.mappings().all()
                     return ans
-        except ResourceClosedError:
-            # 说明是update或其他语句
-            return [{"rowCount": row_count}]
-        except Exception as e:
-            DbConfigDao.log.error(f"查询数据库配置失败, error: {e}")
-            raise e
+                except ResourceClosedError:
+                    # 说明是update或其他语句
+                    return [{"rowCount": row_count}]
+                except Exception as e:
+                    DbConfigDao.log.error(f"查询数据库配置失败, error: {e}")
+                    raise Exception(f"执行sql失败: {e}")
 
     @staticmethod
     async def execute_sql(env: int, name: str, sql: str):
@@ -226,8 +220,9 @@ class DbConfigDao(object):
             query = await DbConfigDao.query_database_by_env_and_name(env, name)
             if query is None:
                 raise Exception("未找到对应的数据库配置")
-            data = await db_helper.get_connection(query.sql_type, query.host, query.port, query.username, query.password,
-                                            query.database)
+            data = await db_helper.get_connection(query.sql_type, query.host, query.port, query.username,
+                                                  query.password,
+                                                  query.database)
             result = await DbConfigDao.execute(data, sql)
             _, result = PityResponse.parse_sql_result(result)
             return json.dumps(result, cls=JsonEncoder, ensure_ascii=False)

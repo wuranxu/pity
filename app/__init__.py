@@ -61,11 +61,11 @@ async def errors_handling(request: Request, call_next):
         )
 
 
-def error_map(error_type: str, field: str):
+def error_map(error_type: str, field: str, msg: str = None):
     if "missing" in error_type:
         return f"缺少参数: {field}"
     if "params" in error_type:
-        return f"参数: {field} 不规范"
+        return f"参数: {field} {'不规范' if msg is None else msg}"
     if "not_allowed" in error_type:
         return f"参数: {field} 类型不正确"
 
@@ -76,8 +76,8 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         status_code=status.HTTP_200_OK,
         content=jsonable_encoder({
             "code": 101,
-            "msg": error_map(exc.errors()[0]["type"], exc.errors()[0].get("loc", ['unknown'])[-1]) if len(
-                exc.errors()) > 0 else "参数解析失败",
+            "msg": error_map(exc.errors()[0]["type"], exc.errors()[0].get("loc", ['unknown'])[-1],
+                             exc.errors()[0].get("msg")) if len(exc.errors()) > 0 else "参数解析失败",
         })
     )
 
