@@ -1,3 +1,4 @@
+import asyncio
 from mimetypes import guess_type
 from os.path import isfile
 
@@ -27,6 +28,7 @@ from app.routers.testcase import router as testcase_router
 from app.routers.workspace import router as workspace_router
 from app.utils.scheduler import Scheduler
 from config import Config, PITY_ENV, BANNER
+from proxy.mock import start_proxy
 
 logger = init_logging()
 
@@ -123,6 +125,11 @@ def init_scheduler():
     Scheduler.init(scheduler)
     Scheduler.configure(jobstores=job_store)
     Scheduler.start()
+
+
+@pity.on_event('startup')
+async def init_proxy():
+    await asyncio.create_task(start_proxy())
 
 
 @pity.on_event('startup')

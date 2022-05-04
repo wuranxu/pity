@@ -28,3 +28,4 @@ qiniu~=7.6.0
 cos-python-sdk-v5
 asyncpg
 pymysql
+mitmproxy
