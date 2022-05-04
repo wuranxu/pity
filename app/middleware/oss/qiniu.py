@@ -57,7 +57,7 @@ class QiniuOss(OssFile):
         if exists is None:
             raise Exception("文件不存在")
         base_url = '%s/%s/%s' % (Config.OSS_URL, self.bucket, filepath)
-        url = self.auth.private_download_url(base_url, expires=3600)
+        url = self.auth.private_download_url(base_url, expires=3600 * 24 * 365)
         content, real_name = await self.download_object(key, url)
         return content, real_name
 
