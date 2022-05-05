@@ -53,11 +53,14 @@ async def execute_case(env: int, case_id: int, _=Depends(Permission())):
 
 
 @router.get("/retry", summary="根据测试数据重新运行测试用例")
-async def re_run_case(env: int, case_id: int, data_id: int, _=Depends(Permission())):
+async def re_run_case(env: int, case_id: int, data_id=None, _=Depends(Permission())):
     try:
         executor = Executor()
-        test_data = await PityTestcaseDataDao.query_record(id=data_id)
-        params = json.loads(test_data.json_data)
+        params = dict()
+        if data_id:
+            # 说明有测试数据
+            test_data = await PityTestcaseDataDao.query_record(id=data_id)
+            params = json.loads(test_data.json_data)
         result, _ = await executor.run(env, case_id, request_param=params)
         return PityResponse.success(result)
     except JSONDecodeError:
