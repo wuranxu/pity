@@ -2,7 +2,7 @@ name: 发布pity
 on:
   push:
     branches:
-      - main # 只在master上push触发部署
+      - main # 只在main上push触发部署
     paths-ignore: # 下列文件的变更不触发部署，可以自行添加
       - README.md
       - LICENSE

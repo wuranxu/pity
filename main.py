@@ -1,3 +1,4 @@
+import asyncio
 from mimetypes import guess_type
 from os.path import isfile
 
@@ -15,6 +16,7 @@ from app.core.ws_connection_manager import ws_manage
 from app.crud import create_table
 from app.crud.notification.NotificationDao import PityNotificationDao
 from app.enums.MessageEnum import MessageStateEnum, MessageTypeEnum
+from app.proxy import start_proxy
 from app.routers.auth import user
 from app.routers.config import router as config_router
 from app.routers.notification import router as msg_router
@@ -123,6 +125,15 @@ def init_scheduler():
     Scheduler.init(scheduler)
     Scheduler.configure(jobstores=job_store)
     Scheduler.start()
+
+
+@pity.on_event('startup')
+def init_proxy():
+    """
+    给你我的附属金卡，默认开启代理
+    :return:
+    """
+    asyncio.create_task(start_proxy())
 
 
 @pity.on_event('startup')

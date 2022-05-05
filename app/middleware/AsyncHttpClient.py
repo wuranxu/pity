@@ -19,17 +19,22 @@ class AsyncRequest(object):
         cookies = session.cookie_jar.filter_cookies(self.url)
         return {k: v.value for k, v in cookies.items()}
 
+    def get_data(self, kwargs):
+        if kwargs.get("json") is not None:
+            return kwargs.get("json")
+        return kwargs.get("data")
+
     async def invoke(self, method: str):
         start = time.time()
         async with aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar(unsafe=True)) as session:
             async with session.request(method, self.url, timeout=self.timeout, verify_ssl=False, **self.kwargs) as resp:
                 if resp.status != 200:
                     # 修复bug，当http状态码不为200的时候给出提示
-                    return await self.collect(False, self.kwargs.get("data"), resp.status, msg="http状态码不为200")
+                    return await self.collect(False, self.get_data(self.kwargs), resp.status, msg="http状态码不为200")
                 cost = "%.0fms" % ((time.time() - start) * 1000)
                 response, json_format = await AsyncRequest.get_resp(resp)
                 cookie = self.get_cookie(session)
-                return await self.collect(True, self.kwargs.get("data"), resp.status, response,
+                return await self.collect(True, self.get_data(self.kwargs), resp.status, response,
                                           resp.headers, resp.request_info.headers, elapsed=cost,
                                           cookies=cookie, json_format=json_format)
 
