@@ -1,5 +1,14 @@
 [English](https://github.com/wuranxu/pity/blob/main/README_EN.md)
 
+![png](https://img.shields.io/badge/Python-3.5+-green)
+![png](https://img.shields.io/badge/React-17+-blue)
+![png](https://img.shields.io/badge/FastApi-green)
+![png](https://img.shields.io/badge/contributors-3-green)
+
+## 平台展示
+
+[在线体验 🍍](https://pity.fun/)
+
 ### 功能列表
 
 | 功能点       | 状态  |
@@ -10,11 +19,10 @@
 | 全局变量      | ✅ |
 | 自定义脚本     | ✅ |
 | 场景测试      | ✅ |
-| http      | ✅ |
 | 后台管理      | ✅ |
 | 文件上传测试    | ✅ |
-| 在线执行SQL   | ✅ |
-| 在线执行Redis | ✅ |
+| 在线SQL   | ✅ |
+| 在线Redis | ✅ |
 | 测试报告      | ✅ |
 | 项目管理      | ✅ |
 | 权限系统      | ✅ |
@@ -32,15 +40,6 @@
 | 精准测试         | 🎉🎉🎉   |
 | 组织架构         | 🎉🎉🎉   |
 | 用例评分         | 🎉🎉🎉   |
-
-![png](https://img.shields.io/badge/Python-3.5+-green)
-![png](https://img.shields.io/badge/React-17+-blue)
-![png](https://img.shields.io/badge/FastApi-green)
-![png](https://img.shields.io/badge/contributors-3-green)
-
-## 平台展示
-
-[在线体验 🍍](https://pity.fun/)
 
 #### 工作台
 
