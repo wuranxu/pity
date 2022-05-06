@@ -9,6 +9,9 @@ class BaseConfig(object):
     LOG_NAME = os.path.join(LOG_DIR, 'pity.log')
 
     SERVER_PORT = 7777
+
+    # mock server
+    MOCK_ON = False
     MOCK_PORT = 7778
 
     # MySQL连接信息

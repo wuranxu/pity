@@ -133,7 +133,8 @@ def init_proxy():
     给你我的附属金卡，默认开启代理
     :return:
     """
-    asyncio.create_task(start_proxy())
+    if Config.MOCK_ON:
+        asyncio.create_task(start_proxy(logger))
 
 
 @pity.on_event('startup')

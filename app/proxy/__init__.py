@@ -1,16 +1,21 @@
-from mitmproxy import options
-from mitmproxy.tools.dump import DumpMaster
-
 from app.proxy.mock import PityMock
 from app.proxy.record import PityRecorder
 from config import Config
 
 
-async def start_proxy():
+async def start_proxy(log):
     """
-    start mitmproxy server at 7778
+    start mitmproxy server
     :return:
     """
+    try:
+        from mitmproxy import options
+        from mitmproxy.tools.dump import DumpMaster
+    except ImportError:
+        log.bind(name=None).warning(
+            "mitmproxy not installed, Please see: https://docs.mitmproxy.org/stable/overview-installation/")
+        return
+
     addons = [
         PityMock(),
         # PityRecorder()
