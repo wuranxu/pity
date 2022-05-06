@@ -110,7 +110,7 @@ class AsyncRequest(object):
             request_body = str(body)
         if isinstance(request_body, str) or request_body is None:
             return request_body
-        return json.dumps(request_body, ensure_ascii=False)
+        return json.dumps(request_body, ensure_ascii=False, indent=4)
 
     @staticmethod
     async def collect(status, request_data, status_code=200, response=None, response_headers=None,
