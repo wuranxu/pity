@@ -14,6 +14,7 @@ class AsyncRequest(object):
         self.url = url
         self.kwargs = kwargs
         self.timeout = aiohttp.ClientTimeout(total=timeout)
+        self.proxy = f"http://127.0.0.1:{Config.MOCK_PORT}" if Config.MOCK_ON else None
 
     def get_cookie(self, session):
         cookies = session.cookie_jar.filter_cookies(self.url)
@@ -27,7 +28,9 @@ class AsyncRequest(object):
     async def invoke(self, method: str):
         start = time.time()
         async with aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar(unsafe=True)) as session:
-            async with session.request(method, self.url, timeout=self.timeout, verify_ssl=False, **self.kwargs) as resp:
+            async with session.request(method, self.url, timeout=self.timeout, proxy=self.proxy,
+                                       ssl=False,
+                                       **self.kwargs) as resp:
                 if resp.status != 200:
                     # 修复bug，当http状态码不为200的时候给出提示
                     return await self.collect(False, self.get_data(self.kwargs), resp.status, msg="http状态码不为200")
@@ -40,7 +43,7 @@ class AsyncRequest(object):
 
     async def download(self):
         async with aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar(unsafe=True)) as session:
-            async with session.request("GET", self.url, timeout=self.timeout, verify_ssl=False, **self.kwargs) as resp:
+            async with session.request("GET", self.url, timeout=self.timeout, ssl=False, **self.kwargs) as resp:
                 if resp.status != 200:
                     raise Exception("download file failed")
                 return resp.content
