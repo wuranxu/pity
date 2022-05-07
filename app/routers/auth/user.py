@@ -90,7 +90,7 @@ async def update_user_info(token: str):
             raise AuthException(status.HTTP_200_OK, "token不存在")
         user_info = UserToken.parse_token(token)
         user = await UserDao.query_user(user_info['id'])
-        return PityResponse.success(user, exclude=("phone", "password", "email"))
+        return PityResponse.success(user, exclude=("password"))
     except Exception as e:
         raise AuthException(status.HTTP_200_OK, e)
 

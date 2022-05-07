@@ -105,7 +105,6 @@ class TestReportDao(object):
         """
         try:
             async with async_session() as session:
-
                 sql = select(PityReport).where(PityReport.start_at.between(start_time, end_time)).order_by(
                     desc(PityReport.start_at))
                 if executor is not None:

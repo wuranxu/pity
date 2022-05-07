@@ -30,7 +30,7 @@ class UserDao(object):
             raise Exception(e)
 
     @staticmethod
-    @RedisHelper.up_cache("user_list")
+    @RedisHelper.up_cache("user_list", "user_touch", key_and_suffix=("user_detail", lambda x: x[1]))
     async def update_user(user_info: UserUpdateForm, user_id: int):
         """
         变更用户的接口，主要用于用户管理页面(为管理员提供)
@@ -55,7 +55,7 @@ class UserDao(object):
             raise Exception(e)
 
     @staticmethod
-    @RedisHelper.up_cache("user_list")
+    @RedisHelper.up_cache("user_list", "user_touch", key_and_suffix=("user_detail", lambda x: x[0]))
     async def delete_user(id: int, user_id: int):
         """
         变更用户的接口，主要用于用户管理页面(为管理员提供)
@@ -79,6 +79,7 @@ class UserDao(object):
             raise Exception(e)
 
     @staticmethod
+    @RedisHelper.up_cache("user_list", "user_touch")
     async def register_for_github(username, name, email, avatar):
         try:
             async with async_session() as session:
@@ -104,6 +105,7 @@ class UserDao(object):
             raise Exception("登录失败")
 
     @staticmethod
+    @RedisHelper.up_cache("user_list", "user_touch")
     async def register_user(username: str, name: str, password: str, email: str):
         """
         :param username: 用户名
@@ -180,7 +182,7 @@ class UserDao(object):
             return query.scalars().first()
 
     @staticmethod
-    @RedisHelper.cache("user_touch", 3600)
+    @RedisHelper.cache("user_touch")
     async def list_user_touch(*user):
         try:
             if not user:

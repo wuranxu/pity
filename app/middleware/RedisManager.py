@@ -6,6 +6,7 @@ import functools
 import inspect
 import pickle
 from random import Random
+from typing import Tuple
 
 from awaits.awaitable import awaitable
 from loguru import logger
@@ -163,6 +164,12 @@ class RedisHelper(object):
         return f"{RedisHelper.pity_prefix}:{key}{':' + ':'.join(str(a) for a in filter_args) if len(filter_args) > 0 else ''}"
 
     @staticmethod
+    def get_key_with_suffix(cls_name: str, key: str, args: list, key_suffix):
+        filter_args = [a for a in args if not str(args[0]).startswith('<class')]
+        suffix = key_suffix(filter_args)
+        return f"{RedisHelper.pity_prefix}:{cls_name}:{key}:{suffix}"
+
+    @staticmethod
     def cache(key: str, expired_time=30 * 60, args_key=True):
         """
         自动缓存装饰器
@@ -213,10 +220,11 @@ class RedisHelper(object):
         return decorator
 
     @staticmethod
-    def up_cache(key: str):
+    def up_cache(*key: str, key_and_suffix: Tuple = None):
         """
         redis缓存key，套了此方法，会自动执行更新数据操作后删除缓存
         :param key:
+        :param key_and_suffix: 要删除的key和key组成规则
         :return:
         """
 
@@ -224,10 +232,15 @@ class RedisHelper(object):
             if asyncio.iscoroutinefunction(func):
                 @functools.wraps(func)
                 async def wrapper(*args, **kwargs):
-                    cls_name = inspect.getframeinfo(inspect.currentframe().f_back)[3][0].split(".")[0].split(" ")[-1]
-                    redis_key = f"{RedisHelper.pity_prefix}:{cls_name}:{key}"
                     new_data = await func(*args, **kwargs)
-                    await RedisHelper.async_delete_prefix(redis_key)
+                    cls_name = inspect.getframeinfo(inspect.currentframe().f_back)[3][0].split(".")[0].split(" ")[-1]
+                    for k in key:
+                        redis_key = f"{RedisHelper.pity_prefix}:{cls_name}:{k}"
+                        await RedisHelper.async_delete_prefix(redis_key)
+                    if key_and_suffix is not None:
+                        current_key = RedisHelper.get_key_with_suffix(cls_name, key_and_suffix[0], args,
+                                                                      key_and_suffix[1])
+                        RedisHelper.pity_redis_client.delete(current_key)
                     # 更新数据，删除缓存
                     return new_data
 
@@ -235,10 +248,15 @@ class RedisHelper(object):
             else:
                 @functools.wraps(func)
                 def wrapper(*args, **kwargs):
-                    cls_name = inspect.getframeinfo(inspect.currentframe().f_back)[3][0].split(".")[0].split(" ")[-1]
-                    redis_key = f"{RedisHelper.pity_prefix}:{cls_name}:{key}"
                     new_data = func(*args, **kwargs)
-                    RedisHelper.delete_prefix(redis_key)
+                    cls_name = inspect.getframeinfo(inspect.currentframe().f_back)[3][0].split(".")[0].split(" ")[-1]
+                    for k in key:
+                        redis_key = f"{RedisHelper.pity_prefix}:{cls_name}:{k}"
+                        RedisHelper.delete_prefix(redis_key)
+                    if key_and_suffix is not None:
+                        current_key = RedisHelper.get_key_with_suffix(cls_name, key_and_suffix[0], args,
+                                                                      key_and_suffix[1])
+                        RedisHelper.pity_redis_client.delete(current_key)
                     return new_data
 
                 return wrapper
