@@ -3,9 +3,12 @@ redis客户端Manager
 """
 import asyncio
 import functools
+import inspect
 import pickle
+from random import Random
 
 from awaits.awaitable import awaitable
+from loguru import logger
 from redis import ConnectionPool, StrictRedis
 from rediscluster import RedisCluster, ClusterConnectionPool
 
@@ -130,13 +133,37 @@ class RedisHelper(object):
         return RedisHelper.pity_redis_client.ping()
 
     @staticmethod
-    def get_key(key: str, args_key: bool = True, *args):
-        if args_key:
-            return f"{RedisHelper.pity_prefix}:{key}{':'.join(str(a) for a in args)}"
-        return f"{RedisHelper.pity_prefix}:{key}"
+    @awaitable
+    def async_delete_prefix(key: str):
+        """
+        根据前缀删除数据
+        :param key:
+        :return:
+        """
+        for k in RedisHelper.pity_redis_client.scan_iter(f"{key}*"):
+            RedisHelper.pity_redis_client.delete(k)
+            logger.bind(name=None).info(f"delete redis key: {k}")
 
     @staticmethod
-    def cache(key: str, expired_time=3 * 60, args_key=True):
+    def delete_prefix(key: str):
+        """
+        根据前缀删除数据
+        :param key:
+        :return:
+        """
+        for k in RedisHelper.pity_redis_client.scan_iter(f"{key}:*"):
+            RedisHelper.pity_redis_client.delete(k)
+            logger.bind(name=None).info(f"delete redis key: {k}")
+
+    @staticmethod
+    def get_key(key: str, args_key: bool = True, *args):
+        if not args_key:
+            return f"{RedisHelper.pity_prefix}:{key}"
+        filter_args = [a for a in args if not str(args[0]).startswith('<class')]
+        return f"{RedisHelper.pity_prefix}:{key}{':' + ':'.join(str(a) for a in filter_args) if len(filter_args) > 0 else ''}"
+
+    @staticmethod
+    def cache(key: str, expired_time=30 * 60, args_key=True):
         """
         自动缓存装饰器
         :param args_key:
@@ -150,7 +177,8 @@ class RedisHelper(object):
             if asyncio.iscoroutinefunction(func):
                 @functools.wraps(func)
                 async def wrapper(*args, **kwargs):
-                    redis_key = RedisHelper.get_key(key, args_key, *args)
+                    cls_name = inspect.getframeinfo(inspect.currentframe().f_back)[3][0].split(".")[0].split(" ")[-1]
+                    redis_key = RedisHelper.get_key(f"{cls_name}:{key}", args_key, *args)
                     data = RedisHelper.pity_redis_client.get(redis_key)
                     # 缓存已存在
                     if data is not None:
@@ -158,6 +186,7 @@ class RedisHelper(object):
                     # 获取最新数据
                     new_data = await func(*args, **kwargs)
                     info = pickle.dumps(new_data)
+                    logger.bind(name=None).info(f"set redis key: {redis_key}")
                     RedisHelper.pity_redis_client.set(redis_key, info.hex(), ex=expired_time)
                     return new_data
 
@@ -165,7 +194,8 @@ class RedisHelper(object):
             else:
                 @functools.wraps(func)
                 def wrapper(*args, **kwargs):
-                    redis_key = RedisHelper.get_key(key, *args)
+                    cls_name = inspect.getframeinfo(inspect.currentframe().f_back)[3][0].split(".")[0].split(" ")[-1]
+                    redis_key = RedisHelper.get_key(f"{cls_name}:{key}", args_key, *args)
                     data = RedisHelper.pity_redis_client.get(redis_key)
                     # 缓存已存在
                     if data is not None:
@@ -173,7 +203,9 @@ class RedisHelper(object):
                     # 获取最新数据
                     new_data = func(*args, **kwargs)
                     info = pickle.dumps(new_data)
-                    RedisHelper.pity_redis_client.set(redis_key, info.hex(), ex=expired_time)
+                    logger.bind(name=None).info(f"set redis key: {redis_key}")
+                    # 添加随机数防止缓存雪崩
+                    RedisHelper.pity_redis_client.set(redis_key, info.hex(), ex=expired_time + Random().randint(10, 59))
                     return new_data
 
                 return wrapper
@@ -189,22 +221,24 @@ class RedisHelper(object):
         """
 
         def decorator(func):
-            redis_key = RedisHelper.get_key(key)
             if asyncio.iscoroutinefunction(func):
                 @functools.wraps(func)
                 async def wrapper(*args, **kwargs):
-                    RedisHelper.pity_redis_client.delete(redis_key)
+                    cls_name = inspect.getframeinfo(inspect.currentframe().f_back)[3][0].split(".")[0].split(" ")[-1]
+                    redis_key = f"{RedisHelper.pity_prefix}:{cls_name}:{key}"
                     new_data = await func(*args, **kwargs)
+                    await RedisHelper.async_delete_prefix(redis_key)
                     # 更新数据，删除缓存
                     return new_data
 
                 return wrapper
             else:
-
                 @functools.wraps(func)
                 def wrapper(*args, **kwargs):
+                    cls_name = inspect.getframeinfo(inspect.currentframe().f_back)[3][0].split(".")[0].split(" ")[-1]
+                    redis_key = f"{RedisHelper.pity_prefix}:{cls_name}:{key}"
                     new_data = func(*args, **kwargs)
-                    RedisHelper.pity_redis_client.delete(redis_key)
+                    RedisHelper.delete_prefix(redis_key)
                     return new_data
 
                 return wrapper

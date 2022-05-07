@@ -63,7 +63,7 @@ class QiniuOss(OssFile):
 
     async def download_object(self, filepath, url, timeout=15):
         async with aiohttp.ClientSession() as session:
-            async with session.request("GET", url, timeout=timeout, verify_ssl=False) as resp:
+            async with session.request("GET", url, timeout=timeout, ssl=False) as resp:
                 if resp.status != 200:
                     raise Exception("download file failed")
                 real_filename = filepath.split("/")[-1]
@@ -80,7 +80,7 @@ class QiniuOss(OssFile):
             raise Exception("文件不存在")
         async with aiohttp.ClientSession() as session:
             basic_url = '%s/%s/%s' % (Config.OSS_URL, self.bucket, filepath)
-            async with session.request("GET", basic_url, timeout=15, verify_ssl=False) as resp:
+            async with session.request("GET", basic_url, timeout=15, ssl=False) as resp:
                 if resp.status != 200:
                     raise Exception("download file failed")
                 return await resp.content.read()

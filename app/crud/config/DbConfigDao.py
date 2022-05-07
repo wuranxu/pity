@@ -114,7 +114,7 @@ class DbConfigDao(object):
             raise Exception("获取数据库配置失败")
 
     @staticmethod
-    @RedisHelper.cache("database:cache", expired_time=3600 * 3, args_key=False)
+    @RedisHelper.cache("database:cache", expired_time=3600 * 3)
     async def query_database_and_tables():
         """
         方法会查询所有数据库表配置的信息

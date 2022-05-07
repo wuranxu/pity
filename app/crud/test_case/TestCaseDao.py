@@ -312,7 +312,6 @@ class TestCaseDao(Mapper):
 
     @staticmethod
     async def get_xmind_data(case_id: int):
-        # result = dict()
         data = await TestCaseDao.query_test_case(case_id)
         cs = data.get("case")
         # 开始解析测试数据

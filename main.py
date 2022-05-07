@@ -120,8 +120,9 @@ async def init_redis():
     try:
         await RedisHelper.ping()
     except Exception as e:
-        logger.bind(name=None).error(f"Redis connect failed, Please check config.py for redis config...")
+        logger.bind(name=None).error(f"Redis connect failed, Please check config.py for redis config.        ❌")
         raise e
+    logger.bind(name=None).info("redis connected success.        ✔")
 
 
 @pity.on_event('startup')
@@ -139,6 +140,7 @@ def init_scheduler():
     Scheduler.init(scheduler)
     Scheduler.configure(jobstores=job_store)
     Scheduler.start()
+    logger.bind(name=None).info("ApScheduler started success.        ✔")
 
 
 @pity.on_event('startup')
@@ -158,6 +160,7 @@ async def init_database():
     :return:
     """
     await create_table()
+    logger.bind(name=None).info("database created success.        ✔")
 
 
 @pity.on_event('shutdown')

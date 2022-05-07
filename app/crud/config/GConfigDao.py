@@ -13,6 +13,7 @@ from app.utils.logger import Log
 class GConfigDao(Mapper):
 
     @classmethod
+    @RedisHelper.up_cache("dao")
     async def insert_gconfig(cls, form: GConfigForm, user_id: int) -> None:
         try:
             async with async_session() as session:
@@ -30,8 +31,8 @@ class GConfigDao(Mapper):
             raise Exception(f"新增变量: {data.key}失败")
 
     @staticmethod
-    @RedisHelper.cache("gconfig", 1800, True)
-    async def async_get_gconfig_by_key(key: str, env: int = None) -> GConfig:
+    @RedisHelper.cache("dao", 1800, True)
+    async def async_get_gconfig_by_key(key: str, env: int) -> GConfig:
         try:
             filters = [GConfig.key == key, GConfig.deleted_at == 0, GConfig.enable == True, GConfig.env == env]
             async with async_session() as session:

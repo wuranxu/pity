@@ -9,6 +9,7 @@ from typing import Tuple, List
 
 from sqlalchemy import select, update
 
+from app.middleware.RedisManager import RedisHelper
 from app.models import Base, async_session, DatabaseHelper, async_engine
 from app.models.address import PityGateway
 from app.models.basic import PityRelationField, init_relation
@@ -30,6 +31,7 @@ class Mapper(object):
     model = None
 
     @classmethod
+    @RedisHelper.cache("dao")
     async def list_record(cls, condition=None, **kwargs):
         """
         通过查询条件获取数据，kwargs的key为参数名, value为参数值
@@ -48,6 +50,7 @@ class Mapper(object):
             raise Exception(f"获取数据失败")
 
     @classmethod
+    @RedisHelper.cache("dao")
     async def list_record_with_pagination(cls, page, size, **kwargs):
         """
         通过分页获取数据
@@ -89,6 +92,7 @@ class Mapper(object):
         return sql
 
     @classmethod
+    @RedisHelper.up_cache("dao")
     async def query_record(cls, session=None, **kwargs):
         try:
             if session:
@@ -104,6 +108,7 @@ class Mapper(object):
             raise Exception(f"查询记录失败")
 
     @classmethod
+    @RedisHelper.up_cache("dao")
     async def insert_record(cls, model, log=False, ss=None):
         try:
             if ss is None:
@@ -132,6 +137,7 @@ class Mapper(object):
             raise Exception(f"添加记录失败")
 
     @classmethod
+    @RedisHelper.up_cache("dao")
     async def update_by_map(cls, user, *condition, **kwargs):
         try:
             async with async_session() as session:
@@ -144,6 +150,7 @@ class Mapper(object):
             raise Exception("更新数据失败")
 
     @classmethod
+    @RedisHelper.up_cache("dao")
     async def update_record_by_id(cls, user: int, model, not_null=False, log=False):
         try:
             async with async_session() as session:
@@ -185,6 +192,7 @@ class Mapper(object):
             return original
 
     @classmethod
+    @RedisHelper.up_cache("dao")
     async def delete_record_by_id(cls, session, user: int, value: int, log=True, key='id', exists=True,
                                   session_begin=False):
         """
@@ -209,6 +217,7 @@ class Mapper(object):
             raise Exception(f"删除失败")
 
     @classmethod
+    @RedisHelper.up_cache("dao")
     async def delete_records(cls, session, user, id_list: List[int], column="id", log=True):
         try:
             for id_ in id_list:
@@ -399,6 +408,7 @@ class Mapper(object):
         return ans
 
     @classmethod
+    @RedisHelper.up_cache("dao")
     async def delete_by_id(cls, id):
         """
         物理删除
