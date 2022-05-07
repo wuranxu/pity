@@ -40,26 +40,26 @@ class PityRedisManager(object):
             PityRedisManager._pool.pop(redis_id)
 
     @staticmethod
-    def get_cluster_client(redis_id: int, addr: str):
+    def get_cluster_client(redis_id: int, address: str):
         """
         获取redis集群客户端
         :param redis_id:
-        :param addr:
+        :param address:
         :return:
         """
         cluster = PityRedisManager._cluster_pool.get(redis_id)
         if cluster is not None:
             return cluster
-        client = PityRedisManager.get_cluster(addr)
+        client = PityRedisManager.get_cluster(address)
         PityRedisManager._cluster_pool[redis_id] = client
         return client
 
     @staticmethod
-    def get_single_node_client(redis_id: int, addr: str, password: str, db: int):
+    def get_single_node_client(redis_id: int, address: str, password: str, db: int):
         """
         获取redis单实例客户端
         :param redis_id:
-        :param addr:
+        :param address:
         :param password:
         :param db:
         :return:
@@ -67,7 +67,7 @@ class PityRedisManager(object):
         node = PityRedisManager._pool.get(redis_id)
         if node is not None:
             return node
-        host, port = addr.split(":")
+        host, port = address.split(":")
         pool = ConnectionPool(host=host, port=port, db=db, max_connections=100, password=password,
                               decode_responses=True)
         client = StrictRedis(connection_pool=pool)
@@ -75,16 +75,16 @@ class PityRedisManager(object):
         return client
 
     @staticmethod
-    def refresh_redis_client(redis_id: int, addr: str, password: str, db: str):
+    def refresh_redis_client(redis_id: int, address: str, password: str, db: str):
         """
         刷新redis客户端
         :param redis_id:
-        :param addr:
+        :param address:
         :param password:
         :param db:
         :return:
         """
-        host, port = addr.split(":")
+        host, port = address.split(":")
         pool = ConnectionPool(host=host, port=port, db=db, max_connections=100, password=password,
                               decode_responses=True)
         client = StrictRedis(connection_pool=pool, decode_responses=True)
@@ -95,14 +95,14 @@ class PityRedisManager(object):
         PityRedisManager._cluster_pool[redis_id] = PityRedisManager.get_cluster(addr)
 
     @staticmethod
-    def get_cluster(addr: str):
+    def get_cluster(address: str):
         """
         获取集群连接池
-        :param addr:
+        :param address:
         :return:
         """
         try:
-            nodes = addr.split(',')
+            nodes = address.split(',')
             startup_nodes = [{"host": n.split(":")[0], "port": n.split(":")[1]} for n in nodes]
             pool = ClusterConnectionPool(startup_nodes=startup_nodes, max_connections=100, decode_responses=True)
             client = RedisCluster(connection_pool=pool, decode_responses=True)
@@ -119,6 +119,15 @@ class RedisHelper(object):
     @awaitable
     def execute_command(client, command, *args, **kwargs):
         return client.execute_command(command, *args, **kwargs)
+
+    @staticmethod
+    @awaitable
+    def ping():
+        """
+        test redis client
+        :return:
+        """
+        return RedisHelper.pity_redis_client.ping()
 
     @staticmethod
     def get_key(key: str, args_key: bool = True, *args):

@@ -16,6 +16,7 @@ from app.core.ws_connection_manager import ws_manage
 from app.crud import create_table
 from app.crud.notification.NotificationDao import PityNotificationDao
 from app.enums.MessageEnum import MessageStateEnum, MessageTypeEnum
+from app.middleware.RedisManager import RedisHelper
 from app.proxy import start_proxy
 from app.routers.auth import user
 from app.routers.config import router as config_router
@@ -108,6 +109,19 @@ async def get_site_static(filename):
 
     content_type, _ = guess_type(filename)
     return Response(content, media_type=content_type)
+
+
+@pity.on_event('startup')
+async def init_redis():
+    """
+    初始化redis，失败则服务起不来
+    :return:
+    """
+    try:
+        await RedisHelper.ping()
+    except Exception as e:
+        logger.bind(name=None).error(f"Redis connect failed, Please check config.py for redis config...")
+        raise e
 
 
 @pity.on_event('startup')
