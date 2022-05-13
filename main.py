@@ -118,15 +118,15 @@ async def init_redis():
     :return:
     """
     try:
+        await RedisHelper.ping()
+        logger.bind(name=None).success("redis connected success.        ✔")
+    except Exception as e:
         if not Config.REDIS_ON:
             logger.bind(name=None).warning(
                 f"Redis is not selected, So we can't ensure that the task is not executed repeatedly.        🚫")
             return
-        await RedisHelper.ping()
-    except Exception as e:
         logger.bind(name=None).error(f"Redis connect failed, Please check config.py for redis config.        ❌")
         raise e
-    logger.bind(name=None).success("redis connected success.        ✔")
 
 
 @pity.on_event('startup')

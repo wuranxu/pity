@@ -126,7 +126,7 @@ $ pip install -r requirements.txt
 6. 启动服务
 
 ```bash
-$ python runserver.py
+$ python pity.py
 ```
 
 7. 注册用户

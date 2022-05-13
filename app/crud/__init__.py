@@ -3,6 +3,7 @@ import importlib
 import json
 import os
 import sys
+from collections import defaultdict
 from copy import deepcopy
 from datetime import datetime
 from typing import Tuple, List
@@ -429,6 +430,29 @@ class Mapper(object):
             raise Exception(f"删除记录失败")
 
 
+# from app.models.user import User
+# from app.models.project import Project
+# from app.models.project_role import ProjectRole
+# from app.models.environment import Environment
+# from app.models.constructor import Constructor
+# from app.models.address import PityGateway
+# from app.models.broadcast_read_user import PityBroadcastReadUser
+# from app.models.testplan_follow_user import PityTestPlanFollowUserRel
+# from app.models.database import PityDatabase
+# from app.models.gconfig import GConfig
+# from app.models.notification import PityNotification
+# from app.models.operation_log import PityOperationLog
+# from app.models.oss_file import PityOssFile
+# from app.models.result import PityTestResult
+# from app.models.test_case import TestCase
+# from app.models.test_plan import PityTestPlan
+# from app.models.testcase_asserts import TestCaseAsserts
+# from app.models.testcase_data import PityTestcaseData
+# from app.models.redis_config import PityRedis
+# from app.models.testcase_directory import PityTestcaseDirectory
+# from app.models.report import PityReport
+
+
 def get_dao_path():
     """获取dao目录下所有的xxxDao.py"""
     dao_path_list = []
@@ -437,7 +461,6 @@ def get_dao_path():
         file_path = os.path.join(Config.DAO_PATH, file)
         # 判断过滤, 取有效目录
         if os.path.isdir(file_path) and '__pycache__' not in file:
-            from collections import defaultdict
             path_dict = defaultdict(list)
             # 获取目录下所有的xxxDao.py
             for py_file in os.listdir(file_path):
