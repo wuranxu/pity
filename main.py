@@ -33,8 +33,8 @@ from config import Config, PITY_ENV, BANNER
 
 logger = init_logging()
 
-logger.bind(name=None).opt(ansi=True).info(f"pity is running at <red>{PITY_ENV}</red>")
-logger.bind(name=None).info(BANNER)
+logger.bind(name=None).opt(ansi=True).success(f"pity is running at <red>{PITY_ENV}</red>")
+logger.bind(name=None).success(BANNER)
 
 
 async def request_info(request: Request):
@@ -118,11 +118,15 @@ async def init_redis():
     :return:
     """
     try:
+        if not Config.REDIS_ON:
+            logger.bind(name=None).warning(
+                f"Redis is not selected, So we can't ensure that the task is not executed repeatedly.        🚫")
+            return
         await RedisHelper.ping()
     except Exception as e:
         logger.bind(name=None).error(f"Redis connect failed, Please check config.py for redis config.        ❌")
         raise e
-    logger.bind(name=None).info("redis connected success.        ✔")
+    logger.bind(name=None).success("redis connected success.        ✔")
 
 
 @pity.on_event('startup')
@@ -140,7 +144,7 @@ def init_scheduler():
     Scheduler.init(scheduler)
     Scheduler.configure(jobstores=job_store)
     Scheduler.start()
-    logger.bind(name=None).info("ApScheduler started success.        ✔")
+    logger.bind(name=None).success("ApScheduler started success.        ✔")
 
 
 @pity.on_event('startup')
@@ -160,7 +164,7 @@ async def init_database():
     :return:
     """
     await create_table()
-    logger.bind(name=None).info("database created success.        ✔")
+    logger.bind(name=None).success("database created success.        ✔")
 
 
 @pity.on_event('shutdown')

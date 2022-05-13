@@ -184,6 +184,8 @@ class RedisHelper(object):
             if asyncio.iscoroutinefunction(func):
                 @functools.wraps(func)
                 async def wrapper(*args, **kwargs):
+                    if not Config.REDIS_ON:
+                        return await func(*args, **kwargs)
                     cls_name = inspect.getframeinfo(inspect.currentframe().f_back)[3][0].split(".")[0].split(" ")[-1]
                     redis_key = RedisHelper.get_key(f"{cls_name}:{key}", args_key, *args)
                     data = RedisHelper.pity_redis_client.get(redis_key)
@@ -201,6 +203,8 @@ class RedisHelper(object):
             else:
                 @functools.wraps(func)
                 def wrapper(*args, **kwargs):
+                    if not Config.REDIS_ON:
+                        return func(*args, **kwargs)
                     cls_name = inspect.getframeinfo(inspect.currentframe().f_back)[3][0].split(".")[0].split(" ")[-1]
                     redis_key = RedisHelper.get_key(f"{cls_name}:{key}", args_key, *args)
                     data = RedisHelper.pity_redis_client.get(redis_key)
@@ -233,6 +237,8 @@ class RedisHelper(object):
                 @functools.wraps(func)
                 async def wrapper(*args, **kwargs):
                     new_data = await func(*args, **kwargs)
+                    if not Config.REDIS_ON:
+                        return new_data
                     cls_name = inspect.getframeinfo(inspect.currentframe().f_back)[3][0].split(".")[0].split(" ")[-1]
                     for k in key:
                         redis_key = f"{RedisHelper.pity_prefix}:{cls_name}:{k}"
@@ -249,6 +255,8 @@ class RedisHelper(object):
                 @functools.wraps(func)
                 def wrapper(*args, **kwargs):
                     new_data = func(*args, **kwargs)
+                    if not Config.REDIS_ON:
+                        return new_data
                     cls_name = inspect.getframeinfo(inspect.currentframe().f_back)[3][0].split(".")[0].split(" ")[-1]
                     for k in key:
                         redis_key = f"{RedisHelper.pity_prefix}:{cls_name}:{k}"

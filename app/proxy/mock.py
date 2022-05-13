@@ -1,7 +1,26 @@
+import json
+
+from mitmproxy import http
+from pymock import Mock
+
+
 class PityMock(object):
     def __init__(self):
-        self.num = 0
+        self.mock = Mock()
 
-    def response(self, flow):
-        self.num = self.num + 1
-        flow.response.headers["count"] = str(self.num)
+    def request(self, flow):
+        if flow.request.pretty_url.startswith("http://www.baidu.com"):
+            data = self.mock.mock_js("""
+            {
+                name: {
+                    first: "@cfirst", 
+                    last: "@clast",
+                    name: "@first@last",
+                }
+            }
+            """)
+            flow.response = http.Response.make(
+                200,  # (optional) status code
+                json.dumps(data, ensure_ascii=False, indent=4),  # (optional) content
+                {"Content-Type": "application/json"}  # (optional) headers
+            )

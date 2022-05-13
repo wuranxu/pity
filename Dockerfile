@@ -1,5 +1,5 @@
 # 使用基础镜像
-FROM python:3.9.9-buster
+FROM python:slim-buster
 # 创建服务运行的目录
 RUN mkdir /opt/server
 #拷贝宿主机上下文目录到容器的/opt/server下

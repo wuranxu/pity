@@ -21,6 +21,7 @@ async def start_proxy(log):
         # PityRecorder()
     ]
     opts = options.Options(listen_host='0.0.0.0', listen_port=Config.MOCK_PORT)
-    m = DumpMaster(opts, True, True)
+    m = DumpMaster(opts, False, False)
     m.addons.add(*addons)
     await m.run()
+    log.bind(name=None).success(f"mock server is running at http://0.0.0.0:{Config.MOCK_PORT}")
