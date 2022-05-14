@@ -157,14 +157,17 @@ class RedisHelper(object):
             logger.bind(name=None).info(f"delete redis key: {k}")
 
     @staticmethod
-    def get_key(key: str, args_key: bool = True, *args):
+    def get_key(_redis_key: str, args_key: bool = True, *args, **kwargs):
         if not args_key:
-            return f"{RedisHelper.pity_prefix}:{key}"
-        filter_args = [a for a in args if not str(args[0]).startswith('<class')]
-        return f"{RedisHelper.pity_prefix}:{key}{':' + ':'.join(str(a) for a in filter_args) if len(filter_args) > 0 else ''}"
+            return f"{RedisHelper.pity_prefix}:{_redis_key}"
+        filter_args = [a for a in args if not str(a).startswith('<class')]
+        for v in kwargs.values():
+            filter_args.append(str(v))
+        return f"{RedisHelper.pity_prefix}:{_redis_key}" \
+               f"{':' + ':'.join(str(a) for a in filter_args) if len(filter_args) > 0 else ''}"
 
     @staticmethod
-    def get_key_with_suffix(cls_name: str, key: str, args: list, key_suffix):
+    def get_key_with_suffix(cls_name: str, key: str, args: tuple, key_suffix):
         filter_args = [a for a in args if not str(args[0]).startswith('<class')]
         suffix = key_suffix(filter_args)
         return f"{RedisHelper.pity_prefix}:{cls_name}:{key}:{suffix}"
@@ -187,7 +190,7 @@ class RedisHelper(object):
                     if not Config.REDIS_ON:
                         return await func(*args, **kwargs)
                     cls_name = inspect.getframeinfo(inspect.currentframe().f_back)[3][0].split(".")[0].split(" ")[-1]
-                    redis_key = RedisHelper.get_key(f"{cls_name}:{key}", args_key, *args)
+                    redis_key = RedisHelper.get_key(f"{cls_name}:{key}", args_key, *args, **kwargs)
                     data = RedisHelper.pity_redis_client.get(redis_key)
                     # 缓存已存在
                     if data is not None:
@@ -206,7 +209,7 @@ class RedisHelper(object):
                     if not Config.REDIS_ON:
                         return func(*args, **kwargs)
                     cls_name = inspect.getframeinfo(inspect.currentframe().f_back)[3][0].split(".")[0].split(" ")[-1]
-                    redis_key = RedisHelper.get_key(f"{cls_name}:{key}", args_key, *args)
+                    redis_key = RedisHelper.get_key(f"{cls_name}:{key}", args_key, *args, **kwargs)
                     data = RedisHelper.pity_redis_client.get(redis_key)
                     # 缓存已存在
                     if data is not None:
