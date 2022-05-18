@@ -23,8 +23,10 @@ python-multipart
 awaits~=0.0.1
 aioify~=0.4.1
 grpc-requests
-loguru
+loguru~=0.6.0
 qiniu~=7.6.0
 cos-python-sdk-v5
 asyncpg
 pymysql
+mitmproxy~=8.0.0
+jsonpath
