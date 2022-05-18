@@ -6,6 +6,8 @@ class WebSocketMessageEnum(IntEnum):
     COUNT = 0
     # 桌面通知
     DESKTOP = 1
+    # 录制数据
+    RECORD = 2
 
 
 class MessageStateEnum(IntEnum):

@@ -1,0 +1,2 @@
+class CaseParametersException(Exception):
+    pass
