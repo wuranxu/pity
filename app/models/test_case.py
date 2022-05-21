@@ -1,6 +1,9 @@
+from typing import List
+
 from sqlalchemy import Column, String, INT, TEXT, SMALLINT, UniqueConstraint
 
 from app.models.basic import PityBase
+from app.models.out_parameters import PityTestCaseOutParameters
 
 
 class TestCase(PityBase):
@@ -22,6 +25,7 @@ class TestCase(PityBase):
     # catalogue = Column(String(12), comment="用例目录")
     # expected = Column(TEXT, comment="预期结果, 支持el表达式", nullable=False)
     case_type = Column(SMALLINT, comment="0: 普通用例 1: 前置用例 2: 数据工厂")
+    out_parameters: List[PityTestCaseOutParameters] = None
     # 调整联合唯一索引
     __table_args__ = (
         UniqueConstraint('directory_id', 'name', 'deleted_at'),
@@ -36,7 +40,7 @@ class TestCase(PityBase):
                      case_type="用例类型")
 
     def __init__(self, name, request_type, url, directory_id, status, priority, create_user,
-                 body_type=1, base_path=None,
+                 body_type=1, base_path=None, out_parameters=None,
                  tag=None, request_headers=None, case_type=0, body=None, request_method=None, id=None):
         super().__init__(create_user, id)
         self.name = name
@@ -48,6 +52,7 @@ class TestCase(PityBase):
         # self.catalogue = catalogue
         self.status = status
         # self.expected = expected
+        self.out_parameters = out_parameters
         self.body_type = body_type
         self.case_type = case_type
         self.body = body

@@ -56,7 +56,7 @@ class TestCaseAssertsDao(Mapper):
                     data = result.scalars().first()
                     if data is not None:
                         raise Exception("断言信息已存在, 请检查")
-                    new_assert = TestCaseAsserts(**form.dict(), user=user_id)
+                    new_assert = TestCaseAsserts(**form.dict(), user_id=user_id)
                     session.add(new_assert)
                     await session.flush()
                     await session.refresh(new_assert)

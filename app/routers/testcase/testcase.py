@@ -1,22 +1,28 @@
+import json
 from datetime import datetime
 from typing import List
 
 from fastapi import APIRouter, Depends
+from starlette.requests import Request
 
 from app.crud.project.ProjectRoleDao import ProjectRoleDao
 from app.crud.test_case.ConstructorDao import ConstructorDao
 from app.crud.test_case.TestCaseAssertsDao import TestCaseAssertsDao
 from app.crud.test_case.TestCaseDao import TestCaseDao
 from app.crud.test_case.TestCaseDirectory import PityTestcaseDirectoryDao
+from app.crud.test_case.TestCaseOutParametersDao import PityTestCaseOutParametersDao
 from app.crud.test_case.TestReport import TestReportDao
 from app.crud.test_case.TestcaseDataDao import PityTestcaseDataDao
 from app.excpetions.AuthException import AuthException
 from app.handler.fatcory import PityResponse
+from app.middleware.RedisManager import RedisHelper
+from app.models.out_parameters import PityTestCaseOutParameters
 from app.models.test_case import TestCase
 from app.routers import Permission, get_session
 from app.schema.constructor import ConstructorForm, ConstructorIndex
 from app.schema.testcase_data import PityTestcaseDataForm
 from app.schema.testcase_directory import PityTestcaseDirectoryForm, PityMoveTestCaseDto
+from app.schema.testcase_out_parameters import PityTestCaseOutParametersForm
 from app.schema.testcase_schema import TestCaseAssertsForm, TestCaseForm, TestCaseInfo
 
 router = APIRouter(prefix="/testcase")
@@ -50,10 +56,11 @@ async def create_testcase(data: TestCaseInfo, user_info=Depends(Permission()), s
 
 
 @router.post("/update")
-async def update_testcase(data: TestCaseForm, user_info=Depends(Permission())):
+async def update_testcase(form: TestCaseForm, user_info=Depends(Permission())):
     try:
-        data = await TestCaseDao.update_test_case(data, user_info['id'])
-        return PityResponse.success(data)
+        data = await TestCaseDao.update_test_case(form, user_info['id'])
+        result = await PityTestCaseOutParametersDao.update_many(form.id, form.out_parameters, user_info['id'])
+        return PityResponse.success(dict(case_info=data, out_parameters=result))
     except Exception as e:
         return PityResponse.failed(e)
 
@@ -74,7 +81,7 @@ async def delete_testcase(id_list: List[int], user_info=Depends(Permission()), s
 
 
 @router.get("/query")
-async def query_testcase(caseId: int, user_info=Depends(Permission())):
+async def query_testcase(caseId: int, _=Depends(Permission())):
     try:
         data = await TestCaseDao.query_test_case(caseId)
         return PityResponse.success(PityResponse.dict_model_to_dict(data))
@@ -252,7 +259,7 @@ async def insert_testcase_data(form: PityTestcaseDataForm, user_info=Depends(Per
 
 
 @router.post("/data/update")
-async def insert_testcase_data(form: PityTestcaseDataForm, user_info=Depends(Permission())):
+async def update_testcase_data(form: PityTestcaseDataForm, user_info=Depends(Permission())):
     try:
         data = await PityTestcaseDataDao.update_testcase_data(form, user_info['id'])
         return PityResponse.success(data)
@@ -261,7 +268,7 @@ async def insert_testcase_data(form: PityTestcaseDataForm, user_info=Depends(Per
 
 
 @router.get("/data/delete")
-async def insert_testcase_data(id: int, user_info=Depends(Permission())):
+async def delete_testcase_data(id: int, user_info=Depends(Permission())):
     try:
         await PityTestcaseDataDao.delete_testcase_data(id, user_info['id'])
         return PityResponse.success()
@@ -280,3 +287,57 @@ async def move_testcase(form: PityMoveTestCaseDto, user_info=Depends(Permission(
         return PityResponse.forbidden()
     except Exception as e:
         return PityResponse.failed(e)
+
+
+@router.post("/parameters/insert")
+async def insert_testcase_out_parameters(form: PityTestCaseOutParametersForm, user_info=Depends(Permission())):
+    query = await PityTestCaseOutParametersDao.query_record(name=form.name, case_id=form.case_id)
+    if query is not None:
+        return PityResponse.failed("参数名称已存在")
+    data = PityTestCaseOutParameters(**form.dict(), user_id=user_info['id'])
+    data = await PityTestCaseOutParametersDao.insert_record(data)
+    return PityResponse.success(data)
+
+
+@router.post("/parameters/update/batch", summary="批量更新出参数据")
+async def update_batch_testcase_out_parameters(case_id: int, form: List[PityTestCaseOutParametersForm],
+                                               user_info=Depends(Permission())):
+    result = await PityTestCaseOutParametersDao.update_many(case_id, form, user_info['id'])
+    return PityResponse.success(result)
+
+
+@router.post("/parameters/update")
+async def update_testcase_out_parameters(form: PityTestCaseOutParametersForm, user_info=Depends(Permission())):
+    data = await PityTestCaseOutParametersDao.update_record_by_id(user_info['id'], form)
+    return PityResponse.success(data)
+
+
+@router.get("/parameters/delete")
+async def delete_testcase_out_parameters(id: int, user_info=Depends(Permission()), session=Depends(get_session)):
+    await PityTestCaseOutParametersDao.delete_record_by_id(session, id, user_info['id'], log=False)
+    return PityResponse.success()
+
+
+@router.get("/record/start", summary="开始录制接口请求")
+async def record_requests(request: Request, regex: str, user_info=Depends(Permission())):
+    await RedisHelper.set_address_record(user_info['id'], request.client.host, regex)
+    return PityResponse.success(msg="开始录制，可以在浏览器/app上操作啦！")
+
+
+@router.get("/record/stop", summary="停止录制接口请求")
+async def record_requests(request: Request, _=Depends(Permission())):
+    await RedisHelper.remove_address_record(request.client.host)
+    return PityResponse.success(msg="停止成功，快去生成用例吧~")
+
+
+@router.get("/record/status", summary="获取录制接口请求状态")
+async def record_requests(request: Request, _=Depends(Permission())):
+    record = await RedisHelper.get_address_record(request.client.host)
+    status = False
+    regex = ''
+    if record is not None:
+        record_data = json.loads(record)
+        regex = record_data.get('regex', '')
+        status = True
+    data = await RedisHelper.list_record_data(request.client.host)
+    return PityResponse.success(dict(data=data, regex=regex, status=status))

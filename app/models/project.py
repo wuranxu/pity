@@ -5,7 +5,6 @@ from app.models.basic import PityBase
 
 class Project(PityBase):
     __tablename__ = 'pity_project'
-    id = Column(INT, primary_key=True)
     name = Column(String(16), unique=True, index=True)
     owner = Column(INT)
     app = Column(String(32), index=True)

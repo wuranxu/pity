@@ -15,7 +15,7 @@ from app.utils.logger import Log
 class PityTestcaseDataDao(Mapper):
 
     @classmethod
-    async def insert_testcase_data(cls, form: PityTestcaseDataForm, user: int):
+    async def insert_testcase_data(cls, form: PityTestcaseDataForm, user_id: int):
         try:
             async with async_session() as session:
                 async with session.begin():
@@ -27,7 +27,7 @@ class PityTestcaseDataDao(Mapper):
                     query = result.scalars().first()
                     if query is not None:
                         raise Exception("该数据已存在, 请重新编辑")
-                    data = PityTestcaseData(**form.dict(), user=user)
+                    data = PityTestcaseData(**form.dict(), user_id=user_id)
                     session.add(data)
                     await session.flush()
                     await session.refresh(data)

@@ -1,8 +1,32 @@
+import json
+import random
 from typing import Any
+
+from app.excpetions.CaseParametersException import CaseParametersException
 
 
 class Parser(object):
 
     @staticmethod
-    def parse(source: str, expression: str = "", idx: int = None) -> Any:
+    def parse(source: dict, expression: str = "", idx: str = None) -> Any:
         raise NotImplementedError
+
+    @staticmethod
+    def parse_result(data: list, match_index: str = None):
+        if len(data) == 0:
+            return "null"
+        # 如果是数字
+        length = len(data)
+        if match_index is not None:
+            if match_index.isdigit():
+                idx = int(match_index)
+                if idx >= length or idx < -length:
+                    raise CaseParametersException(f"results length is {length}, index is not in [{-length}, {length})")
+                return json.dumps(data[idx], ensure_ascii=False)
+            if match_index.lower() == 'random':
+                # 随机选取
+                return json.dumps(random.choice(data), ensure_ascii=False)
+            if match_index.lower() == 'all':
+                return json.dumps(data, ensure_ascii=False)
+            raise CaseParametersException(f"invalid match index: {match_index}, not number or random")
+        return json.dumps(data, ensure_ascii=False)

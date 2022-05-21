@@ -4,6 +4,7 @@ redis客户端Manager
 import asyncio
 import functools
 import inspect
+import json
 import pickle
 from random import Random
 from typing import Tuple
@@ -132,6 +133,66 @@ class RedisHelper(object):
         :return:
         """
         return RedisHelper.pity_redis_client.ping()
+
+    @staticmethod
+    @awaitable
+    def get_address_record(address: str):
+        """
+        获取ip是否已经开启录制
+        :param address:
+        :return:
+        """
+        key = RedisHelper.get_key(f"record:ip:{address}")
+        return RedisHelper.pity_redis_client.get(key)
+
+    @staticmethod
+    @awaitable
+    def cache_record(address: str, request):
+        """
+        :param address:
+        :param request:
+        :return:
+        """
+        key = RedisHelper.get_key(f"record:{address}:requests")
+        return RedisHelper.pity_redis_client.rpush(key, request)
+
+    @staticmethod
+    @awaitable
+    def set_address_record(user_id: int, address: str, regex: str):
+        """
+        设置录制状态
+        :param user_id:
+        :param address:
+        :param regex: 录制的url正则
+        :return:
+        """
+        # 默认录制1小时
+        value = json.dumps({"user_id": user_id, "regex": regex}, ensure_ascii=False)
+        RedisHelper.pity_redis_client.set(RedisHelper.get_key(f"record:ip:{address}"), value, ex=3600)
+        # 清楚上次录制数据
+        RedisHelper.pity_redis_client.delete(RedisHelper.get_key(f"record:{address}:requests"))
+
+    @staticmethod
+    @awaitable
+    def remove_address_record(address: str):
+        """
+        停止录制任务
+        :param address:
+        :return:
+        """
+        return RedisHelper.pity_redis_client.delete(RedisHelper.get_key(f"record:ip:{address}"))
+
+    @staticmethod
+    @awaitable
+    def list_record_data(address: str):
+        """
+        停止录制任务
+        :param address:
+        :return:
+        """
+        key = RedisHelper.get_key(f"record:{address}:requests")
+        data = RedisHelper.pity_redis_client.lrange(key, 0, -1)
+        return [json.loads(x) for x in data]
 
     @staticmethod
     @awaitable

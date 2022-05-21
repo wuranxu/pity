@@ -42,7 +42,7 @@ class ConstructorDao(Mapper):
                     result = await session.execute(sql)
                     if result.scalars().first() is not None:
                         raise Exception(f"{data.name}已存在")
-                    constructor = Constructor(**data.dict(), user=user_id)
+                    constructor = Constructor(**data.dict(), user_id=user_id)
                     constructor.index = await constructor.get_index(session, data.case_id)
                     session.add(constructor)
         except Exception as e:

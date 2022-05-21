@@ -6,6 +6,7 @@ from app.excpetions.ParamsException import ParamsError
 from app.schema.base import PityModel
 from app.schema.constructor import ConstructorForm
 from app.schema.testcase_data import PityTestcaseDataForm
+from app.schema.testcase_out_parameters import PityTestCaseOutParametersForm
 
 
 class TestCaseForm(BaseModel):
@@ -21,6 +22,7 @@ class TestCaseForm(BaseModel):
     request_headers: str = None
     request_method: str = None
     status: int
+    out_parameters: List[PityTestCaseOutParametersForm] = []
     directory_id: int
     request_type: int
 
@@ -49,6 +51,7 @@ class TestCaseInfo(BaseModel):
     asserts: List[TestCaseAssertsForm] = []
     data: List[PityTestcaseDataForm] = []
     constructor: List[ConstructorForm] = []
+    out_parameters: List[PityTestCaseOutParametersForm] = []
 
     @validator("case")
     def name_not_empty(cls, v):

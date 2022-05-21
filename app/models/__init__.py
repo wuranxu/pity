@@ -86,6 +86,8 @@ class DatabaseHelper(object):
                     continue
                 if isinstance(value, bool) or isinstance(value, int) or value:
                     # 如果是bool值或者int, false和0也是可以接受的
+                    if not hasattr(dist, var):
+                        continue
                     if getattr(dist, var) != value:
                         changed.append(var)
                         setattr(dist, var, value)

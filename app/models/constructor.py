@@ -24,8 +24,9 @@ class Constructor(PityBase):
     # 2021-12-18 是否是后置条件
     suffix = Column(BOOLEAN, default=False, comment="是否是后置条件，默认为否")
 
-    def __init__(self, type, name, enable, constructor_json, case_id, public, user, value="", suffix=False, id=None, index=0):
-        super().__init__(user, id)
+    def __init__(self, type, name, enable, constructor_json, case_id, public, user_id, value="", suffix=False, id=None,
+                 index=0):
+        super().__init__(user_id, id)
         self.type = type
         self.name = name
         self.enable = enable

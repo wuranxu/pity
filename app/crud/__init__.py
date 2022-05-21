@@ -73,10 +73,10 @@ class Mapper(object):
         conditions = condition if condition else list()
         if getattr(cls.model, "deleted_at", None):
             conditions.append(getattr(cls.model, "deleted_at") == 0)
-        desc = kwargs.get("desc")
-        if desc:
+        _sort = kwargs.get("_sort")
+        if _sort is not None:
             # 需要去掉desc，不然会影响之前的sql执行
-            kwargs.pop("desc")
+            kwargs.pop("_sort")
         # 遍历参数，当参数不为None的时候传递
         for k, v in kwargs.items():
             # 判断是否是like的情况
@@ -87,13 +87,13 @@ class Mapper(object):
             DatabaseHelper.where(v, getattr(cls.model, k).like(v) if like else getattr(cls.model, k) == v,
                                  conditions)
         sql = select(cls.model).where(*conditions)
-        if desc and isinstance(desc, list):
-            for d in desc:
+        if _sort and isinstance(_sort, tuple):
+            for d in _sort:
                 sql = getattr(sql, "order_by")(d)
         return sql
 
     @classmethod
-    @RedisHelper.up_cache("dao")
+    @RedisHelper.cache("dao")
     async def query_record(cls, session=None, **kwargs):
         try:
             if session:

@@ -78,6 +78,10 @@ class ConnectionManager:
         for connection in self.active_connections.values():
             await self.pusher(sender=connection, message=message)
 
+    async def send_data(self, user_id, msg_type, record_msg):
+        msg = dict(type=msg_type, record_msg=record_msg)
+        await self.send_personal_message(user_id, msg)
+
     async def notify(self, user_id, title=None, content=None, notice: PityNotification = None):
         """
         根据user_id推送对应的
