@@ -494,9 +494,9 @@ class Executor(object):
                 actually = self.translate(item.actually)
                 status, err = self.ops(item.assert_type, expected, actually)
                 result[item.id] = {"status": status, "msg": err}
-                if not status and ok is True:
-                    ok = False
             except Exception as e:
+                if ok is True:
+                    ok = False
                 self.append(f"预期结果: {item.expected}\n实际结果: {item.actually}\n")
                 result[item.id] = {"status": False, "msg": f"断言取值失败, 请检查断言语句: {e}"}
         return json.dumps(result, ensure_ascii=False), ok
