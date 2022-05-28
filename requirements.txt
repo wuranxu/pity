@@ -29,4 +29,5 @@ cos-python-sdk-v5
 asyncpg
 pymysql
 mitmproxy~=8.0.0
-jsonpath
+jsonpath~=0.82
+py-mock
