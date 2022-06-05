@@ -485,7 +485,7 @@ class Executor(object):
         ok = True
         if len(asserts) == 0:
             self.append("未设置断言, 用例结束")
-            return json.dumps(result, ensure_ascii=False), ans
+            return json.dumps(result, ensure_ascii=False), ok
         for item in asserts:
             try:
                 # 解析预期/实际结果
