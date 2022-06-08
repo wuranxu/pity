@@ -13,9 +13,12 @@ class BaseConfig(BaseSettings):
 
     SERVER_PORT: int
 
+    HEARTBEAT: int = 48
+
     # mock server
     MOCK_ON: bool
-    MOCK_PORT: int
+    PROXY_ON: bool
+    PROXY_PORT: int
     MYSQL_HOST: str
     MYSQL_PORT: int
     MYSQL_USER: str

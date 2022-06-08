@@ -154,7 +154,10 @@ class RedisHelper(object):
         :return:
         """
         key = RedisHelper.get_key(f"record:{address}:requests")
-        return RedisHelper.pity_redis_client.rpush(key, request)
+        RedisHelper.pity_redis_client.rpush(key, request)
+        ttl = RedisHelper.pity_redis_client.ttl(key)
+        if ttl < 0:
+            RedisHelper.pity_redis_client.expire(key, 3600)
 
     @staticmethod
     @awaitable

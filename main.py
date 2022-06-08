@@ -153,7 +153,7 @@ def init_proxy():
     给你我的附属金卡，默认开启代理
     :return:
     """
-    if Config.MOCK_ON:
+    if Config.PROXY_ON:
         asyncio.create_task(start_proxy(logger))
 
 
@@ -174,6 +174,14 @@ def stop_test():
 
 @pity.websocket("/ws/{user_id}")
 async def websocket_endpoint(websocket: WebSocket, user_id: int):
+    async def send_heartbeat():
+        while True:
+            logger.info("sending heartbeat")
+            await websocket.send_json({
+                'type': 3
+            })
+            await asyncio.sleep(Config.HEARTBEAT)
+
     await ws_manage.connect(websocket, user_id)
     try:
         # 定义特殊值的回复，配合前端实现确定连接，心跳检测等逻辑
@@ -188,6 +196,8 @@ async def websocket_endpoint(websocket: WebSocket, user_id: int):
         # 如果有未读消息, 则推送给前端对应的count
         if len(msg_records) > 0:
             await websocket.send_json(WebSocketMessage.msg_count(len(msg_records), True))
+        # 发送心跳包
+        # asyncio.create_task(send_heartbeat())
         while True:
             data: str = await websocket.receive_text()
             du = data.upper()
