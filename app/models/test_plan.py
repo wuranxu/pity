@@ -41,7 +41,7 @@ class PityTestPlan(PityBase):
 
     __tablename__ = "pity_test_plan"
 
-    __fields__ = (name, project_id, env, priority,)
+    __fields__ = (name, project_id, env, priority)
     __tag__ = "测试计划"
     __alias__ = dict(name="名称", project_id="项目", env="环境", priority="优先级", cron="cron", ordered="顺序",
                      pass_rate="通过率", msg_type="通知类型", retry_minutes="重试时间", receiver="通知人", case_list="用例列表")

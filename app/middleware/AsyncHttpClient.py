@@ -14,7 +14,7 @@ class AsyncRequest(object):
         self.url = url
         self.kwargs = kwargs
         self.timeout = aiohttp.ClientTimeout(total=timeout)
-        self.proxy = f"http://127.0.0.1:{Config.MOCK_PORT}" if Config.MOCK_ON else None
+        self.proxy = f"http://127.0.0.1:{Config.PROXY_PORT}" if Config.MOCK_ON else None
 
     def get_cookie(self, session):
         cookies = session.cookie_jar.filter_cookies(self.url)

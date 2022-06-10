@@ -508,72 +508,72 @@ class Executor(object):
         """
         if assert_type == "equal":
             if exp == act:
-                return True, f"预期结果: {exp} ✔ 等于 ✔ 实际结果: {act}"
-            return False, f"预期结果: {exp} ❌ 不等于 ❌ 实际结果: {act}"
+                return True, f"预期结果: {exp} 等于 实际结果: {act}【✔】"
+            return False, f"预期结果: {exp} 不等于 实际结果: {act}【❌】"
         if assert_type == "not_equal":
             if exp != act:
-                return True, f"预期结果: {exp} ✔ 不等于 ✔ 实际结果: {act}"
-            return False, f"预期结果: {exp} ❌ 等于 ❌ 实际结果: {act}"
+                return True, f"预期结果: {exp} 不等于 实际结果: {act}【✔】"
+            return False, f"预期结果: {exp} 等于 实际结果: {act}【❌】"
         if assert_type == "in":
             if exp in act:
-                return True, f"预期结果: {exp} ✔ 包含于 ✔ 实际结果: {act}"
-            return False, f"预期结果: {exp} ❌ 不包含于 ❌ 实际结果: {act}"
+                return True, f"预期结果: {exp} 包含于 实际结果: {act}【✔】"
+            return False, f"预期结果: {exp} 不包含于 实际结果: {act}【❌】"
         if assert_type == "not_in":
             if exp not in act:
-                return True, f"预期结果: {exp} ✔ 不包含于 ✔ 实际结果: {act}"
-            return False, f"预期结果: {exp} ❌ 包含于 ❌ 实际结果: {act}"
+                return True, f"预期结果: {exp} 不包含于 实际结果: {act}【✔】"
+            return False, f"预期结果: {exp} 包含于 实际结果: {act}【❌】"
         if assert_type == "contain":
             if act in exp:
-                return True, f"预期结果: {exp} ✔ 包含 ✔ 实际结果: {act}"
-            return False, f"预期结果: {exp} ❌ 不包含 ❌ 实际结果: {act}"
+                return True, f"预期结果: {exp} 包含 实际结果: {act}【✔】"
+            return False, f"预期结果: {exp} 不包含 实际结果: {act}【❌】"
         if assert_type == "not_contain":
             if act not in exp:
-                return True, f"预期结果: {exp} ✔ 不包含 ✔ 实际结果: {act}"
-            return False, f"预期结果: {exp} ❌ 包含 ❌ 实际结果: {act}"
+                return True, f"预期结果: {exp} 不包含 实际结果: {act}【✔】"
+            return False, f"预期结果: {exp} 包含 实际结果: {act}【❌】"
         if assert_type == "length_eq":
             if exp == len(act):
-                return True, f"预期数量: {exp} ✔ 等于 ✔ 实际数量: {len(act)}"
-            return False, f"预期数量: {exp} ❌ 不等于 ❌ 实际数量: {len(act)}"
+                return True, f"预期数量: {exp} 等于 实际数量: {len(act)}【✔】"
+            return False, f"预期数量: {exp} 不等于 实际数量: {len(act)}【❌】"
         if assert_type == "length_gt":
             if exp > len(act):
-                return True, f"预期数量: {exp} ✔ 大于 ✔ 实际数量: {len(act)}"
-            return False, f"预期数量: {exp} ❌ 不大于 ❌ 实际数量: {len(act)}"
+                return True, f"预期数量: {exp} 大于 实际数量: {len(act)}【✔】"
+            return False, f"预期数量: {exp} 不大于 实际数量: {len(act)}【❌】"
         if assert_type == "length_ge":
             if exp >= len(act):
-                return True, f"预期数量: {exp} ✔ 大于等于 ✔ 实际数量: {len(act)}"
-            return False, f"预期数量: {exp} ❌ 小于 ❌ 实际数量: {len(act)}"
+                return True, f"预期数量: {exp} 大于等于 实际数量: {len(act)}【✔】"
+            return False, f"预期数量: {exp} 小于 实际数量: {len(act)}【❌】"
         if assert_type == "length_le":
             if exp <= len(act):
-                return True, f"预期数量: {exp} ✔ 小于等于 ✔ 实际数量: {len(act)}"
-            return False, f"预期数量: {exp} ❌ 大于 ❌ 实际数量: {len(act)}"
+                return True, f"预期数量: {exp} 小于等于 实际数量: {len(act)}【✔】"
+            return False, f"预期数量: {exp} 大于 实际数量: {len(act)}【❌】"
         if assert_type == "length_lt":
             if exp < len(act):
-                return True, f"预期数量: {exp} ✔ 小于 ✔ 实际数量: {len(act)}"
-            return False, f"预期数量: {exp} ❌ 不小于 ❌ 实际数量: {len(act)}"
+                return True, f"预期数量: {exp} 小于 实际数量: {len(act)}【✔】"
+            return False, f"预期数量: {exp} 不小于 实际数量: {len(act)}【❌】"
         if assert_type == "json_equal":
             data = JsonCompare().compare(exp, act)
             if len(data) == 0:
-                return True, "预期JSON ✔ 等于 ✔ 实际JSON"
+                return True, "预期JSON 等于 实际JSON【✔】"
             return False, data
         if assert_type == "text_in":
             if isinstance(act, str):
                 # 如果b是string，则不转换
                 if exp in act:
-                    return True, f"预期结果: {exp} ✔ 文本包含于 ✔ 实际结果: {act}"
-                return False, f"预期结果: {exp} ❌ 文本不包含于 ❌ 实际结果: {act}"
+                    return True, f"预期结果: {exp} 文本包含于 实际结果: {act}【✔】"
+                return False, f"预期结果: {exp} 文本不包含于 实际结果: {act}【❌】"
             temp = json.dumps(act, ensure_ascii=False)
             if exp in temp:
-                return True, f"预期结果: {exp} ✔ 文本包含于 ✔ 实际结果: {act}"
-            return False, f"预期结果: {exp} ❌ 文本不包含于 ❌ 实际结果: {act}"
+                return True, f"预期结果: {exp} 文本包含于 实际结果: {act}【✔】"
+            return False, f"预期结果: {exp} 文本不包含于 实际结果: {act}【❌】"
         if assert_type == "text_not_in":
             if isinstance(act, str):
                 if exp in act:
-                    return True, f"预期结果: {exp} ❌ 文本包含于 ❌ 实际结果: {act}"
-                return False, f"预期结果: {exp} ✔ 文本不包含于 ✔ 实际结果: {act}"
+                    return True, f"预期结果: {exp} 文本包含于 实际结果: {act}【❌】"
+                return False, f"预期结果: {exp} 文本不包含于 实际结果: {act}【✔】"
             temp = json.dumps(act, ensure_ascii=False)
             if exp in temp:
-                return True, f"预期结果: {exp} ❌ 文本包含于 ❌ 实际结果: {act}"
-            return False, f"预期结果: {exp} ✔ 文本不包含于 ✔ 实际结果: {act}"
+                return True, f"预期结果: {exp} 文本包含于 实际结果: {act}【❌】"
+            return False, f"预期结果: {exp} 文本不包含于 实际结果: {act}【✔】"
         return False, "不支持的断言方式💔"
 
     def get_el_expression(self, string: str):

@@ -5,9 +5,10 @@ from typing import List
 
 from pydantic import BaseSettings
 
+ROOT = os.path.dirname(os.path.abspath(__file__))
+
 
 class BaseConfig(BaseSettings):
-    ROOT = os.path.dirname(os.path.abspath(__file__))
     LOG_DIR = os.path.join(ROOT, 'logs')
     LOG_NAME = os.path.join(LOG_DIR, 'pity.log')
 
@@ -140,12 +141,12 @@ class BaseConfig(BaseSettings):
 
 class DevConfig(BaseConfig):
     class Config:
-        env_file = "./conf/dev.env"
+        env_file = os.path.join(ROOT, "conf", "dev.env")
 
 
 class ProConfig(BaseConfig):
     class Config:
-        env_file = "./conf/pro.env"
+        env_file = os.path.join(ROOT, "conf", "pro.env")
 
     SERVER_REPORT = "https://pity.fun/#/record/report/"
 

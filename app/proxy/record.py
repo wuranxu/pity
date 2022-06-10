@@ -6,10 +6,10 @@ import asyncio
 import json
 import re
 
+from app.core.request.request import RequestInfo
 from app.core.ws_connection_manager import ws_manage
 from app.enums.MessageEnum import WebSocketMessageEnum
 from app.middleware.RedisManager import RedisHelper
-from app.proxy.utils import RequestInfo
 
 
 class PityRecorder(object):
