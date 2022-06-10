@@ -2,13 +2,14 @@ import json
 import os
 
 from app.middleware.RedisManager import RedisHelper
-from config import Config, PITY_ENV
+from config import Config, PITY_ENV, ROOT
 
 
 class SystemConfiguration(object):
     """
     系统配置
     """
+
     @staticmethod
     def config_filename():
         if PITY_ENV and PITY_ENV.lower() == "pro":
@@ -19,7 +20,7 @@ class SystemConfiguration(object):
     @RedisHelper.cache("configuration", 24 * 3600)
     def get_config():
         try:
-            filepath = os.path.join(Config.ROOT, SystemConfiguration.config_filename())
+            filepath = os.path.join(ROOT, SystemConfiguration.config_filename())
             if not os.path.exists(filepath):
                 raise Exception("没找到配置文件，请检查configuration文件是否已经被删除")
             with open(filepath, mode="r", encoding='utf-8') as f:
