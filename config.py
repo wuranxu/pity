@@ -88,44 +88,6 @@ class BaseConfig(BaseSettings):
     # 测试计划中，case默认重试次数
     RETRY_TIMES = 1
 
-    # 请求类型
-    class BodyType(IntEnum):
-        none = 0
-        json = 1
-        form = 2
-        x_form = 3
-        binary = 4
-        graphQL = 5
-
-    # 全局变量的类型
-    class GconfigType:
-        case = 0
-        constructor = 1
-        asserts = 2
-
-        @staticmethod
-        def value(val):
-            if val == 0:
-                return "用例"
-            if val == 1:
-                return "前后置条件"
-            return "断言"
-
-    # 日志类型
-    class OperationType:
-        INSERT = 0
-        UPDATE = 1
-        DELETE = 2
-        EXECUTE = 3
-        STOP = 4
-
-    # 通知类型
-    class NoticeType(IntEnum):
-        EMAIL = 0
-        DINGDING = 1
-        WECHAT = 2
-        FEISHU = 3
-
     # 日志名
     PITY_ERROR = "pity_error"
     PITY_INFO = "pity_info"

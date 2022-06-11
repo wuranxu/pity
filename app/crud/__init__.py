@@ -10,6 +10,7 @@ from typing import Tuple, List
 
 from sqlalchemy import select, update
 
+from app.enums.OperationEnum import OperationType
 from app.middleware.RedisManager import RedisHelper
 from app.models import Base, async_session, DatabaseHelper, async_engine
 from app.models.address import PityGateway
@@ -121,7 +122,7 @@ class Mapper(object):
                     if log:
                         async with session.begin():
                             await asyncio.create_task(
-                                cls.insert_log(session, model.create_user, Config.OperationType.INSERT, model,
+                                cls.insert_log(session, model.create_user, OperationType.INSERT, model,
                                                key=model.id))
                     # 这里直接return了，不会继续走下面的add
                     return model
@@ -130,7 +131,7 @@ class Mapper(object):
             ss.expunge(model)
             if log:
                 await asyncio.create_task(
-                    cls.insert_log(ss, model.create_user, Config.OperationType.INSERT, model,
+                    cls.insert_log(ss, model.create_user, OperationType.INSERT, model,
                                    key=model.id))
             return model
         except Exception as e:
@@ -168,7 +169,7 @@ class Mapper(object):
                 if log:
                     async with session.begin():
                         await asyncio.create_task(
-                            cls.insert_log(session, user, Config.OperationType.UPDATE, now, old, model.id,
+                            cls.insert_log(session, user, OperationType.UPDATE, now, old, model.id,
                                            changed=changed))
                 return now
         except Exception as e:
@@ -189,7 +190,7 @@ class Mapper(object):
         session.expunge(original)
         if log:
             await asyncio.create_task(
-                cls.insert_log(session, user, Config.OperationType.DELETE, original, key=value))
+                cls.insert_log(session, user, OperationType.DELETE, original, key=value))
             return original
 
     @classmethod
@@ -233,7 +234,7 @@ class Mapper(object):
                 session.expunge(original)
                 if log:
                     await asyncio.create_task(
-                        cls.insert_log(session, user, Config.OperationType.DELETE, original, key=id_))
+                        cls.insert_log(session, user, OperationType.DELETE, original, key=id_))
         except Exception as e:
             cls.log.exception(f"删除{cls.model}记录失败, error: {e}")
             raise Exception(f"删除记录失败")
@@ -277,14 +278,14 @@ class Mapper(object):
         else:
             fields = ['id']
         if not changed:
-            if mode == Config.OperationType.INSERT:
+            if mode == OperationType.INSERT:
                 changed_fields = await cls.get_fields(now)
             else:
                 changed_fields = []
         else:
             changed_fields = changed
         detail_fields = [c for c in changed_fields if
-                         c not in fields] if mode != Config.OperationType.UPDATE else changed_fields
+                         c not in fields] if mode != OperationType.UPDATE else changed_fields
         result = []
         title = []
         for f in detail_fields:

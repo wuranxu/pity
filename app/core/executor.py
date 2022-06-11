@@ -27,8 +27,10 @@ from app.crud.test_case.TestPlan import PityTestPlanDao
 from app.crud.test_case.TestReport import TestReportDao
 from app.crud.test_case.TestResult import TestResultDao
 from app.crud.test_case.TestcaseDataDao import PityTestcaseDataDao
-from app.enums.ConstructorType import ConstructorType
-from app.enums.GconfigEnum import GConfigParserEnum
+from app.enums.ConstructorEnum import ConstructorType
+from app.enums.GconfigEnum import GConfigParserEnum, GconfigType
+from app.enums.NoticeEnum import NoticeType
+from app.enums.RequestBodyEnum import BodyType
 from app.middleware.AsyncHttpClient import AsyncRequest
 from app.models.constructor import Constructor
 from app.models.out_parameters import PityTestCaseOutParameters
@@ -89,7 +91,7 @@ class Executor(object):
         解析全局变量
         """
         for f in fields:
-            await self.parse_field(data, f, Config.GconfigType.value(type_), env)
+            await self.parse_field(data, f, GconfigType.text(type_), env)
 
     @case_log
     def get_parser(self, key_type):
@@ -249,9 +251,9 @@ class Executor(object):
         :param headers:
         :return:
         """
-        if case_info.body_type == Config.BodyType.none:
+        if case_info.body_type == BodyType.none:
             return
-        if case_info.body_type == Config.BodyType.json:
+        if case_info.body_type == BodyType.json:
             if "Content-Type" not in headers:
                 headers['Content-Type'] = "application/json; charset=UTF-8"
 
@@ -289,7 +291,7 @@ class Executor(object):
             response_info["request_method"] = method
 
             # Step1: 替换全局变量
-            await self.parse_gconfig(case_info, Config.GconfigType.case, env, *Executor.fields)
+            await self.parse_gconfig(case_info, GconfigType.case, env, *Executor.fields)
 
             self.append("解析全局变量", True)
 
@@ -298,7 +300,7 @@ class Executor(object):
 
             #  Step3: 解析前后置条件的全局变量
             for c in constructors:
-                await self.parse_gconfig(c, Config.GconfigType.constructor, env, "constructor_json")
+                await self.parse_gconfig(c, GconfigType.constructor, env, "constructor_json")
 
             # Step4: 获取断言
             asserts = await TestCaseAssertsDao.async_list_test_case_asserts(case_id)
@@ -307,7 +309,7 @@ class Executor(object):
             out_parameters = await PityTestCaseOutParametersDao.list_record(case_id=case_id)
 
             for ast in asserts:
-                await self.parse_gconfig(ast, Config.GconfigType.asserts, env, "expected", "actually")
+                await self.parse_gconfig(ast, GconfigType.asserts, env, "expected", "actually")
 
             # Step5: 替换参数
             self.replace_args(req_params, case_info, constructors, asserts)
@@ -460,7 +462,7 @@ class Executor(object):
     @case_log
     def replace_body(self, req_params, body, body_type=1):
         """根据传入的构造参数进行参数替换"""
-        if body_type != Config.BodyType.json:
+        if body_type != BodyType.json:
             self.append("当前请求数据不为json, 跳过替换")
             return body
         try:
@@ -657,12 +659,12 @@ class Executor(object):
             msg_types = plan.msg_type.split(",")
             if msg_types and users:
                 for m in msg_types:
-                    if int(m) == Config.NoticeType.EMAIL:
+                    if int(m) == NoticeType.EMAIL:
                         render_html = Email.render_html(plan_name=plan.name, **report_dict[e])
                         Email.send_msg(
                             f"【{report_dict[e].get('env')}】测试计划【{plan.name}】执行完毕（{report_dict[e].get('plan_result')}）",
                             render_html, None, *[r.get("email") for r in users])
-                    if int(m) == Config.NoticeType.DINGDING:
+                    if int(m) == NoticeType.DINGDING:
                         report_dict[e]['result_color'] = '#67C23A' if report_dict[e]['plan_result'] == '通过' \
                             else '#E6A23C'
                         # 批量获取用户手机号

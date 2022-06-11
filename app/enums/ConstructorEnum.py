@@ -1,5 +1,8 @@
 # 前置条件类型
-class ConstructorType:
+from enum import IntEnum
+
+
+class ConstructorType(IntEnum):
     testcase = 0
     sql = 1
     redis = 2

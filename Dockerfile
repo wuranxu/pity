@@ -9,4 +9,4 @@ RUN cd /opt/server && pip3 install -r requirements.txt -i https://pypi.douban.co
 #切换到/opt/server工作目录下
 WORKDIR /opt/server
 #容器启动时运行项目启动命令
-CMD python3 main.py
+CMD python3 pity.py

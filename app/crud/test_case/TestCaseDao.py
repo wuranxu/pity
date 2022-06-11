@@ -11,7 +11,7 @@ from app.crud.test_case.TestCaseAssertsDao import TestCaseAssertsDao
 from app.crud.test_case.TestCaseDirectory import PityTestcaseDirectoryDao
 from app.crud.test_case.TestCaseOutParametersDao import PityTestCaseOutParametersDao
 from app.crud.test_case.TestcaseDataDao import PityTestcaseDataDao
-from app.enums.ConstructorType import ConstructorType
+from app.enums.ConstructorEnum import ConstructorType
 from app.middleware.RedisManager import RedisHelper
 from app.models import DatabaseHelper, async_session
 from app.models.constructor import Constructor
@@ -24,7 +24,6 @@ from app.models.user import User
 from app.schema.testcase_schema import TestCaseForm, TestCaseInfo
 from app.utils.decorator import dao
 from app.utils.logger import Log
-from config import Config
 
 
 @dao(TestCase, Log("TestCaseDao"))

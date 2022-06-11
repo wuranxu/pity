@@ -17,7 +17,7 @@ class PityBase(Base):
     create_user = Column(INT, nullable=False)
     update_user = Column(INT, nullable=False)
     __abstract__ = True
-    __fields__: Tuple[Column] = (id,)
+    __fields__: Tuple[Column] = [id]
     __tag__ = "未定义"
     __alias__ = dict(name="名称")
     __show__ = 1

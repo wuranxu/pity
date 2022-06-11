@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud import Mapper
+from app.enums.OperationEnum import OperationType
 from app.excpetions.AuthException import AuthException
 from app.models import async_session, DatabaseHelper
 from app.models.project import Project
@@ -153,7 +154,7 @@ class ProjectRoleDao(Mapper):
                     session.expunge(original)
                 async with session.begin():
                     await asyncio.create_task(
-                        ProjectRoleDao.insert_log(session, user_id, Config.OperationType.UPDATE, original, old, role.id,
+                        ProjectRoleDao.insert_log(session, user_id, OperationType.UPDATE, original, old, role.id,
                                                   changed=changed))
         except Exception as e:
             cls.log.error(f"更新用户角色失败: {e}")
@@ -180,6 +181,6 @@ class ProjectRoleDao(Mapper):
                     session.expunge(role)
                 async with session.begin():
                     await asyncio.create_task(
-                        ProjectRoleDao.insert_log(session, user_id, Config.OperationType.DELETE, role, key=role_id))
+                        ProjectRoleDao.insert_log(session, user_id, OperationType.DELETE, role, key=role_id))
         except Exception as e:
             raise Exception(f"删除用户角色失败: {e}")

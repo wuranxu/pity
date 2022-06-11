@@ -20,7 +20,7 @@ class PityTestcaseData(PityBase):
 
     __tablename__ = "pity_testcase_data"
 
-    __fields__ = (name,)
+    __fields__ = [name]
     __show__ = 1
 
     def __init__(self, env, case_id, name, json_data, user_id, id=None):

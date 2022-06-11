@@ -15,7 +15,7 @@ class Environment(PityBase):
         UniqueConstraint('name', 'deleted_at'),
     )
 
-    __fields__ = (name,)
+    __fields__ = [name]
     __tag__ = "环境"
     __alias__ = dict(name="名称", remarks="备注")
 
