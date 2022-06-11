@@ -111,14 +111,6 @@ class BaseConfig(BaseSettings):
                 return "前后置条件"
             return "断言"
 
-    # 前置条件类型
-    class ConstructorType:
-        testcase = 0
-        sql = 1
-        redis = 2
-        py_script = 3
-        http = 4
-
     # 日志类型
     class OperationType:
         INSERT = 0

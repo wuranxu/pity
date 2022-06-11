@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import List, Any
 
 from app.core.constructor.case_constructor import TestcaseConstructor
+from app.core.constructor.http_constructor import HttpConstructor
 from app.core.constructor.python_constructor import PythonConstructor
 from app.core.constructor.redis_constructor import RedisConstructor
 from app.core.constructor.sql_constructor import SqlConstructor
@@ -26,6 +27,7 @@ from app.crud.test_case.TestPlan import PityTestPlanDao
 from app.crud.test_case.TestReport import TestReportDao
 from app.crud.test_case.TestResult import TestResultDao
 from app.crud.test_case.TestcaseDataDao import PityTestcaseDataDao
+from app.enums.ConstructorType import ConstructorType
 from app.enums.GconfigEnum import GConfigParserEnum
 from app.middleware.AsyncHttpClient import AsyncRequest
 from app.models.constructor import Constructor
@@ -63,14 +65,16 @@ class Executor(object):
 
     @staticmethod
     def get_constructor_type(c: Constructor):
-        if c.type == Config.ConstructorType.testcase:
+        if c.type == ConstructorType.testcase:
             return TestcaseConstructor
-        if c.type == Config.ConstructorType.sql:
+        if c.type == ConstructorType.sql:
             return SqlConstructor
-        if c.type == Config.ConstructorType.redis:
+        if c.type == ConstructorType.redis:
             return RedisConstructor
-        if c.type == Config.ConstructorType.py_script:
+        if c.type == ConstructorType.py_script:
             return PythonConstructor
+        if c.type == ConstructorType.http:
+            return HttpConstructor
         return None
 
     def append(self, content, end=False):

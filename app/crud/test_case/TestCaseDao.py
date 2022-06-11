@@ -11,6 +11,7 @@ from app.crud.test_case.TestCaseAssertsDao import TestCaseAssertsDao
 from app.crud.test_case.TestCaseDirectory import PityTestcaseDirectoryDao
 from app.crud.test_case.TestCaseOutParametersDao import PityTestCaseOutParametersDao
 from app.crud.test_case.TestcaseDataDao import PityTestcaseDataDao
+from app.enums.ConstructorType import ConstructorType
 from app.middleware.RedisManager import RedisHelper
 from app.models import DatabaseHelper, async_session
 from app.models.constructor import Constructor
@@ -294,16 +295,16 @@ class TestCaseDao(Mapper):
         constructors = await TestCaseDao.async_select_constructor(case_id)
         for c in constructors:
             temp = dict(id=f"constructor_{c.id}", label=f"{c.name}", children=list())
-            if c.type == Config.ConstructorType.testcase:
+            if c.type == ConstructorType.testcase:
                 # 说明是用例，继续递归
                 temp["label"] = "[CASE]: " + temp["label"]
                 json_data = json.loads(c.constructor_json)
                 await TestCaseDao.collect_data(json_data.get("case_id"), temp.get("children"))
-            elif c.type == Config.ConstructorType.sql:
+            elif c.type == ConstructorType.sql:
                 temp["label"] = "[SQL]: " + temp["label"]
-            elif c.type == Config.ConstructorType.redis:
+            elif c.type == ConstructorType.redis:
                 temp["label"] = "[REDIS]: " + temp["label"]
-            elif c.type == Config.ConstructorType.py_script:
+            elif c.type == ConstructorType.py_script:
                 temp["label"] = "[PyScript]: " + temp["label"]
             # 否则正常添加数据
             if c.suffix:
