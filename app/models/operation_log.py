@@ -2,6 +2,7 @@ from datetime import datetime
 
 from sqlalchemy import Column, INT, TIMESTAMP, String, SMALLINT, TEXT
 
+from app.enums.OperationEnum import OperationType
 from app.models import Base
 
 
@@ -33,10 +34,10 @@ class PityOperationLog(Base):
     # key
     key = Column(INT, nullable=True, comment="关键id，可能是目录id，case_id或者其他id")
 
-    def __init__(self, user_id, mode, title, tag, description, key=None):
+    def __init__(self, user_id, mode: OperationType, title, tag, description, key=None):
         self.user_id = user_id
         self.tag = tag
-        self.mode = mode
+        self.mode = mode.value
         self.title = title
         self.key = key
         self.description = description
