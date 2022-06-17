@@ -5,6 +5,7 @@ from pydantic import BaseModel, validator
 from app.excpetions.ParamsException import ParamsError
 from app.schema.base import PityModel
 from app.schema.constructor import ConstructorForm
+from app.schema.request import RequestInfo
 from app.schema.testcase_data import PityTestcaseDataForm
 from app.schema.testcase_out_parameters import PityTestCaseOutParametersForm
 
@@ -12,8 +13,8 @@ from app.schema.testcase_out_parameters import PityTestCaseOutParametersForm
 class TestCaseForm(BaseModel):
     id: int = None
     priority: str
-    url: str
-    name: str
+    url: str = ""
+    name: str = ""
     case_type: int = 0
     base_path: str = None
     tag: str = None
@@ -56,3 +57,8 @@ class TestCaseInfo(BaseModel):
     @validator("case")
     def name_not_empty(cls, v):
         return PityModel.not_empty(v)
+
+
+class TestCaseGeneratorForm(BaseModel):
+    directory_id: int
+    requests: List[RequestInfo]

@@ -66,21 +66,6 @@ class TestCaseDao(Mapper):
             TestCaseDao.log.error(f"获取测试用例失败: {str(e)}")
             raise Exception(f"获取测试用例失败: {str(e)}")
 
-    # @staticmethod
-    # async def get_tree(case_list):
-    #     result = defaultdict(list)
-    #     # 获取目录->用例的映射关系
-    #     for cs in case_list:
-    #         result[cs.catalogue].append(cs)
-    #
-    #     keys = sorted(result.keys())
-    #     tree = [dict(key=f"cat_{key}",
-    #                  children=[{"key": f"case_{child.id}", "title": child.name,
-    #                             "total": await TestCaseDao.get_case_children_length(child.id),
-    #                             "children": await TestCaseDao.get_case_children(child.id)} for child in result[key]],
-    #                  title=key, total=len(result[key])) for key in keys]
-    #     return tree
-
     @staticmethod
     async def get_case_children(case_id: int):
         data = await TestCaseAssertsDao.list_test_case_asserts(case_id)
@@ -105,7 +90,7 @@ class TestCaseDao(Mapper):
                 await md.insert_record(data, ss=session)
 
     @staticmethod
-    async def insert_test_case(session, data: TestCaseInfo, user_id: int):
+    async def insert_test_case(session, data: TestCaseInfo, user_id: int) -> TestCase:
         """
         测试数据和用户id
         :param data: 测试用例数据
@@ -127,6 +112,7 @@ class TestCaseDao(Mapper):
                                   asserts=(TestCaseAssertsDao, TestCaseAsserts),
                                   out_parameters=(PityTestCaseOutParametersDao, PityTestCaseOutParameters),
                                   data=(PityTestcaseDataDao, PityTestcaseData))
+        return cs
 
     @classmethod
     async def update_test_case(cls, test_case: TestCaseForm, user_id: int) -> TestCase:

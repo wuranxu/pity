@@ -14,29 +14,31 @@ body = TypeVar("body", bytes, str)
 
 
 class RequestInfo(pydantic.BaseModel):
-    url: str = None
-    body: body = None
-    request_method: str = None
-    request_data: str = None
-    request_headers: dict = None
-    response_headers: dict = None
-    cookies: dict = None
-    request_cookies: dict = None
-    response_content: str = None
-    status_code: int = None
+    url: str
+    body: str
+    request_method: str
+    # request_data: str
+    request_headers: dict
+    response_headers: dict
+    cookies: dict
+    request_cookies: dict
+    response_content: str
+    status_code: int
 
-    def __init__(self, flow=None):
-        super().__init__()
+    def __init__(self, flow=None, **kwargs):
         if flow:
-            self.status_code = flow.response.status_code
-            self.url = flow.request.url
-            self.request_method = flow.request.method
-            self.request_headers = dict(flow.request.headers)
-            self.response_headers = dict(flow.response.headers)
-            self.response_content = self.get_response(flow.response)
-            self.body = self.get_body(flow.request)
-            self.cookies = dict(flow.response.cookies)
-            self.request_cookies = dict(flow.request.cookies)
+            kwargs.update(
+                dict(status_code=flow.response.status_code,
+                     url=flow.request.url,
+                     request_method=flow.request.method,
+                     request_headers=dict(flow.request.headers),
+                     response_headers=dict(flow.response.headers),
+                     response_content=self.get_response(flow.response),
+                     body=self.get_body(flow.request),
+                     cookies=dict(flow.response.cookies),
+                     request_cookies=dict(flow.request.cookies),
+                     ))
+        super().__init__(**kwargs)
 
     def from_dict(self, **kwargs):
         for k, v in kwargs:
@@ -64,7 +66,7 @@ class RequestInfo(pydantic.BaseModel):
     @classmethod
     def get_body(cls, request):
         if len(request.content) == 0:
-            return None
+            return ''
         content_type = request.headers.get("Content-Type")
         if "json" in content_type.lower():
             return cls.translate_json(request.text)

@@ -1,15 +1,21 @@
 __author__ = "woody"
 
 import json
+import time
 from collections import defaultdict
 from json import JSONDecodeError
 from typing import List
 
 from loguru import logger
 
-from app.core.request.request import RequestInfo
+from app.enums.CaseStatusEnum import CaseStatus
+from app.enums.ConstructorEnum import ConstructorType
+from app.enums.RequestBodyEnum import BodyType
+from app.enums.RequestTypeEnum import RequestType
 from app.excpetions.convert.GenerateException import GenerateException
-from app.models.test_case import TestCase
+from app.schema.constructor import ConstructorForm
+from app.schema.request import RequestInfo
+from app.schema.testcase_schema import TestCaseForm
 
 """
 case生成器，根据RequestInfo数组生成
@@ -31,8 +37,45 @@ class CaseGenerator(object):
         return False
 
     @staticmethod
-    def generate_case(requests: List[RequestInfo]) -> List[TestCase]:
-        pass
+    def get_body_type(headers):
+        content_type = headers.get("Content-Type", "").lower()
+        if "json" in content_type:
+            return BodyType.json
+        if "x-www-form" in content_type:
+            return BodyType.x_form
+        if "form" in content_type:
+            return BodyType.form
+        return BodyType.none
+
+    @staticmethod
+    def generate_constructors(requests: List[RequestInfo]) -> List[ConstructorForm]:
+        constructors = []
+        for r in range(len(requests) - 1):
+            name = f"http请求_{r + 1}"
+            constructor_json = json.dumps(dict(
+                body=requests[r].body,
+                headers=requests[r].request_headers,
+                base_path=None,
+                url=requests[r].url,
+                request_method=requests[r].request_method,
+                body_type=CaseGenerator.get_body_type(requests[r].request_headers),
+            ), ensure_ascii=False)
+            c = ConstructorForm(name=name, value=f"http_res_{r + 1}", constructor_json=constructor_json,
+                                enable=True, public=True, suffix=False, index=r + 1,
+                                type=ConstructorType.http.value)
+            constructors.append(c)
+        return constructors
+
+    @staticmethod
+    def generate_case(directory_id: int, last: RequestInfo) -> TestCaseForm:
+        name = f"录制用例_{int(time.time())}"
+        form = TestCaseForm(directory_id=directory_id, name=name, url=last.url,
+                            request_type=RequestType.http.value, body=last.body,
+                            request_method=last.request_method,
+                            body_type=CaseGenerator.get_body_type(last.request_headers).value,
+                            request_headers=json.dumps(last.request_headers, ensure_ascii=False),
+                            case_type=0, status=CaseStatus.debugging.value, priority="P3")
+        return form
 
     @staticmethod
     def extract_field(requests: List[RequestInfo]) -> List[str]:
@@ -44,6 +87,9 @@ class CaseGenerator(object):
         var_pool = defaultdict(list)
         replaced = []
         for i in range(len(requests)):
+            # 删除headers里面的Content-Length字段
+            requests[i].request_headers.pop("Content-Length")
+            requests[i].response_headers.pop("Content-Length")
             # 记录变量
             CaseGenerator.record_vars(requests[i], var_pool, f"http_res_{i + 1}")
             if i > 0:

@@ -17,7 +17,9 @@ class HttpConstructor(ConstructorAbstract):
             if data.get("base_path"):
                 base_path = await PityGatewayDao.query_gateway(env, data.get("base_path"))
                 url = f"{base_path}{url}"
-            headers = json.loads(data.get("headers"))
+            headers = data.get("headers")
+            if isinstance(headers, str):
+                headers = json.loads(data.get("headers"))
             client = await AsyncRequest.client(url=url, body_type=data.get("body_type"), headers=headers,
                                                body=data.get("body"))
             resp = await client.invoke(data.get("request_method"))

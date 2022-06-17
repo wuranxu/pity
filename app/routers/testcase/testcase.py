@@ -5,6 +5,7 @@ from typing import List
 from fastapi import APIRouter, Depends
 from starlette.requests import Request
 
+from app.core.request.generator import CaseGenerator
 from app.crud.project.ProjectRoleDao import ProjectRoleDao
 from app.crud.test_case.ConstructorDao import ConstructorDao
 from app.crud.test_case.TestCaseAssertsDao import TestCaseAssertsDao
@@ -23,7 +24,7 @@ from app.schema.constructor import ConstructorForm, ConstructorIndex
 from app.schema.testcase_data import PityTestcaseDataForm
 from app.schema.testcase_directory import PityTestcaseDirectoryForm, PityMoveTestCaseDto
 from app.schema.testcase_out_parameters import PityTestCaseOutParametersForm
-from app.schema.testcase_schema import TestCaseAssertsForm, TestCaseForm, TestCaseInfo
+from app.schema.testcase_schema import TestCaseAssertsForm, TestCaseForm, TestCaseInfo, TestCaseGeneratorForm
 
 router = APIRouter(prefix="/testcase")
 
@@ -341,3 +342,16 @@ async def record_requests(request: Request, _=Depends(Permission())):
         status = True
     data = await RedisHelper.list_record_data(request.client.host)
     return PityResponse.success(dict(data=data, regex=regex, status=status))
+
+
+@router.post("/generate", summary="生成用例")
+async def generate_case(form: TestCaseGeneratorForm, user=Depends(Permission()), session=Depends(get_session)):
+    if len(form.requests) == 0:
+        return PityResponse.failed("无http请求，请检查参数")
+    CaseGenerator.extract_field(form.requests)
+    cs = CaseGenerator.generate_case(form.directory_id, form.requests[-1])
+    constructors = CaseGenerator.generate_constructors(form.requests)
+    info = TestCaseInfo(constructor=constructors, case=cs)
+    async with session.begin():
+        ans = await TestCaseDao.insert_test_case(session, info, user['id'])
+        return PityResponse.success(ans)

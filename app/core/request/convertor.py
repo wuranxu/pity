@@ -2,7 +2,7 @@ __author__ = "woody"
 
 from typing import List
 
-from app.core.request.request import RequestInfo
+from app.schema.request import RequestInfo
 
 """
 request转换器，支持har到
