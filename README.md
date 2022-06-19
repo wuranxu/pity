@@ -5,6 +5,23 @@
 ![png](https://img.shields.io/badge/FastApi-green)
 ![png](https://img.shields.io/badge/contributors-3-green)
 
+### 🎉 技术栈
+
+- [x] 🎨 FastApi(前期Flask，所以教程初期也是Flask)
+- [x] 🎶 SQLAlchemy(你可以看到很多sqlalchemy的用法) 
+- [x] 🎉 Apscheduler(定时任务框架) 
+- [x] 🎃 mitmproxy(mock，用例录制生成) 
+- [x] 🔒 Redis
+- [x] 🏐 Gunicorn(内含uvicorn，部署服务)
+- [x] 🎲 Nginx(反向代理，https配置等)
+- [x] 💎 七牛云oss(用于文件上传时接口测试文件存储)
+- [x] 👟 asyncio(几乎全异步写法，值得参考)
+- [ ] ⛏ Grpc(支持Grpc请求，即将支持) 
+
+### ⚽ 前端地址
+
+  [🎁 快点我](https://github.com/wuranxu/pityWeb)
+
 ## ☕ 说明
 
 这是一个具备完整`开发手册`(开发手册，手把手教那种)，严格按照`写一块内容`，`补一篇文章`的形式创作而成，其中也经历了从`Flask`到`FastApi`
