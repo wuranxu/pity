@@ -31,6 +31,18 @@ async def http_request(data: HttpRequestForm, _=Depends(Permission())):
         return PityResponse.failed(e)
 
 
+# @router.get("/cert")
+# async def http_request():
+#     try:
+#         client = AsyncRequest("http://mitm.it/cert/p12")
+#         r = await client.download()
+#         with open("./mitmproxy.p12", 'wb') as f:
+#             f.write(await r.read())
+#         return PityResponse.file("./mitmproxy.p12", "mitmproxy.p12")
+#     except Exception as e:
+#         return PityResponse.failed(e)
+#
+
 @router.get("/run")
 async def execute_case(env: int, case_id: int, _=Depends(Permission())):
     try:

@@ -1,7 +1,6 @@
 __author__ = "woody"
 
 import json
-import time
 from collections import defaultdict
 from json import JSONDecodeError
 from typing import List
@@ -67,15 +66,13 @@ class CaseGenerator(object):
         return constructors
 
     @staticmethod
-    def generate_case(directory_id: int, last: RequestInfo) -> TestCaseForm:
-        name = f"录制用例_{int(time.time())}"
-        form = TestCaseForm(directory_id=directory_id, name=name, url=last.url,
+    def generate_case(directory_id: int, name: str, last: RequestInfo) -> TestCaseForm:
+        return TestCaseForm(directory_id=directory_id, name=name, url=last.url,
                             request_type=RequestType.http.value, body=last.body,
                             request_method=last.request_method,
                             body_type=CaseGenerator.get_body_type(last.request_headers).value,
                             request_headers=json.dumps(last.request_headers, ensure_ascii=False),
                             case_type=0, status=CaseStatus.debugging.value, priority="P3")
-        return form
 
     @staticmethod
     def extract_field(requests: List[RequestInfo]) -> List[str]:
@@ -88,8 +85,10 @@ class CaseGenerator(object):
         replaced = []
         for i in range(len(requests)):
             # 删除headers里面的Content-Length字段
-            requests[i].request_headers.pop("Content-Length")
-            requests[i].response_headers.pop("Content-Length")
+            if "Content-Length" in requests[i].request_headers:
+                requests[i].request_headers.pop("Content-Length")
+            if "Content-Length" in requests[i].response_headers:
+                requests[i].response_headers.pop("Content-Length")
             # 记录变量
             CaseGenerator.record_vars(requests[i], var_pool, f"http_res_{i + 1}")
             if i > 0:

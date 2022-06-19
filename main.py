@@ -158,13 +158,16 @@ def init_proxy():
 
 
 @pity.on_event('startup')
-async def init_database():
+def init_database():
     """
     初始化数据库，建表
     :return:
     """
-    await create_table()
-    logger.bind(name=None).success("database created success.        ✔")
+    try:
+        asyncio.create_task(create_table())
+        logger.bind(name=None).success("database created success.        ✔")
+    except Exception as e:
+        logger.bind(name=None).error(f"database created failed.        ❌\nerror: {e}")
 
 
 @pity.on_event('shutdown')

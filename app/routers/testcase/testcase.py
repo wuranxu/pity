@@ -2,9 +2,10 @@ import json
 from datetime import datetime
 from typing import List
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, UploadFile, File
 from starlette.requests import Request
 
+from app.core.request import get_convertor
 from app.core.request.generator import CaseGenerator
 from app.crud.project.ProjectRoleDao import ProjectRoleDao
 from app.crud.test_case.ConstructorDao import ConstructorDao
@@ -14,6 +15,7 @@ from app.crud.test_case.TestCaseDirectory import PityTestcaseDirectoryDao
 from app.crud.test_case.TestCaseOutParametersDao import PityTestCaseOutParametersDao
 from app.crud.test_case.TestReport import TestReportDao
 from app.crud.test_case.TestcaseDataDao import PityTestcaseDataDao
+from app.enums.ConvertorEnum import CaseConvertorType
 from app.excpetions.AuthException import AuthException
 from app.handler.fatcory import PityResponse
 from app.middleware.RedisManager import RedisHelper
@@ -349,9 +351,20 @@ async def generate_case(form: TestCaseGeneratorForm, user=Depends(Permission()),
     if len(form.requests) == 0:
         return PityResponse.failed("无http请求，请检查参数")
     CaseGenerator.extract_field(form.requests)
-    cs = CaseGenerator.generate_case(form.directory_id, form.requests[-1])
+    cs = CaseGenerator.generate_case(form.directory_id, form.name, form.requests[-1])
     constructors = CaseGenerator.generate_constructors(form.requests)
     info = TestCaseInfo(constructor=constructors, case=cs)
     async with session.begin():
         ans = await TestCaseDao.insert_test_case(session, info, user['id'])
         return PityResponse.success(ans)
+
+
+@router.post("/import", summary="导入har或其他用例数据文件")
+async def convert_case(import_type: CaseConvertorType, file: UploadFile = File(...), _=Depends(Permission())):
+    convert, file_ext = get_convertor(import_type)
+    if convert is None:
+        return PityResponse.failed(f"不支持的导入数据")
+    if not file.filename.endswith(f".{file_ext}"):
+        return PityResponse.failed(f"请传入{file_ext}后缀文件")
+    requests = convert(file.file)
+    return PityResponse.success(requests)

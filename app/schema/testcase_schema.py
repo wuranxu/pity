@@ -62,3 +62,4 @@ class TestCaseInfo(BaseModel):
 class TestCaseGeneratorForm(BaseModel):
     directory_id: int
     requests: List[RequestInfo]
+    name: str

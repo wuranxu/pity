@@ -44,7 +44,8 @@ class AsyncRequest(object):
 
     async def download(self):
         async with aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar(unsafe=True)) as session:
-            async with session.request("GET", self.url, timeout=self.timeout, ssl=False, **self.kwargs) as resp:
+            async with session.request("GET", self.url, timeout=self.timeout, proxy=self.proxy, ssl=False,
+                                       **self.kwargs) as resp:
                 if resp.status != 200:
                     raise Exception("download file failed")
                 return resp.content
