@@ -11,12 +11,20 @@ from fastapi.responses import JSONResponse
 from loguru import logger
 from loguru._defaults import LOGURU_FORMAT
 from starlette.types import Message
+from starlette_context import middleware, plugins
 
 from app.excpetions.RequestException import AuthException
 from app.excpetions.RequestException import PermissionException
 from config import Config
 
 pity = FastAPI()
+
+pity.add_middleware(
+    middleware.ContextMiddleware,
+    plugins=(
+        plugins.ForwardedForPlugin(),
+    ),
+)
 
 # 配置日志格式
 INFO_FORMAT = "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> " \
