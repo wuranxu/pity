@@ -3,8 +3,6 @@ from datetime import datetime
 from typing import List
 
 from fastapi import APIRouter, Depends, UploadFile, File, Request
-from loguru import logger
-from starlette_context import context
 
 from app.core.request import get_convertor
 from app.core.request.generator import CaseGenerator
@@ -324,23 +322,19 @@ async def delete_testcase_out_parameters(id: int, user_info=Depends(Permission()
 
 @router.get("/record/start", summary="开始录制接口请求")
 async def record_requests(request: Request, regex: str, user_info=Depends(Permission())):
-    host = context.data["X-Forwarded-For"]
-    await RedisHelper.set_address_record(user_info['id'], host, regex)
+    await RedisHelper.set_address_record(user_info['id'], request.client.host, regex)
     return PityResponse.success(msg="开始录制，可以在浏览器/app上操作啦！")
 
 
 @router.get("/record/stop", summary="停止录制接口请求")
 async def record_requests(request: Request, _=Depends(Permission())):
-    host = context.data["X-Forwarded-For"]
-    await RedisHelper.remove_address_record(host)
+    await RedisHelper.remove_address_record(request.client.host)
     return PityResponse.success(msg="停止成功，快去生成用例吧~")
 
 
 @router.get("/record/status", summary="获取录制接口请求状态")
 async def record_requests(request: Request, _=Depends(Permission())):
-    host = context.data["X-Forwarded-For"]
-    logger.info("client ip: ", host)
-    record = await RedisHelper.get_address_record(host)
+    record = await RedisHelper.get_address_record(request.client.host)
     status = False
     regex = ''
     if record is not None:
