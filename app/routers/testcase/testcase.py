@@ -335,7 +335,6 @@ async def record_requests(request: Request, _=Depends(Permission())):
 
 @router.get("/record/status", summary="获取录制接口请求状态")
 async def record_requests(request: Request, _=Depends(Permission())):
-    print(request.client.host)
     record = await RedisHelper.get_address_record(request.client.host)
     status = False
     regex = ''
