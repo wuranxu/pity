@@ -21,12 +21,11 @@ async def start_proxy(log):
     ]
     if Config.MOCK_ON:
         addons.append(PityMock())
-    opts = options.Options(listen_host='0.0.0.0', listen_port=Config.PROXY_PORT, showhost=True)
+    opts = options.Options(listen_host='0.0.0.0', listen_port=Config.PROXY_PORT)
     m = DumpMaster(opts, False, False)
     # remove global block
     block_addon = m.addons.get("block")
     m.addons.remove(block_addon)
-    m.addons
     m.addons.add(*addons)
     log.bind(name=None).info(f"mock server is running at http://0.0.0.0:{Config.PROXY_PORT}")
     await m.run()

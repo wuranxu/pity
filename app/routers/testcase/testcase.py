@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import List
 
 from fastapi import APIRouter, Depends, UploadFile, File, Request
+from starlette_context import context
 
 from app.core.request import get_convertor
 from app.core.request.generator import CaseGenerator
@@ -334,6 +335,7 @@ async def record_requests(request: Request, _=Depends(Permission())):
 
 @router.get("/record/status", summary="获取录制接口请求状态")
 async def record_requests(request: Request, _=Depends(Permission())):
+    print(request.client.host)
     record = await RedisHelper.get_address_record(request.client.host)
     status = False
     regex = ''

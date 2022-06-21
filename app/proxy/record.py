@@ -13,9 +13,12 @@ from app.schema.request import RequestInfo
 
 
 class PityRecorder(object):
+    def request(self, flow):
+        flow.request.headers["X-Forwarded-For"] = flow.client_conn.address[0]
 
     async def response(self, flow):
         addr = flow.client_conn.address[0]
+        flow.response.headers["X-Forwarded-For"] = addr
         record = await RedisHelper.get_address_record(addr)
         if not record:
             return
