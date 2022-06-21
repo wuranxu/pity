@@ -14,8 +14,7 @@ from app.schema.request import RequestInfo
 
 class PityRecorder(object):
     def request(self, flow):
-        pass
-        # flow.request.headers["X-Forwarded-For"] = flow.client_conn.address[0]
+        flow.request.headers["X-Forwarded-For"] = flow.client_conn.address[0]
 
     async def response(self, flow):
         addr = flow.client_conn.address[0]
