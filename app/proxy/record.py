@@ -17,7 +17,7 @@ class PityRecorder(object):
         flow.request.headers["X-Forwarded-For"] = flow.client_conn.address[0]
 
     async def response(self, flow):
-        if flow.request.url.startswith("pity.fun") or flow.request.method.lower() == "options" or \
+        if "pity.fun" in flow.request.url or flow.request.method.lower() == "options" or \
                 flow.request.url.endswith(("js", "css", "ttf", "jpg", "svg", "gif")):
             # 如果是pity，options请求，js等url直接拒绝
             return
