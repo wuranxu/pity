@@ -17,6 +17,10 @@ class PityRecorder(object):
         flow.request.headers["X-Forwarded-For"] = flow.client_conn.address[0]
 
     async def response(self, flow):
+        if flow.request.url.startswith("pity.fun") or flow.request.method.lower() == "options" or \
+                flow.request.url.endswith(("js", "css", "ttf", "jpg", "svg", "gif")):
+            # 如果是pity，options请求，js等url直接拒绝
+            return
         addr = flow.client_conn.address[0]
         # flow.response.headers["X-Forwarded-For"] = addr
         record = await RedisHelper.get_address_record(addr)
@@ -25,11 +29,6 @@ class PityRecorder(object):
         data = json.loads(record)
         pattern = re.compile(data.get("regex"))
         if re.findall(pattern, flow.request.url):
-            # 忽略js、css等文件
-            if flow.request.method.lower() == "options":
-                return
-            if flow.request.url.endswith(("js", "css", "ttf", "jpg", "svg", "gif")):
-                return
             # 说明已开启录制开关，记录状态
             request_data = RequestInfo(flow)
             dump_data = request_data.dumps()

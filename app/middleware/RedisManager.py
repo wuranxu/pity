@@ -7,7 +7,7 @@ import inspect
 import json
 import pickle
 from random import Random
-from typing import Tuple
+from typing import Tuple, List, Dict
 
 from awaits.awaitable import awaitable
 from loguru import logger
@@ -172,7 +172,7 @@ class RedisHelper(object):
         # 默认录制1小时
         value = json.dumps({"user_id": user_id, "regex": regex}, ensure_ascii=False)
         RedisHelper.pity_redis_client.set(RedisHelper.get_key(f"record:ip:{address}"), value, ex=3600)
-        # 清楚上次录制数据
+        # 清除上次录制数据
         RedisHelper.pity_redis_client.delete(RedisHelper.get_key(f"record:{address}:requests"))
 
     @staticmethod
