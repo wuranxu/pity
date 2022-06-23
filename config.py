@@ -1,6 +1,5 @@
 # 基础配置类
 import os
-from enum import IntEnum
 from typing import List
 
 from pydantic import BaseSettings

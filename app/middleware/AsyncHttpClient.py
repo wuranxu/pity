@@ -48,7 +48,7 @@ class AsyncRequest(object):
                                        **self.kwargs) as resp:
                 if resp.status != 200:
                     raise Exception("download file failed")
-                return resp.content
+                return await resp.content.read()
 
     @staticmethod
     async def client(url: str, body_type: BodyType = BodyType.json, timeout=15, **kwargs):

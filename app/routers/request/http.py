@@ -1,5 +1,6 @@
 import asyncio
 import json
+import random
 import uuid
 from json import JSONDecodeError
 from typing import List, Dict
@@ -8,6 +9,7 @@ from fastapi import Depends, APIRouter
 
 from app.core.executor import Executor
 from app.crud.test_case.TestcaseDataDao import PityTestcaseDataDao
+from app.enums.CertEnum import CertType
 from app.handler.fatcory import PityResponse
 from app.middleware.AsyncHttpClient import AsyncRequest
 from app.routers import Permission
@@ -15,8 +17,8 @@ from app.routers.request.http_schema import HttpRequestForm
 
 router = APIRouter(prefix="/request")
 
-
 # random_dict = dict()
+CERT_URL = "http://mitm.it/cert/"
 
 
 @router.post("/http")
@@ -31,17 +33,21 @@ async def http_request(data: HttpRequestForm, _=Depends(Permission())):
         return PityResponse.failed(e)
 
 
-# @router.get("/cert")
-# async def http_request():
-#     try:
-#         client = AsyncRequest("http://mitm.it/cert/p12")
-#         r = await client.download()
-#         with open("./mitmproxy.p12", 'wb') as f:
-#             f.write(await r.read())
-#         return PityResponse.file("./mitmproxy.p12", "mitmproxy.p12")
-#     except Exception as e:
-#         return PityResponse.failed(e)
-#
+@router.get("/cert")
+async def http_request(cert: CertType):
+    try:
+        suffix = cert.get_url()
+        client = AsyncRequest(CERT_URL + suffix)
+        content = await client.download()
+        shuffle = list(range(0, 9))
+        random.shuffle(shuffle)
+        filename = f"{''.join(map(lambda x: str(x), shuffle))}mitmproxy.{suffix}"
+        with open(filename, 'wb') as f:
+            f.write(content)
+        return PityResponse.file(filename, f"mitmproxy.{suffix}")
+    except Exception as e:
+        return PityResponse.failed(e)
+
 
 @router.get("/run")
 async def execute_case(env: int, case_id: int, _=Depends(Permission())):
