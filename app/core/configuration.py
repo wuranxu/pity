@@ -32,7 +32,7 @@ class SystemConfiguration(object):
     @RedisHelper.up_cache("configuration")
     def update_config(config):
         try:
-            filepath = os.path.join(Config.ROOT, SystemConfiguration.config_filename())
+            filepath = os.path.join(ROOT, SystemConfiguration.config_filename())
             if not os.path.exists(filepath):
                 raise Exception("没找到配置文件，请检查configuration文件是否已经被删除")
             with open(filepath, mode="w", encoding='utf-8') as f:

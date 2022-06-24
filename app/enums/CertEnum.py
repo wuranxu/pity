@@ -8,7 +8,7 @@ class CertType(IntEnum):
     ios = 3
     android = 4
 
-    def get_url(self):
+    def get_suffix(self):
         if self == CertType.windows:
             return "p12"
         if self in (CertType.linux, CertType.macos, CertType.ios):

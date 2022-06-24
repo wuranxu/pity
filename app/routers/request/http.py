@@ -2,11 +2,12 @@ import asyncio
 import json
 import random
 import uuid
+from collections import deque
 from json import JSONDecodeError
 from typing import List, Dict
 
 from fastapi import Depends, APIRouter
-
+deque
 from app.core.executor import Executor
 from app.crud.test_case.TestcaseDataDao import PityTestcaseDataDao
 from app.enums.CertEnum import CertType
@@ -36,7 +37,7 @@ async def http_request(data: HttpRequestForm, _=Depends(Permission())):
 @router.get("/cert")
 async def http_request(cert: CertType):
     try:
-        suffix = cert.get_url()
+        suffix = cert.get_suffix()
         client = AsyncRequest(CERT_URL + suffix)
         content = await client.download()
         shuffle = list(range(0, 9))
