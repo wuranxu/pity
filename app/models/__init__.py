@@ -2,6 +2,7 @@ import time
 from datetime import datetime
 from typing import List
 
+from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.ext.declarative import declarative_base
@@ -9,6 +10,19 @@ from sqlalchemy.orm import sessionmaker
 
 from app.enums.DatabaseEnum import DatabaseEnum
 from config import Config
+
+
+def create_database():
+    engine = create_engine('mysql+mysqlconnector://{}:{}@{}:{}'.format(
+        Config.MYSQL_USER, Config.MYSQL_PWD, Config.MYSQL_HOST, Config.MYSQL_PORT), echo=True)
+    with engine.connect() as conn:
+        conn.execute("CREATE DATABASE IF NOT EXISTS pity default character set utf8mb4 collate utf8mb4_unicode_ci")
+    # close engine
+    engine.dispose()
+
+
+# 优先建库
+create_database()
 
 # 同步engine
 # engine = create_engine(Config.SQLALCHEMY_DATABASE_URI, pool_recycle=1500)

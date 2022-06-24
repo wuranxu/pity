@@ -13,7 +13,7 @@ from starlette.templating import Jinja2Templates
 from app import pity, init_logging
 from app.core.msg.wss_msg import WebSocketMessage
 from app.core.ws_connection_manager import ws_manage
-from app.crud import create_table, create_database
+from app.crud import create_table
 from app.crud.notification.NotificationDao import PityNotificationDao
 from app.enums.MessageEnum import MessageStateEnum, MessageTypeEnum
 from app.middleware.RedisManager import RedisHelper
@@ -164,7 +164,6 @@ async def init_database():
     :return:
     """
     try:
-        create_database()
         await asyncio.create_task(create_table())
         logger.bind(name=None).success("database and tables created success.        ✔")
     except Exception as e:
