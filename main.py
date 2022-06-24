@@ -13,7 +13,7 @@ from starlette.templating import Jinja2Templates
 from app import pity, init_logging
 from app.core.msg.wss_msg import WebSocketMessage
 from app.core.ws_connection_manager import ws_manage
-from app.crud import create_table
+from app.crud import create_table, create_database
 from app.crud.notification.NotificationDao import PityNotificationDao
 from app.enums.MessageEnum import MessageStateEnum, MessageTypeEnum
 from app.middleware.RedisManager import RedisHelper
@@ -158,16 +158,18 @@ def init_proxy():
 
 
 @pity.on_event('startup')
-def init_database():
+async def init_database():
     """
     初始化数据库，建表
     :return:
     """
     try:
-        asyncio.create_task(create_table())
-        logger.bind(name=None).success("database created success.        ✔")
+        create_database()
+        await asyncio.create_task(create_table())
+        logger.bind(name=None).success("database and tables created success.        ✔")
     except Exception as e:
-        logger.bind(name=None).error(f"database created failed.        ❌\nerror: {e}")
+        logger.bind(name=None).error(f"database and tables  created failed.        ❌\nerror: {e}")
+        raise
 
 
 @pity.on_event('shutdown')

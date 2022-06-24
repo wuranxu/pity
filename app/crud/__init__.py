@@ -8,7 +8,7 @@ from copy import deepcopy
 from datetime import datetime
 from typing import Tuple, List
 
-from sqlalchemy import select, update
+from sqlalchemy import select, update, create_engine
 
 from app.enums.OperationEnum import OperationType
 from app.middleware.RedisManager import RedisHelper
@@ -486,6 +486,13 @@ for path in dao_path_list:
 async def create_table():
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+
+def create_database():
+    uri = "/".join(Config.SQLALCHEMY_DATABASE_URI.split("/")[:-1])
+    engine = create_engine(uri)
+    with engine.connect() as conn:
+        conn.execute("CREATE DATABASE IF NOT EXISTS pity default character set utf8mb4 collate utf8mb4_unicode_ci")
 
 
 # 设置项目角色映射关系
