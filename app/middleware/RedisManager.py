@@ -7,7 +7,7 @@ import inspect
 import json
 import pickle
 from random import Random
-from typing import Tuple, List, Dict
+from typing import Tuple
 
 from awaits.awaitable import awaitable
 from loguru import logger
@@ -189,13 +189,26 @@ class RedisHelper(object):
     @awaitable
     def list_record_data(address: str):
         """
-        停止录制任务
+        获取录制数据
         :param address:
         :return:
         """
         key = RedisHelper.get_key(f"record:{address}:requests")
         data = RedisHelper.pity_redis_client.lrange(key, 0, -1)
         return [json.loads(x) for x in data]
+
+    @staticmethod
+    @awaitable
+    def remove_record_data(address: str, index: int):
+        """
+        停止录制任务
+        :param address:
+        :param index:
+        :return:
+        """
+        key = RedisHelper.get_key(f"record:{address}:requests")
+        RedisHelper.pity_redis_client.lset(key, index, "DELETED")
+        RedisHelper.pity_redis_client.lrem(key, 1, "DELETED")
 
     @staticmethod
     @awaitable

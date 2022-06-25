@@ -3,7 +3,6 @@ from datetime import datetime
 from typing import List
 
 from fastapi import APIRouter, Depends, UploadFile, File, Request
-from starlette_context import context
 
 from app.core.request import get_convertor
 from app.core.request.generator import CaseGenerator
@@ -344,6 +343,12 @@ async def record_requests(request: Request, _=Depends(Permission())):
         status = True
     data = await RedisHelper.list_record_data(request.client.host)
     return PityResponse.success(dict(data=data, regex=regex, status=status))
+
+
+@router.get("/record/remove", summary="删除录制接口")
+async def remove_record(index: int, request: Request, _=Depends(Permission())):
+    await RedisHelper.remove_record_data(request.client.host, index)
+    return PityResponse.success()
 
 
 @router.post("/generate", summary="生成用例")
