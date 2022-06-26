@@ -8,6 +8,7 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: Pitytester666666
       MYSQL_DATABASE: pity
+      TZ: Asia/Shanghai
     networks:
       pity_net:
         aliases:
