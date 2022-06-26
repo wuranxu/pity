@@ -12,8 +12,6 @@ services:
       pity_net:
         aliases:
           - pity_mysql
-    ports:
-      - "3306:3306"
 
   pity_redis:
     image: redis
@@ -45,6 +43,7 @@ services:
         - pity_server
     volumes:
       - ./dev.env.ops:/pity/conf/dev.env
+    command: bash -c '/pity/ops/wait-for-it.sh pity_mysql:3306 -- /pity/ops/wait-for-it.sh pity_redis:6379 -- /pity/venv/bin/supervisord -c /pity/ops/supervisor.conf'
 
 networks:
   pity_net:
