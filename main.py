@@ -164,7 +164,7 @@ async def init_database():
     :return:
     """
     try:
-        await asyncio.create_task(create_table())
+        asyncio.create_task(create_table())
         logger.bind(name=None).success("database and tables created success.        ✔")
     except Exception as e:
         logger.bind(name=None).error(f"database and tables  created failed.        ❌\nerror: {e}")

@@ -1,7 +1,9 @@
 from fastapi import Header
 from starlette import status
 
+from app.crud.auth.UserDao import UserDao
 from app.excpetions.RequestException import AuthException, PermissionException
+from app.handler.fatcory import PityResponse
 from app.middleware.Jwt import UserToken
 from app.models import async_session
 from config import Config
@@ -20,6 +22,10 @@ class Permission:
             user_info = UserToken.parse_token(token)
             if user_info.get("role", 0) < self.role:
                 raise PermissionException(status.HTTP_200_OK, FORBIDDEN)
+            user = UserDao.query_user(user_info['id'])
+            if user is None:
+                raise Exception("用户不存在")
+            user_info = UserToken.get_token(PityResponse.model_to_dict(user, "password"))
         except PermissionException as e:
             raise e
         except Exception as e:
@@ -34,7 +40,6 @@ async def get_session():
     """
     async with async_session() as session:
         yield session
-
 
 # _router: Dict[str, APIRouter] = {}
 #
