@@ -32,3 +32,5 @@ mitmproxy~=8.0.0
 jsonpath~=0.82
 py-mock
 starlette_context
+gunicorn
+supervisor

@@ -1,0 +1,26 @@
+FROM python:3.9-slim as builder
+WORKDIR /pity
+COPY ./requirements.txt ./requirements.txt
+RUN python -m venv /pity/venv  \
+    && /pity/venv/bin/python -m pip install --upgrade pip \
+    && /pity/venv/bin/python -m pip install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/ \
+    && apt update -y \
+    && apt upgrade -y \
+    && apt install -y tzdata \
+    && apt install -y wget \
+    && wget https://github.com/vishnubob/wait-for-it/raw/master/wait-for-it.sh
+
+
+FROM python:3.9-slim
+ENV PYTHONUNBUFFERED=1
+WORKDIR /pity
+COPY . .
+COPY --from=builder /pity/venv/ /pity/venv/
+COPY --from=builder /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+COPY --from=builder /pity/wait-for-it.sh /pity/ops/wait-for-it.sh
+RUN ln -sf /pity/ops/dev.env.ops /pity/conf/dev.env \
+    && chmod +x /pity/ops/wait-for-it.sh
+
+EXPOSE 7777
+
+CMD ["/pity/venv/bin/supervisord", "-c", "/pity/ops/supervisor.conf"]
