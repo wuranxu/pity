@@ -18,14 +18,14 @@ class Permission:
     def __init__(self, role: int = Config.MEMBER):
         self.role = role
 
-    def __call__(self, token: str = Header(...)):
+    async def __call__(self, token: str = Header(...)):
         if not token:
             raise AuthException(status.HTTP_200_OK, "用户信息身份认证失败, 请检查")
         try:
             user_info = UserToken.parse_token(token)
             if user_info.get("role", 0) < self.role:
                 raise PermissionException(status.HTTP_200_OK, FORBIDDEN)
-            user = synchronize_async_helper(UserDao.query_user(user_info['id']))
+            user = await UserDao.query_user(user_info['id'])
             if user is None:
                 raise Exception("用户不存在")
             user_info = PityResponse.model_to_dict(user, "password")
