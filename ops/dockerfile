@@ -1,0 +1,22 @@
+FROM python:3.9-slim as builder
+WORKDIR /pity
+COPY ./requirements.txt ./requirements.txt
+RUN python -m venv /pity/venv  \
+    && /pity/venv/bin/python -m pip install --upgrade pip \
+    && /pity/venv/bin/python -m pip install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/ \
+    && apt update -y \
+    && apt upgrade -y \
+    && apt install -y tzdata
+
+
+FROM python:3.9-slim
+ENV PYTHONUNBUFFERED=1
+WORKDIR /pity
+COPY . .
+COPY --from=builder /pity/venv/ /pity/venv/
+COPY --from=builder /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+RUN ln -sf /pity/ops/dev.env.ops /pity/conf/dev.env
+
+EXPOSE 7777
+
+CMD ["/pity/venv/bin/supervisord", "-c", "/pity/ops/supervisor.conf"]

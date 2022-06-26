@@ -1,0 +1,50 @@
+version: "3"
+services:
+
+  mysql:
+    image: mysql:8.0
+    container_name: pity_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: Pitytester666666
+      MYSQL_DATABASE: pity
+    networks:
+      pity_net:
+        aliases:
+          - pity_mysql
+    ports:
+      - "3306:3306"
+
+  redis:
+    image: redis
+    container_name: pity_redis
+    command: redis-server --requirepass 123456
+    restart: always
+    environment:
+      - TZ=Asia/Shanghai
+    networks:
+      pity_net:
+        aliases:
+          - pity_redis
+
+  pity:
+    build:
+      context: ../
+      dockerfile: ops/dockerfile
+      args:
+        buildno: 1
+    container_name: pity_server
+    ports:
+      - "7777:7777"
+    restart: always
+    environment:
+      - TZ=Asia/Shanghai
+    networks:
+      pity_net:
+        aliases:
+        - pity_server
+    volumes:
+      - ./dev.env.ops:/pity/conf/dev.env
+
+networks:
+  pity_net:
