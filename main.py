@@ -5,7 +5,6 @@ from os.path import isfile
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import Request, WebSocket, WebSocketDisconnect, Depends
-from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import Response
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
@@ -64,14 +63,6 @@ pity.include_router(oss_router, dependencies=[Depends(request_info)])
 pity.include_router(operation_router, dependencies=[Depends(request_info)])
 pity.include_router(msg_router, dependencies=[Depends(request_info)])
 pity.include_router(workspace_router, dependencies=[Depends(request_info)])
-
-pity.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 pity.mount("/statics", StaticFiles(directory="statics"), name="statics")
 
