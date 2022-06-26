@@ -126,6 +126,18 @@ pity是一款专注于api自动化的工具，采用`Python`+`FastApi`+`React`�
 
 项目起源是本人很期待的某家公司🐧拒绝了我，觉得特别遗憾吧😅。加上这一年`浑浑噩噩`的，也没有什么产出，做的东西不如18，19年多。所以打算把自己18-19的项目重写出来，给大家一些参考。
 
+### Docker部署
+
+1. 安装Docker Desktop
+2. 打开终端并进入pity目录
+3. 执行以下命令，安静等待pity启动即可（不需要额外安装mysql redis等，一键启动直接起飞）
+
+  **docker镜像由卫衣哥（QYZHG倾情制作👏👏👏）**
+
+```bash
+docker-compose -f .\ops\docker-compose.yaml up
+```
+
 ### 🎉 二次开发
 
 1. 拉取代码
