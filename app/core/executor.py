@@ -352,6 +352,9 @@ class Executor(object):
             # 替换主变量
             req_params.update(out_dict)
 
+            # 写入response
+            req_params["response"] = res.get("response", "")
+
             self.replace_asserts(req_params, asserts)
             self.replace_constructors(req_params, constructors)
 
