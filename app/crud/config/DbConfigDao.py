@@ -44,6 +44,7 @@ class DbConfigDao(object):
             raise Exception("获取数据库配置失败")
 
     @staticmethod
+    @RedisHelper.up_cache("database:cache")
     async def insert_database(data: DatabaseForm, user: str):
         try:
             async with async_session() as session:
@@ -60,6 +61,7 @@ class DbConfigDao(object):
             raise Exception("新增数据库配置失败")
 
     @staticmethod
+    @RedisHelper.up_cache("database:cache")
     async def update_database(data: DatabaseForm, user: str):
         try:
             async with async_session() as session:
@@ -75,6 +77,7 @@ class DbConfigDao(object):
             raise Exception("编辑数据库配置失败")
 
     @staticmethod
+    @RedisHelper.up_cache("database:cache")
     async def delete_database(id: int, user: str):
         try:
             async with async_session() as session:

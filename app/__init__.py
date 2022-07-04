@@ -78,6 +78,8 @@ def error_map(error_type: str, field: str, msg: str = None):
         return f"参数: {field} {'不规范' if msg is None else msg}"
     if "not_allowed" in error_type:
         return f"参数: {field} 类型不正确"
+    if "type_error" in error_type:
+        return f"参数: {field} 类型不合法"
 
 
 @pity.exception_handler(RequestValidationError)
