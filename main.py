@@ -27,6 +27,7 @@ from app.routers.project import project
 from app.routers.request import http
 from app.routers.testcase import router as testcase_router
 from app.routers.workspace import router as workspace_router
+from app.utils.decorator import lock
 from app.utils.scheduler import Scheduler
 from config import Config, PITY_ENV, BANNER
 
@@ -139,13 +140,19 @@ def init_scheduler():
 
 
 @pity.on_event('startup')
-def init_proxy():
+async def init_proxy():
     """
     给你我的附属金卡，默认开启代理
     :return:
     """
     if Config.PROXY_ON:
-        asyncio.create_task(start_proxy(logger))
+        await start_mock()
+        # asyncio.create_task()
+
+
+@lock("mitm_proxy")
+async def start_mock():
+    asyncio.create_task(start_proxy(logger))
 
 
 @pity.on_event('startup')
