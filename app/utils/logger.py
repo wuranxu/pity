@@ -22,7 +22,7 @@ class Log(object):
     def info(self, message: str):
         file_name, line, func, _, _ = inspect.getframeinfo(inspect.currentframe().f_back)
         logger.bind(name=Config.PITY_INFO, func=func, line=line,
-                    business=self.business, filename=file_name).info(message)
+                    business=self.business, filename=file_name).debug(message)
 
     def error(self, message: str):
         file_name, line, func, _, _ = inspect.getframeinfo(inspect.currentframe().f_back)

@@ -37,7 +37,7 @@ logger.bind(name=None).success(BANNER)
 
 
 async def request_info(request: Request):
-    logger.bind(name=None).info(f"{request.method} {request.url}")
+    logger.bind(name=None).debug(f"{request.method} {request.url}")
     try:
         body = await request.json()
         logger.bind(payload=body, name=None).debug("request_json: ")
@@ -171,7 +171,7 @@ def stop_test():
 async def websocket_endpoint(websocket: WebSocket, user_id: int):
     async def send_heartbeat():
         while True:
-            logger.info("sending heartbeat")
+            logger.debug("sending heartbeat")
             await websocket.send_json({
                 'type': 3
             })
@@ -202,4 +202,4 @@ async def websocket_endpoint(websocket: WebSocket, user_id: int):
         if user_id in ws_manage.active_connections:
             ws_manage.disconnect(user_id)
     except Exception as e:
-        logger.bind(name=None).info(f"websocket: 用户: {user_id} 异常退出: {e}")
+        logger.bind(name=None).debug(f"websocket: 用户: {user_id} 异常退出: {e}")

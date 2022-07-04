@@ -27,5 +27,5 @@ async def start_proxy(log):
     block_addon = m.addons.get("block")
     m.addons.remove(block_addon)
     m.addons.add(*addons)
-    log.bind(name=None).info(f"mock server is running at http://0.0.0.0:{Config.PROXY_PORT}")
+    log.bind(name=None).debug(f"mock server is running at http://0.0.0.0:{Config.PROXY_PORT}")
     await m.run()

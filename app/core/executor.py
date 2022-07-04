@@ -675,7 +675,7 @@ class Executor(object):
                         report_dict[e]['notification_user'] = " ".join(map(lambda x: f"@{x}", users))
                         render_markdown = DingTalk.render_markdown(**report_dict[e], plan_name=plan.name)
                         if not project.dingtalk_url:
-                            Executor.log.info("项目未配置钉钉通知机器人")
+                            Executor.log.debug("项目未配置钉钉通知机器人")
                             continue
                         ding = DingTalk(project.dingtalk_url)
                         await ding.send_msg("pity测试报告", render_markdown, None, users)
@@ -691,7 +691,7 @@ class Executor(object):
         """
         plan = await PityTestPlanDao.query_test_plan(plan_id)
         if plan is None:
-            Executor.log.info(f"测试计划: [{plan_id}]不存在")
+            Executor.log.debug(f"测试计划: [{plan_id}]不存在")
             return
         try:
             # 设置为running
