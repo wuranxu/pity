@@ -16,7 +16,7 @@ from app.crud import create_table
 from app.crud.notification.NotificationDao import PityNotificationDao
 from app.enums.MessageEnum import MessageStateEnum, MessageTypeEnum
 from app.middleware.RedisManager import RedisHelper
-from app.proxy import start_proxy
+from app.proxy import start_proxy, check_port
 from app.routers.auth import user
 from app.routers.config import router as config_router
 from app.routers.notification import router as msg_router
@@ -27,7 +27,6 @@ from app.routers.project import project
 from app.routers.request import http
 from app.routers.testcase import router as testcase_router
 from app.routers.workspace import router as workspace_router
-from app.utils.decorator import lock
 from app.utils.scheduler import Scheduler
 from config import Config, PITY_ENV, BANNER
 
@@ -140,19 +139,13 @@ def init_scheduler():
 
 
 @pity.on_event('startup')
-async def init_proxy():
+def init_proxy():
     """
     给你我的附属金卡，默认开启代理
     :return:
     """
-    if Config.PROXY_ON:
-        await start_mock()
-        # asyncio.create_task()
-
-
-@lock("mitm_proxy")
-async def start_mock():
-    asyncio.create_task(start_proxy(logger))
+    if Config.PROXY_ON and check_port(Config.PROXY_PORT):
+        asyncio.create_task(start_proxy(logger))
 
 
 @pity.on_event('startup')

@@ -102,17 +102,28 @@ def lock(key):
     """
 
     def decorator(func):
-        @functools.wraps(func)
-        async def wrapper(*args, **kwargs):
-            try:
-                with RedLock(f"distributed_lock:{func.__name__}:{key}:{str(args)}",
-                             connection_details=Config.REDIS_NODES,
-                             ttl=30000,  # 锁释放时间为30s
-                             ):
-                    return await func(*args, **kwargs)
-            except RedLockError:
-                print(f"进程: {os.getpid()}获取任务失败, 不用担心，还有其他哥们给你执行了")
-
+        if asyncio.iscoroutine(func):
+            @functools.wraps(func)
+            async def wrapper(*args, **kwargs):
+                try:
+                    with RedLock(f"distributed_lock:{func.__name__}:{key}:{str(args)}",
+                                 connection_details=Config.REDIS_NODES,
+                                 ttl=30000,  # 锁释放时间为30s
+                                 ):
+                        return await func(*args, **kwargs)
+                except RedLockError:
+                    print(f"进程: {os.getpid()}获取任务失败, 不用担心，还有其他哥们给你执行了")
+        else:
+            @functools.wraps(func)
+            def wrapper(*args, **kwargs):
+                try:
+                    with RedLock(f"distributed_lock:{func.__name__}:{key}:{str(args)}",
+                                 connection_details=Config.REDIS_NODES,
+                                 ttl=30000,  # 锁释放时间为30s
+                                 ):
+                        return func(*args, **kwargs)
+                except RedLockError:
+                    print(f"进程: {os.getpid()}获取任务失败, 不用担心，还有其他哥们给你执行了")
         return wrapper
 
     return decorator
