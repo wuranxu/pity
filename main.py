@@ -16,7 +16,6 @@ from app.crud import create_table
 from app.crud.notification.NotificationDao import PityNotificationDao
 from app.enums.MessageEnum import MessageStateEnum, MessageTypeEnum
 from app.middleware.RedisManager import RedisHelper
-from app.proxy import start_proxy, check_port
 from app.routers.auth import user
 from app.routers.config import router as config_router
 from app.routers.notification import router as msg_router
@@ -136,16 +135,6 @@ def init_scheduler():
     Scheduler.configure(jobstores=job_store)
     Scheduler.start()
     logger.bind(name=None).success("ApScheduler started success.        ✔")
-
-
-@pity.on_event('startup')
-def init_proxy():
-    """
-    给你我的附属金卡，默认开启代理
-    :return:
-    """
-    if Config.PROXY_ON and check_port(Config.PROXY_PORT):
-        asyncio.create_task(start_proxy(logger))
 
 
 @pity.on_event('startup')
