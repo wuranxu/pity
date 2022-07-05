@@ -1,6 +1,3 @@
-import json
-
-from mitmproxy import http
 from pymock import Mock
 
 

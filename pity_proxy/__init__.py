@@ -1,22 +1,6 @@
-import asyncio
-
-from app.proxy.mock import PityMock
-from app.proxy.record import PityRecorder
+from pity_proxy.mock import PityMock
+from pity_proxy.record import PityRecorder
 from config import Config
-
-
-def check_port(i):
-    import socket, errno
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    try:
-        s.bind(("127.0.0.1", i))
-    except socket.error as e:
-        if e.errno == errno.EADDRINUSE:
-            print("Port is already in use", i)
-        else:
-            return False
-    s.close()
-    return True
 
 
 async def start_proxy(log):
