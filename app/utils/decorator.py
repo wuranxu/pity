@@ -102,7 +102,7 @@ def lock(key):
     """
 
     def decorator(func):
-        if asyncio.iscoroutine(func):
+        if asyncio.iscoroutinefunction(func):
             @functools.wraps(func)
             async def wrapper(*args, **kwargs):
                 try:
