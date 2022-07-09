@@ -21,8 +21,8 @@ class PityGateway(PityBase):
     __alias__ = dict(name="网关名称", env="环境", gateway="网关地址")
     __show__ = 2
 
-    def __init__(self, env, name, gateway, user, id=None):
-        super().__init__(user, id)
+    def __init__(self, env, name, gateway, user_id, id=None):
+        super().__init__(user_id, id)
         self.name = name
         self.env = env
         self.gateway = gateway

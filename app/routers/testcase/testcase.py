@@ -1,6 +1,6 @@
 import json
 from datetime import datetime
-from typing import List
+from typing import List, TypeVar
 
 from fastapi import APIRouter, Depends, UploadFile, File, Request
 
@@ -28,6 +28,7 @@ from app.schema.testcase_out_parameters import PityTestCaseOutParametersForm
 from app.schema.testcase_schema import TestCaseAssertsForm, TestCaseForm, TestCaseInfo, TestCaseGeneratorForm
 
 router = APIRouter(prefix="/testcase")
+Author = TypeVar("Author", int, str)
 
 
 @router.get("/list")
@@ -178,7 +179,7 @@ async def query_report(id: int, user_info=Depends(Permission())):
 
 # 获取构建历史记录
 @router.get("/report/list")
-async def list_report(page: int, size: int, start_time: str, end_time: str, executor: int = None,
+async def list_report(page: int, size: int, start_time: str, end_time: str, executor: Author = None,
                       _=Depends(Permission())):
     start = datetime.strptime(start_time, "%Y-%m-%d %H:%M:%S")
     end = datetime.strptime(end_time, "%Y-%m-%d %H:%M:%S")

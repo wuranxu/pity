@@ -18,7 +18,7 @@ async def list_gateway(name: str = '', gateway: str = '', env: int = None,
 
 @router.post("/gateway/insert", summary="添加网关地址", description="添加网关地址，只有组长可以操作")
 async def insert_gateway(form: PityAddressForm, user_info=Depends(Permission(Config.MANAGER))):
-    model = PityGateway(**form.dict(), user=user_info['id'])
+    model = PityGateway(**form.dict(), user_id=user_info['id'])
     model = await PityGatewayDao.insert_record(model, True)
     return PityResponse.success(model)
 

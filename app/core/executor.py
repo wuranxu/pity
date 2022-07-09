@@ -415,6 +415,7 @@ class Executor(object):
     async def run_with_test_data(env, data, report_id, case_id, params_pool: dict = None, request_param: dict = None,
                                  path='主case', name: str = "", data_id: int = None, retry_minutes: int = 0):
         retry_times = Config.RETRY_TIMES if retry_minutes > 0 else 0
+        times = 0
         for i in range(retry_times + 1):
             start_at = datetime.now()
             executor = Executor()
@@ -428,6 +429,7 @@ class Executor(object):
             # 若status不为0，代表case执行失败，走重试逻辑
             if status != 0 and i < retry_times:
                 await asyncio.sleep(60 * retry_minutes)
+                times += 1
                 continue
             asserts = result.get("asserts")
             url = result.get("url")
@@ -446,7 +448,7 @@ class Executor(object):
                                        case_logs, start_at, finished_at,
                                        url, body, request_method, request_headers, cost,
                                        asserts, response_headers, response,
-                                       status_code, cookies, 0, req, name, data_id)
+                                       status_code, cookies, times, req, name, data_id)
             break
 
     @staticmethod

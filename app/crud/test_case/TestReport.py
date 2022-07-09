@@ -93,14 +93,14 @@ class TestReportDao(object):
             raise Exception(f"查询报告失败: {e}")
 
     @staticmethod
-    async def list_report(page: int, size: int, start_time: datetime, end_time: datetime, executor: int = None):
+    async def list_report(page: int, size: int, start_time: datetime, end_time: datetime, executor: int or str = None):
         """
         获取报告列表
         :param size:
         :param page:
         :param end_time:
         :param start_time:
-        :param executor:
+        :param executor: int or str
         :return:
         """
         try:
@@ -108,6 +108,7 @@ class TestReportDao(object):
                 sql = select(PityReport).where(PityReport.start_at.between(start_time, end_time)).order_by(
                     desc(PityReport.start_at))
                 if executor is not None:
+                    executor = executor if executor != "CPU" else 0
                     sql = sql.where(PityReport.executor == executor)
                 data = await session.execute(sql)
                 total = data.raw.rowcount
