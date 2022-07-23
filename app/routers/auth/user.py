@@ -29,8 +29,8 @@ async def login(data: UserForm):
     try:
         user = await UserDao.login(data.username, data.password)
         user = PityResponse.model_to_dict(user, "password")
-        token = UserToken.get_token(user)
-        return PityResponse.success(dict(token=token, user=user), msg="登录成功")
+        expire, token = UserToken.get_token(user)
+        return PityResponse.success(dict(token=token, user=user, expire=expire), msg="登录成功")
     except Exception as e:
         return PityResponse.failed(e)
 
@@ -59,8 +59,8 @@ async def login_with_github(code: str):
                                                      user_info.get("email"),
                                                      user_info.get("avatar_url"))
             user = PityResponse.model_to_dict(user, "password")
-            token = UserToken.get_token(user)
-            return PityResponse.success(dict(token=token, user=user), msg="登录成功")
+            expire, token = UserToken.get_token(user)
+            return PityResponse.success(dict(token=token, user=user, expire=expire), msg="登录成功")
     except:
         # 大部分原因是github出问题，忽略
         return PityResponse.failed(code=110, msg="登录超时, 请稍后再试")
@@ -94,7 +94,8 @@ async def query_user_info(token: str):
             return PityResponse.failed("用户不存在")
         return PityResponse.success(user, exclude=("password",))
     except Exception as e:
-        raise AuthException(status.HTTP_200_OK, e)
+        # raise AuthException(status.HTTP_200_OK, e)
+        return PityResponse.failed(e)
 
 
 @router.get("/delete")
