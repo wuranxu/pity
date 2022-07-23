@@ -21,7 +21,7 @@ class TestCase(PityBase):
     directory_id = Column(INT, comment="所属目录")
     tag = Column(String(64), comment="用例标签")
     status = Column(INT, comment="用例状态: 1: 调试中 2: 暂时关闭 3: 正常运作")
-    priority = Column(String(3), comment="用例优先级: p0-p3")
+    priority = Column(String(3), comment="用例优先级: P0-P4")
     # catalogue = Column(String(12), comment="用例目录")
     # expected = Column(TEXT, comment="预期结果, 支持el表达式", nullable=False)
     case_type = Column(SMALLINT, comment="0: 普通用例 1: 前置用例 2: 数据工厂")
@@ -61,4 +61,4 @@ class TestCase(PityBase):
         self.base_path = base_path
 
     def __str__(self):
-        return f"[用例: {self.name}]({self.id}))"
+        return f"[用例: {self.name}]({self.id})"

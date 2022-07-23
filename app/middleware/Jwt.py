@@ -22,9 +22,9 @@ class UserToken(object):
         try:
             return jwt.decode(token, key=UserToken.key, algorithms=["HS256"])
         except ExpiredSignatureError:
-            raise Exception("token已过期, 请重新登录")
+            raise Exception("登录状态已过期, 请重新登录")
         except Exception:
-            raise Exception("token解析失败, 请重新登录")
+            raise Exception("登录状态校验失败, 请重新登录")
 
     @staticmethod
     def add_salt(password):

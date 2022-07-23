@@ -3,19 +3,6 @@ from sqlalchemy import INT, Column
 from app.models.basic import PityBase
 
 
-class ProjectRoleEnum:
-    ADMIN = 1
-    MEMBER = 2
-
-    @staticmethod
-    def name(role):
-        if role == 1:
-            return "组长"
-        if role == 0:
-            return "组员"
-        return None
-
-
 class ProjectRole(PityBase):
     __tablename__ = 'pity_project_role'
     user_id = Column(INT, index=True)

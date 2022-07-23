@@ -11,6 +11,7 @@ from typing import Tuple, List
 from sqlalchemy import select, update
 
 from app.enums.OperationEnum import OperationType
+from app.enums.ProjectEnum import ProjectRoleEnum
 from app.middleware.RedisManager import RedisHelper
 from app.models import Base, async_session, DatabaseHelper, async_engine
 from app.models.address import PityGateway
@@ -19,7 +20,7 @@ from app.models.environment import Environment
 from app.models.gconfig import GConfig
 from app.models.operation_log import PityOperationLog
 from app.models.project import Project
-from app.models.project_role import ProjectRole, ProjectRoleEnum
+from app.models.project_role import ProjectRole
 from app.models.redis_config import PityRedis
 from app.models.test_case import TestCase
 from app.models.test_plan import PityTestPlan
