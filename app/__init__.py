@@ -13,20 +13,21 @@ from loguru._defaults import LOGURU_FORMAT
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.errors import ServerErrorMiddleware
 from starlette.types import Message
-from starlette_context import middleware, plugins
 
 from app.excpetions.RequestException import AuthException
 from app.excpetions.RequestException import PermissionException
 from config import Config
 
+# from starlette_context import middleware, plugins
+
 pity = FastAPI()
 
-pity.add_middleware(
-    middleware.ContextMiddleware,
-    plugins=(
-        plugins.ForwardedForPlugin(),
-    ),
-)
+# pity.add_middleware(
+#     middleware.ContextMiddleware,
+#     plugins=(
+#         plugins.ForwardedForPlugin(),
+#     ),
+# )
 
 # 配置日志格式
 INFO_FORMAT = "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> " \
