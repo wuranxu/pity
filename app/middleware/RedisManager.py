@@ -72,6 +72,8 @@ class PityRedisManager(object):
         node = PityRedisManager._pool.get(redis_id)
         if node is not None:
             return node
+        if ":" not in address:
+            raise Exception("redis连接未包含端口号，请检查配置")
         host, port = address.split(":")
         pool = ConnectionPool(host=host, port=port, db=db, max_connections=100, password=password,
                               decode_responses=True)
@@ -108,7 +110,9 @@ class PityRedisManager(object):
         """
         try:
             nodes = address.split(',')
-            startup_nodes = [{"host": n.split(":")[0], "port": n.split(":")[1]} for n in nodes]
+            startup_nodes = [{"host": n.split(":")[0], "port": n.split(":")[1]} for n in nodes if ":" in n]
+            if len(startup_nodes) == 0:
+                raise Exception("找不到集群节点，请检查配置")
             pool = ClusterConnectionPool(startup_nodes=startup_nodes, max_connections=100, decode_responses=True)
             client = RedisCluster(connection_pool=pool, decode_responses=True)
             return client
