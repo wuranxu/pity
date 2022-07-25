@@ -24,6 +24,7 @@ class SystemConfiguration(object):
             if not os.path.exists(filepath):
                 raise Exception("没找到配置文件，请检查configuration文件是否已经被删除")
             with open(filepath, mode="r", encoding='utf-8') as f:
+
                 return json.load(f)
         except Exception as e:
             raise Exception(f"获取系统设置失败, {e}")
@@ -36,6 +37,7 @@ class SystemConfiguration(object):
             if not os.path.exists(filepath):
                 raise Exception("没找到配置文件，请检查configuration文件是否已经被删除")
             with open(filepath, mode="w", encoding='utf-8') as f:
-                json.dump(config, f, ensure_ascii=False, indent=4)
+                json.dump(config, f,  indent=4, separators=(", ", ": "), sort_keys=True)
+
         except Exception as e:
             raise Exception(f"更新系统设置失败, {e}")

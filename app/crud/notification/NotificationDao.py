@@ -47,6 +47,7 @@ class PityNotificationDao(Mapper):
                                and_(PityNotification.id == PityBroadcastReadUser.notification_id,
                                     PityBroadcastReadUser.read_user == receiver)).where(*conditions).order_by(
                     PityNotification.created_at.desc())
+                """"""
                 query = await session.execute(sql)
                 result = query.all()
                 ans = []

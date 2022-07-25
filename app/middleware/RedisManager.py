@@ -274,8 +274,9 @@ class RedisHelper(object):
                     redis_key = RedisHelper.get_key(f"{cls_name}:{key}", args_key, *args, **kwargs)
                     data = RedisHelper.pity_redis_client.get(redis_key)
                     # 缓存已存在
-                    if data is not None:
-                        return pickle.loads(bytes.fromhex(data))
+                    # if data is not None:
+                    #     print(pickle.loads(bytes.fromhex(data)))
+                    #     return pickle.loads(bytes.fromhex(data))
                     # 获取最新数据
                     new_data = await func(*args, **kwargs)
                     info = pickle.dumps(new_data)
@@ -293,8 +294,8 @@ class RedisHelper(object):
                     redis_key = RedisHelper.get_key(f"{cls_name}:{key}", args_key, *args, **kwargs)
                     data = RedisHelper.pity_redis_client.get(redis_key)
                     # 缓存已存在
-                    if data is not None:
-                        return pickle.loads(bytes.fromhex(data))
+                    # if data is not None:
+                    #     return pickle.loads(bytes.fromhex(data))
                     # 获取最新数据
                     new_data = func(*args, **kwargs)
                     info = pickle.dumps(new_data)
