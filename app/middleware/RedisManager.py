@@ -233,7 +233,7 @@ class RedisHelper(object):
         :param key:
         :return:
         """
-        for k in RedisHelper.pity_redis_client.scan_iter(f"{key}:*"):
+        for k in RedisHelper.pity_redis_client.scan_iter(f"{key}*"):
             RedisHelper.pity_redis_client.delete(k)
             logger.bind(name=None).debug(f"delete redis key: {k}")
 

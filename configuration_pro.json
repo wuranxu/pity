@@ -1,18 +1,18 @@
 {
-  "email": {
-    "sender": "wuranxu1993@126.com",
-    "password": "PQDGGXFWKYGZYQBU",
-    "host": "smtp.126.com",
-    "to": "测试报告收件人pro"
-  },
-  "yapi": {
-    "token": "ff"
-  },
-  "oss": {
-    "oss_type": "qiniu",
-    "access_key_id": "CYl54wZe1VO-DXzMTbnX9VJXROrRjEFpCVdG-5PH",
-    "access_key_secret": "6wpB7ZlNlP11YioLfQG404yCXyIScUJ_ws6W2D80",
-    "bucket": "pity",
-    "endpoint": ""
-  }
+    "email": {
+        "sender": "wuranxu1993@126.com",
+        "password": "PQDGGXFWKYGZYQBU",
+        "host": "smtp.126.com",
+        "to": "测试报告收件人pro"
+    },
+    "yapi": {
+        "token": "ff"
+    },
+    "oss": {
+        "oss_type": "qiniu",
+        "access_key_id": "CYl54wZe1VO-DXzMTbnX9VJXROrRjEFpCVdG-5PH",
+        "access_key_secret": "6wpB7ZlNlP11YioLfQG404yCXyIScUJ_ws6W2D80",
+        "bucket": "pity",
+        "endpoint": ""
+    }
 }
