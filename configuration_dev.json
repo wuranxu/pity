@@ -1,17 +1,17 @@
 {
     "email": {
-        "host": "1", 
-        "password": "PQDGGXFWKYGZYQBU", 
-        "sender": "1", 
-        "to": "\u6d4b\u8bd5\u62a5\u544a\u6536\u4ef6\u4eba"
-    }, 
-    "oss": {
-        "access_key_id": "56a5797a2fb4a3cdfca439082da7dee1", 
-        "access_key_secret": "woodywrx", 
-        "bucket": "oss", 
-        "oss_type": "gitee"
-    }, 
+        "sender": "1013645039@qq.com",
+        "password": "11",
+        "host": "1",
+        "to": "测试报告收件人"
+    },
     "yapi": {
         "token": "ff"
+    },
+    "oss": {
+        "oss_type": "gitee",
+        "access_key_id": "56a5797a2fb4a3cdfca439082da7dee1",
+        "access_key_secret": "woodywrx",
+        "bucket": "oss"
     }
 }

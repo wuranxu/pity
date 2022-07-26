@@ -273,11 +273,11 @@ class RedisHelper(object):
                     cls_name = inspect.getframeinfo(inspect.currentframe().f_back)[3][0].split(".")[0].split(" ")[-1]
                     redis_key = RedisHelper.get_key(f"{cls_name}:{key}", args_key, *args, **kwargs)
                     data = RedisHelper.pity_redis_client.get(redis_key)
-                    # 缓存已存在
-                    # if data is not None:
-                    #     print(pickle.loads(bytes.fromhex(data)))
-                    #     return pickle.loads(bytes.fromhex(data))
-                    # 获取最新数据
+                    """缓存已存在"""
+                    if data is not None:
+                        print(pickle.loads(bytes.fromhex(data)))
+                        return pickle.loads(bytes.fromhex(data))
+                    """获取最新数据"""
                     new_data = await func(*args, **kwargs)
                     info = pickle.dumps(new_data)
                     logger.bind(name=None).debug(f"set redis key: {redis_key}")
@@ -293,10 +293,10 @@ class RedisHelper(object):
                     cls_name = inspect.getframeinfo(inspect.currentframe().f_back)[3][0].split(".")[0].split(" ")[-1]
                     redis_key = RedisHelper.get_key(f"{cls_name}:{key}", args_key, *args, **kwargs)
                     data = RedisHelper.pity_redis_client.get(redis_key)
-                    # 缓存已存在
-                    # if data is not None:
-                    #     return pickle.loads(bytes.fromhex(data))
-                    # 获取最新数据
+                    """缓存已存在"""
+                    if data is not None:
+                        return pickle.loads(bytes.fromhex(data))
+                    """获取最新数据"""
                     new_data = func(*args, **kwargs)
                     info = pickle.dumps(new_data)
                     logger.bind(name=None).debug(f"set redis key: {redis_key}")
