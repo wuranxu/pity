@@ -13,9 +13,9 @@ class TencentCos(OssFile):
         self.client = CosS3Client(self.config)
 
     @awaitable
-    def create_file(self, filepath: str, content: bytes, base_path: str = None):
+    def create_file(self, filepath: str, content: bytes, filename: str, base_path: str = None):
         try:
-            key = self.get_real_path(filepath, base_path)
+            key = self.get_real_path(filepath, base_path) + filename
             self.client.put_object(
                 Bucket=self.bucket,
                 Body=content,

@@ -19,7 +19,7 @@ async def create_oss_file(filepath: str, file: UploadFile = File(...),
         file_content = await file.read()
         client = OssClient.get_oss_client()
         # oss上传 WARNING: 可能存在数据不同步的问题，oss成功本地失败
-        file_url, file_size = await client.create_file(filepath, file_content)
+        file_url, file_size = await client.create_file(filepath=filepath, content=file_content, filename=file.filename)
         # 本地数据也要备份一份
         model = PityOssFile(user_info['id'], filepath, file_url, PityOssFile.get_size(file_size))
         record = await PityOssDao.query_record(file_path=filepath,

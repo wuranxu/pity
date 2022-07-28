@@ -5,7 +5,7 @@ import time
 class OssFile(object):
     _base_path = "pity"
 
-    async def create_file(self, filepath: str, content, base_path: str = None) -> (str, int):
+    async def create_file(self, filepath: str, content, filename: str, base_path: str = None) -> (str, int):
         raise NotImplementedError
 
     # async def update_file(self, filepath: str, content, base_path: str = None):
