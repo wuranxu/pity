@@ -8,12 +8,12 @@ from app.models import async_session, DatabaseHelper
 from app.models.constructor import Constructor
 from app.models.test_case import TestCase
 from app.schema.constructor import ConstructorForm, ConstructorIndex
-from app.utils.decorator import dao
 from app.utils.logger import Log
 
 
-@dao(Constructor, Log("ConstructorDao"))
-class ConstructorDao(Mapper):
+class ConstructorDao(Mapper, metaclass=Mapper):
+    __model__ = Constructor
+    __log__ = Log("ConstructorDao")
 
     @staticmethod
     async def list_constructor(case_id: int) -> List[Constructor]:
@@ -29,7 +29,7 @@ class ConstructorDao(Mapper):
                 result = await session.execute(sql)
                 return result.scalars().all()
         except Exception as e:
-            ConstructorDao.log.error(f"获取初始化数据失败, {e}")
+            ConstructorDao.__log__.error(f"获取初始化数据失败, {e}")
             raise Exception(f"获取初始化数据失败, {e}")
 
     @staticmethod
@@ -46,7 +46,7 @@ class ConstructorDao(Mapper):
                     constructor.index = await constructor.get_index(session, data.case_id)
                     session.add(constructor)
         except Exception as e:
-            ConstructorDao.log.error(f"新增前/后置条件: {data.name}失败, {e}")
+            ConstructorDao.__log__.error(f"新增前/后置条件: {data.name}失败, {e}")
             raise Exception(f"新增前/后置条件失败, {e}")
 
     @staticmethod
@@ -67,7 +67,7 @@ class ConstructorDao(Mapper):
                         raise Exception(f"{data.name}不存在")
                     DatabaseHelper.update_model(query, data, user_id)
         except Exception as e:
-            ConstructorDao.log.error(f"编辑前后置条件: {data.name}失败, {e}")
+            ConstructorDao.__log__.error(f"编辑前后置条件: {data.name}失败, {e}")
             raise Exception(f"编辑前后置条件失败, {e}")
 
     @classmethod
@@ -88,7 +88,7 @@ class ConstructorDao(Mapper):
                         raise Exception(f"前后置条件{id}不存在")
                     DatabaseHelper.delete_model(query, user_id)
         except Exception as e:
-            cls.log.error(f"删除前后置条件: {id}失败, {e}")
+            cls.__log__.error(f"删除前后置条件: {id}失败, {e}")
             raise Exception(f"删除前后置条件失败, {e}")
 
     @classmethod
@@ -105,7 +105,7 @@ class ConstructorDao(Mapper):
                         await session.execute(
                             update(Constructor).where(Constructor.id == item.id).values(index=item.index))
         except Exception as e:
-            cls.log.error(f"更新前后置条件顺序失败, {e}")
+            cls.__log__.error(f"更新前后置条件顺序失败, {e}")
             raise Exception("更新前后置条件顺序失败")
 
     @classmethod
@@ -139,7 +139,7 @@ class ConstructorDao(Mapper):
                     })
                 return result
         except Exception as e:
-            cls.log.error(f"获取前后置条件树失败, {e}")
+            cls.__log__.error(f"获取前后置条件树失败, {e}")
             raise Exception("获取前后置条件失败")
 
     @staticmethod

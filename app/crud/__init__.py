@@ -29,9 +29,15 @@ from app.models.user import User
 from config import Config
 
 
-class Mapper(object):
-    log = None
-    model = None
+class Mapper(type):
+    __log__ = None
+    __model__ = None
+
+    def __new__(mcs, name, bases, attrs):
+        res = super().__new__(mcs, name, bases, attrs)
+        mcs.__log__ = attrs['__log__']
+        mcs.__model__ = attrs['__model__']
+        return res
 
     @classmethod
     @RedisHelper.cache("dao")
@@ -49,7 +55,7 @@ class Mapper(object):
                 return result.scalars().all()
         except Exception as e:
             # 这边调用cls本身的log参数，写入日志+抛出异常
-            cls.log.error(f"获取{cls.model}列表失败, error: {e}")
+            cls.__log__.error(f"获取{cls.__model__}列表失败, error: {e}")
             raise Exception(f"获取数据失败")
 
     @classmethod
@@ -67,14 +73,14 @@ class Mapper(object):
                 sql = cls.query_wrapper(**kwargs)
                 return await DatabaseHelper.pagination(page, size, session, sql)
         except Exception as e:
-            cls.log.error(f"获取{cls.model}列表失败, error: {e}")
+            cls.__log__.error(f"获取{cls.__model__}列表失败, error: {e}")
             raise Exception(f"获取数据失败")
 
     @classmethod
     def query_wrapper(cls, condition=None, **kwargs):
         conditions = condition if condition else list()
-        if getattr(cls.model, "deleted_at", None):
-            conditions.append(getattr(cls.model, "deleted_at") == 0)
+        if getattr(cls.__model__, "deleted_at", None):
+            conditions.append(getattr(cls.__model__, "deleted_at") == 0)
         _sort = kwargs.get("_sort")
         if _sort is not None:
             # 需要去掉desc，不然会影响之前的sql执行
@@ -86,9 +92,9 @@ class Mapper(object):
             if like and len(v) == 2:
                 continue
             # 如果是like模式，则使用Model.字段.like 否则用 Model.字段 等于
-            DatabaseHelper.where(v, getattr(cls.model, k).like(v) if like else getattr(cls.model, k) == v,
+            DatabaseHelper.where(v, getattr(cls.__model__, k).like(v) if like else getattr(cls.__model__, k) == v,
                                  conditions)
-        sql = select(cls.model).where(*conditions)
+        sql = select(cls.__model__).where(*conditions)
         if _sort and isinstance(_sort, tuple):
             for d in _sort:
                 sql = getattr(sql, "order_by")(d)
@@ -107,7 +113,7 @@ class Mapper(object):
                 result = await session.execute(sql)
                 return result.scalars().first()
         except Exception as e:
-            cls.log.error(f"查询{cls.model}失败, error: {e}")
+            cls.__log__.error(f"查询{cls.__model__}失败, error: {e}")
             raise Exception(f"查询记录失败")
 
     @classmethod
@@ -136,7 +142,7 @@ class Mapper(object):
                                    key=model.id))
             return model
         except Exception as e:
-            cls.log.error(f"添加{cls.model}记录失败, error: {e}")
+            cls.__log__.error(f"添加{cls.__model__}记录失败, error: {e}")
             raise Exception(f"添加记录失败")
 
     @classmethod
@@ -145,11 +151,11 @@ class Mapper(object):
         try:
             async with async_session() as session:
                 async with session.begin():
-                    sql = update(cls.model).where(*condition).values(**kwargs, updated_at=datetime.now(),
+                    sql = update(cls.__model__).where(*condition).values(**kwargs, updated_at=datetime.now(),
                                                                      update_user=user)
                     await session.execute(sql)
         except Exception as e:
-            cls.log.error(f"更新数据失败: {e}")
+            cls.__log__.error(f"更新数据失败: {e}")
             raise Exception("更新数据失败")
 
     @classmethod
@@ -174,7 +180,7 @@ class Mapper(object):
                                            changed=changed))
                 return now
         except Exception as e:
-            cls.log.error(f"更新{cls.model}记录失败, error: {e}")
+            cls.__log__.error(f"更新{cls.__model__}记录失败, error: {e}")
             raise Exception(f"更新数据失败")
 
     @classmethod
@@ -216,7 +222,7 @@ class Mapper(object):
             async with session.begin():
                 return await cls._inner_delete(session, user, value, log, key, exists)
         except Exception as e:
-            cls.log.exception(f"删除{cls.model.__name__}记录失败: \n{e}")
+            cls.__log__.exception(f"删除{cls.__model__.__name__}记录失败: \n{e}")
             raise Exception(f"删除失败")
 
     @classmethod
@@ -237,7 +243,7 @@ class Mapper(object):
                     await asyncio.create_task(
                         cls.insert_log(session, user, OperationType.DELETE, original, key=id_))
         except Exception as e:
-            cls.log.exception(f"删除{cls.model}记录失败, error: {e}")
+            cls.__log__.exception(f"删除{cls.__model__}记录失败, error: {e}")
             raise Exception(f"删除记录失败")
 
     @classmethod
@@ -428,7 +434,7 @@ class Mapper(object):
                         raise Exception("记录不存在")
                     session.delete(original)
         except Exception as e:
-            cls.log.error(f"逻辑删除{cls.model}记录失败, error: {e}")
+            cls.__log__.error(f"逻辑删除{cls.__model__}记录失败, error: {e}")
             raise Exception(f"删除记录失败")
 
 
