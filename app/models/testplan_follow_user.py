@@ -15,7 +15,7 @@ class PityTestPlanFollowUserRel(PityBase):
     user_id = Column(INT, nullable=False)
     plan_id = Column(INT, nullable=False)
 
-    def __init__(self, plan_id, user_id, user):
-        super().__init__(user)
+    def __init__(self, plan_id, user_id):
+        super().__init__(user_id)
         self.user_id = user_id
         self.plan_id = plan_id

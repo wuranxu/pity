@@ -47,7 +47,6 @@ class PityReport(Base):
         self.failed_count = failed_count
         self.error_count = error_count
         self.skipped_count = skipped_count
-        self.status = status
         self.mode = mode
         self.status = status
         self.plan_id = plan_id

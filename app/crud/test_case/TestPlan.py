@@ -174,7 +174,7 @@ class PityTestPlanDao(Mapper):
                 ans = data.scalars().first()
                 if ans is not None:
                     raise Exception("已关注过此测试计划")
-                model = PityTestPlanFollowUserRel(plan_id, user_id, user_id)
+                model = PityTestPlanFollowUserRel(plan_id, user_id)
                 session.add(model)
 
     @staticmethod
