@@ -29,15 +29,15 @@ from app.models.user import User
 from config import Config
 
 
-class Mapper(type):
+class Mapper(object):
     __log__ = None
     __model__ = None
 
-    def __new__(mcs, name, bases, attrs):
-        res = super().__new__(mcs, name, bases, attrs)
-        mcs.__log__ = attrs['__log__']
-        mcs.__model__ = attrs['__model__']
-        return res
+    # def __new__(mcs, name, bases, attrs):
+    #     res = super().__new__(mcs, name, bases, attrs)
+    #     mcs.__log__ = attrs['__log__']
+    #     mcs.__model__ = attrs['__model__']
+    #     return res
 
     @classmethod
     @RedisHelper.cache("dao")

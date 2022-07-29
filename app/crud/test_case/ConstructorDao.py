@@ -8,12 +8,12 @@ from app.models import async_session, DatabaseHelper
 from app.models.constructor import Constructor
 from app.models.test_case import TestCase
 from app.schema.constructor import ConstructorForm, ConstructorIndex
+from app.utils.decorator import dao
 from app.utils.logger import Log
 
 
-class ConstructorDao(Mapper, metaclass=Mapper):
-    __model__ = Constructor
-    __log__ = Log("ConstructorDao")
+@dao(Constructor, Log("ConstructorDao"))
+class ConstructorDao(Mapper):
 
     @staticmethod
     async def list_constructor(case_id: int) -> List[Constructor]:

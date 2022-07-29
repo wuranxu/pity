@@ -3,12 +3,12 @@ from sqlalchemy import select
 from app.crud import Mapper
 from app.models import async_session
 from app.models.address import PityGateway
+from app.utils.decorator import dao
 from app.utils.logger import Log
 
 
-class PityGatewayDao(Mapper, metaclass=Mapper):
-    __log__ = Log("PityRedisConfigDao")
-    __model__ = PityGateway
+@dao(PityGateway, Log("PityRedisConfigDao"))
+class PityGatewayDao(Mapper):
 
     @staticmethod
     # @RedisHelper.cache(f"gateway", 1800)

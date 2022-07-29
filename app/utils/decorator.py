@@ -87,8 +87,8 @@ def dao(model, log):
         :return:
         """
         # 设置model和log
-        setattr(cls, "model", model)
-        setattr(cls, "log", log)
+        setattr(cls, "__model__", model)
+        setattr(cls, "__log__", log)
         return cls
 
     return wrapper
