@@ -1,11 +1,9 @@
-from app.crud import Mapper
+from app.crud import Mapper, ModelWrapper
 from app.middleware.RedisManager import PityRedisManager, RedisHelper
 from app.models.redis_config import PityRedis
-from app.utils.decorator import dao
-from app.utils.logger import Log
 
 
-@dao(PityRedis, Log("PityRedisConfigDao"))
+@ModelWrapper(PityRedis)
 class PityRedisConfigDao(Mapper):
 
     @staticmethod
@@ -22,5 +20,3 @@ class PityRedisConfigDao(Mapper):
             return await RedisHelper.execute_command(client, command)
         except Exception as e:
             raise Exception(f"执行redis命令出错: {e}")
-
-

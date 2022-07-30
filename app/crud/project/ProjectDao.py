@@ -3,17 +3,15 @@ from typing import List
 
 from sqlalchemy import or_, select, desc
 
-from app.crud import Mapper
+from app.crud import Mapper, ModelWrapper
 from app.crud.project.ProjectRoleDao import ProjectRoleDao
 from app.models import async_session
 from app.models.project import Project
 from app.models.project_role import ProjectRole
-from app.utils.decorator import dao
-from app.utils.logger import Log
 from config import Config
 
 
-@dao(Project, Log("ProjectDao"))
+@ModelWrapper(Project)
 class ProjectDao(Mapper):
 
     @classmethod

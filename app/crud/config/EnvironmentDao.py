@@ -1,14 +1,12 @@
 from sqlalchemy import select
 
-from app.crud import Mapper
+from app.crud import ModelWrapper, Mapper
 from app.models import async_session
 from app.models.environment import Environment
 from app.schema.environment import EnvironmentForm
-from app.utils.decorator import dao
-from app.utils.logger import Log
 
 
-@dao(Environment, Log("EnvironmentDao"))
+@ModelWrapper(Environment)
 class EnvironmentDao(Mapper):
 
     @staticmethod

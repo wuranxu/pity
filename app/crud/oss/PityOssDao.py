@@ -1,9 +1,7 @@
-from app.crud import Mapper
+from app.crud import Mapper, ModelWrapper
 from app.models.oss_file import PityOssFile
-from app.utils.decorator import dao
-from app.utils.logger import Log
 
 
-@dao(PityOssFile, Log("PityOssDao"))
+@ModelWrapper(PityOssFile)
 class PityOssDao(Mapper):
     pass

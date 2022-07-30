@@ -4,7 +4,7 @@ from copy import deepcopy
 
 from sqlalchemy import select, and_, or_, null
 
-from app.crud import Mapper
+from app.crud import Mapper, ModelWrapper
 from app.crud.project.ProjectDao import ProjectDao
 from app.enums.OperationEnum import OperationType
 from app.models import async_session, DatabaseHelper
@@ -12,11 +12,9 @@ from app.models.report import PityReport
 from app.models.test_plan import PityTestPlan
 from app.models.testplan_follow_user import PityTestPlanFollowUserRel
 from app.schema.test_plan import PityTestPlanForm
-from app.utils.decorator import dao
-from app.utils.logger import Log
 
 
-@dao(PityTestPlan, Log("PityTestPlanDao"))
+@ModelWrapper(PityTestPlan)
 class PityTestPlanDao(Mapper):
 
     @staticmethod

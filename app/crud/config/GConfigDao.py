@@ -1,15 +1,13 @@
 from sqlalchemy import select
 
-from app.crud import Mapper
+from app.crud import Mapper, ModelWrapper
 from app.middleware.RedisManager import RedisHelper
 from app.models import async_session
 from app.models.gconfig import GConfig
 from app.schema.gconfig import GConfigForm
-from app.utils.decorator import dao
-from app.utils.logger import Log
 
 
-@dao(GConfig, Log("GConfigDao"))
+@ModelWrapper(GConfig)
 class GConfigDao(Mapper):
 
     @classmethod

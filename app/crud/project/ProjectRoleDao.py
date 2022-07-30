@@ -5,15 +5,13 @@ from typing import List
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.crud import Mapper
+from app.crud import Mapper, ModelWrapper
 from app.enums.OperationEnum import OperationType
 from app.excpetions.AuthException import AuthException
 from app.models import async_session, DatabaseHelper
 from app.models.project import Project
 from app.models.project_role import ProjectRole
 from app.routers.project.project_schema import ProjectRoleEditForm
-from app.utils.decorator import dao
-from app.utils.logger import Log
 from config import Config
 
 
@@ -23,7 +21,7 @@ from config import Config
 # 4. 应该多封装自定义异常，这样一下子就能清楚是什么报错
 
 
-@dao(ProjectRole, Log("ProjectRoleDao"))
+@ModelWrapper(ProjectRole)
 class ProjectRoleDao(Mapper):
 
     @classmethod

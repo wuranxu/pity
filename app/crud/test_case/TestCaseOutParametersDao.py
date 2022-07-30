@@ -4,16 +4,14 @@ from typing import List
 
 from sqlalchemy import select, update
 
-from app.crud import Mapper
+from app.crud import Mapper, ModelWrapper
 from app.middleware.RedisManager import RedisHelper
 from app.models import async_session
 from app.models.out_parameters import PityTestCaseOutParameters
 from app.schema.testcase_out_parameters import PityTestCaseOutParametersForm
-from app.utils.decorator import dao
-from app.utils.logger import Log
 
 
-@dao(PityTestCaseOutParameters, Log("PityTestCaseOutParametersDao"))
+@ModelWrapper(PityTestCaseOutParameters)
 class PityTestCaseOutParametersDao(Mapper):
 
     @classmethod

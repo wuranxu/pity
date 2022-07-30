@@ -3,16 +3,14 @@ from typing import List
 
 from sqlalchemy import select, and_, or_, update
 
-from app.crud import Mapper
+from app.crud import Mapper, ModelWrapper
 from app.enums.MessageEnum import MessageTypeEnum, MessageStateEnum
 from app.models import async_session
 from app.models.broadcast_read_user import PityBroadcastReadUser
 from app.models.notification import PityNotification
-from app.utils.decorator import dao
-from app.utils.logger import Log
 
 
-@dao(PityNotification, Log("PityNotificationDao"))
+@ModelWrapper(PityNotification)
 class PityNotificationDao(Mapper):
 
     @classmethod

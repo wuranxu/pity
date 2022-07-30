@@ -1,13 +1,11 @@
 from sqlalchemy import select
 
-from app.crud import Mapper
+from app.crud import Mapper, ModelWrapper
 from app.models import async_session
 from app.models.address import PityGateway
-from app.utils.decorator import dao
-from app.utils.logger import Log
 
 
-@dao(PityGateway, Log("PityRedisConfigDao"))
+@ModelWrapper(PityGateway)
 class PityGatewayDao(Mapper):
 
     @staticmethod

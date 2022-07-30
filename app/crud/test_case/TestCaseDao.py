@@ -5,7 +5,7 @@ from typing import List, Dict
 from sqlalchemy import desc, func, and_, asc
 from sqlalchemy.future import select
 
-from app.crud import Mapper
+from app.crud import Mapper, ModelWrapper
 from app.crud.test_case.ConstructorDao import ConstructorDao
 from app.crud.test_case.TestCaseAssertsDao import TestCaseAssertsDao
 from app.crud.test_case.TestCaseDirectory import PityTestcaseDirectoryDao
@@ -22,11 +22,10 @@ from app.models.testcase_asserts import TestCaseAsserts
 from app.models.testcase_data import PityTestcaseData
 from app.models.user import User
 from app.schema.testcase_schema import TestCaseForm, TestCaseInfo
-from app.utils.decorator import dao
 from app.utils.logger import Log
 
 
-@dao(TestCase, Log("TestCaseDao"))
+@ModelWrapper(TestCase)
 class TestCaseDao(Mapper):
     log = Log("TestCaseDao")
 

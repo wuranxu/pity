@@ -26,6 +26,7 @@ from app.models.test_case import TestCase
 from app.models.test_plan import PityTestPlan
 from app.models.testcase_asserts import TestCaseAsserts
 from app.models.user import User
+from app.utils.logger import Log
 from config import Config
 
 
@@ -152,7 +153,7 @@ class Mapper(object):
             async with async_session() as session:
                 async with session.begin():
                     sql = update(cls.__model__).where(*condition).values(**kwargs, updated_at=datetime.now(),
-                                                                     update_user=user)
+                                                                         update_user=user)
                     await session.execute(sql)
         except Exception as e:
             cls.__log__.error(f"更新数据失败: {e}")
@@ -436,6 +437,21 @@ class Mapper(object):
         except Exception as e:
             cls.__log__.error(f"逻辑删除{cls.__model__}记录失败, error: {e}")
             raise Exception(f"删除记录失败")
+
+
+class ModelWrapper:
+
+    def __init__(self, model, log=None):
+        self.__model__ = model
+        if log is None:
+            self.__log__ = Log(f"{model.__name__}Dao")
+        else:
+            self.__log__ = log
+
+    def __call__(self, cls):
+        setattr(cls, "__model__", self.__model__)
+        setattr(cls, "__log__", self.__log__)
+        return cls
 
 
 # from app.models.user import User

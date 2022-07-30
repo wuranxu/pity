@@ -3,16 +3,14 @@ from typing import List
 
 from sqlalchemy import select, update
 
-from app.crud import Mapper
+from app.crud import Mapper, ModelWrapper
 from app.models import async_session, DatabaseHelper
 from app.models.constructor import Constructor
 from app.models.test_case import TestCase
 from app.schema.constructor import ConstructorForm, ConstructorIndex
-from app.utils.decorator import dao
-from app.utils.logger import Log
 
 
-@dao(Constructor, Log("ConstructorDao"))
+@ModelWrapper(Constructor)
 class ConstructorDao(Mapper):
 
     @staticmethod

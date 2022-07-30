@@ -2,14 +2,12 @@ from datetime import datetime
 
 from sqlalchemy import func, select
 
-from app.crud import Mapper
+from app.crud import Mapper, ModelWrapper
 from app.models import async_session
 from app.models.operation_log import PityOperationLog
-from app.utils.decorator import dao
-from app.utils.logger import Log
 
 
-@dao(PityOperationLog, Log("PityOperationDao"))
+@ModelWrapper(PityOperationLog)
 class PityOperationDao(Mapper):
 
     @classmethod

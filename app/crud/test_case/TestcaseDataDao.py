@@ -3,15 +3,13 @@ from typing import List
 
 from sqlalchemy import select
 
-from app.crud import Mapper
+from app.crud import Mapper, ModelWrapper
 from app.models import async_session, DatabaseHelper
-from app.schema.testcase_data import PityTestcaseDataForm
 from app.models.testcase_data import PityTestcaseData
-from app.utils.decorator import dao
-from app.utils.logger import Log
+from app.schema.testcase_data import PityTestcaseDataForm
 
 
-@dao(PityTestcaseData, Log("PityTestcaseDataDao"))
+@ModelWrapper(PityTestcaseData)
 class PityTestcaseDataDao(Mapper):
 
     @classmethod

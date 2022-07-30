@@ -28,11 +28,12 @@ def case_log(func):
             self = args[0]
             doc = func.__doc__
             self.logger.o_append("[{}]: 步骤开始 -> {}".format(datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                                                           doc.strip() if doc else func.__name__, get_str(args, kw)))
+                                                               doc.strip() if doc else func.__name__,
+                                                               get_str(args, kw)))
             returns = await func(*args, **kw)
             self.logger.o_append("[{}]: 步骤结束 -> {} {}".format(datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                                                              doc.strip() if doc else func.__name__,
-                                                              get_returns(returns)))
+                                                                  doc.strip() if doc else func.__name__,
+                                                                  get_returns(returns)))
             return returns
     else:
         @wraps(func)
@@ -40,15 +41,16 @@ def case_log(func):
             self = args[0]
             doc = func.__doc__
             self.logger.o_append("[{}]: 步骤开始 -> {}".format(datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                                                           doc.strip() if doc else func.__name__, get_str(args, kw)))
+                                                               doc.strip() if doc else func.__name__,
+                                                               get_str(args, kw)))
             returns = func(*args, **kw)
             if not isinstance(returns, Coroutine):
                 self.logger.o_append("[{}]: 步骤结束 -> {} {}".format(datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                                                                  doc.strip() if doc else func.__name__,
-                                                                  get_returns(returns)))
+                                                                      doc.strip() if doc else func.__name__,
+                                                                      get_returns(returns)))
             else:
                 self.logger.o_append("[{}]: 步骤结束 -> {}".format(datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                                                               doc.strip() if doc else func.__name__))
+                                                                   doc.strip() if doc else func.__name__))
             return returns
     return wrapper
 
@@ -77,21 +79,6 @@ def get_returns(obj):
     if isinstance(obj, object):
         return str(obj)
     return f"返回值: {obj}"
-
-
-def dao(model, log):
-    def wrapper(cls):
-        """
-        # 测试过，不同dao包裹的cls，地址不一致，可放心使用，并非单例
-        :param cls:
-        :return:
-        """
-        # 设置model和log
-        setattr(cls, "__model__", model)
-        setattr(cls, "__log__", log)
-        return cls
-
-    return wrapper
 
 
 def lock(key):
