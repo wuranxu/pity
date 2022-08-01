@@ -42,7 +42,7 @@ class ProjectDao(Mapper):
                 data = await session.execute(sql)
                 return data.scalars().all(), total
         except Exception as e:
-            cls.log.error(f"获取用户: {user_id}项目列表失败, {e}")
+            cls.__log__.error(f"获取用户: {user_id}项目列表失败, {e}")
             raise Exception(f"获取用户: {user_id}项目列表失败")
 
     @classmethod
@@ -82,7 +82,7 @@ class ProjectDao(Mapper):
                     pr = Project(name, app, owner, user_id, description, private, dingtalk_url)
                     session.add(pr)
         except Exception as e:
-            cls.log.error(f"新增项目: {name}失败, {e}")
+            cls.__log__.error(f"新增项目: {name}失败, {e}")
             raise Exception(f"新增项目: {name}失败, {e}")
 
     @classmethod
@@ -102,7 +102,7 @@ class ProjectDao(Mapper):
                     data.updated_at = datetime.now()
                     data.update_user = user_id
         except Exception as e:
-            cls.log.error(f"修改项目头像失败, 项目: {project_id}, error: {e}")
+            cls.__log__.error(f"修改项目头像失败, 项目: {project_id}, error: {e}")
             raise Exception(e)
 
     @classmethod
@@ -140,7 +140,7 @@ class ProjectDao(Mapper):
                     data.update_user = user_id
                     data.dingtalk_url = dingtalk_url
         except Exception as e:
-            cls.log.error(f"编辑项目: {name}失败, {e}")
+            cls.__log__.error(f"编辑项目: {name}失败, {e}")
             raise Exception(f"编辑项目: {name}失败, {e}")
 
     @classmethod
@@ -154,7 +154,7 @@ class ProjectDao(Mapper):
                 roles = await ProjectRoleDao.list_role(project_id)
                 return data, roles
         except Exception as e:
-            cls.log.error(f"查询项目: {project_id}失败, {e}")
+            cls.__log__.error(f"查询项目: {project_id}失败, {e}")
             raise Exception(f"查询项目: {project_id}失败, {e}")
 
     @staticmethod

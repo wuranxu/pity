@@ -45,7 +45,7 @@ class TestCaseDao(Mapper):
                 result = await session.execute(sql)
                 return result.scalars().all()
         except Exception as e:
-            cls.log.error(f"获取测试用例失败: {str(e)}")
+            cls.__log__.error(f"获取测试用例失败: {str(e)}")
             raise Exception(f"获取测试用例失败: {str(e)}")
 
     @staticmethod
@@ -135,7 +135,7 @@ class TestCaseDao(Mapper):
                     session.expunge(data)
                     return data
         except Exception as e:
-            cls.log.error(f"编辑用例失败: {str(e)}")
+            cls.__log__.error(f"编辑用例失败: {str(e)}")
             raise Exception(f"编辑用例失败: {str(e)}")
 
     @staticmethod
@@ -218,7 +218,7 @@ class TestCaseDao(Mapper):
                     })
                 return result
         except Exception as e:
-            cls.log.error(f"获取用例列表失败: {str(e)}")
+            cls.__log__.error(f"获取用例列表失败: {str(e)}")
             raise Exception("获取用例列表失败")
 
     @staticmethod

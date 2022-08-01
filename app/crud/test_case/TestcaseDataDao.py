@@ -32,7 +32,7 @@ class PityTestcaseDataDao(Mapper):
                     session.expunge(data)
                     return data
         except Exception as e:
-            cls.log.error(f"新增测试数据失败, error: {str(e)}")
+            cls.__log__.error(f"新增测试数据失败, error: {str(e)}")
             raise Exception(f"新增测试数据失败, {str(e)}")
 
     @classmethod
@@ -51,7 +51,7 @@ class PityTestcaseDataDao(Mapper):
                     session.expunge(query)
                     return query
         except Exception as e:
-            cls.log.error(f"编辑测试数据失败, error: {str(e)}")
+            cls.__log__.error(f"编辑测试数据失败, error: {str(e)}")
             raise Exception(f"编辑测试数据失败, {str(e)}")
 
     @classmethod
@@ -67,7 +67,7 @@ class PityTestcaseDataDao(Mapper):
                         raise Exception("测试数据不存在")
                     DatabaseHelper.delete_model(query, user)
         except Exception as e:
-            cls.log.error(f"删除测试数据失败, error: {str(e)}")
+            cls.__log__.error(f"删除测试数据失败, error: {str(e)}")
             raise Exception(f"删除测试数据失败, {str(e)}")
 
     @classmethod
@@ -83,7 +83,7 @@ class PityTestcaseDataDao(Mapper):
                     ans[q.env].append(q)
                 return ans
         except Exception as e:
-            cls.log.error(f"查询测试数据失败, error: {str(e)}")
+            cls.__log__.error(f"查询测试数据失败, error: {str(e)}")
             raise Exception(f"查询测试数据失败, {str(e)}")
 
     @classmethod
@@ -96,5 +96,5 @@ class PityTestcaseDataDao(Mapper):
                 result = await session.execute(sql)
                 return result.scalars().all()
         except Exception as e:
-            cls.log.error(f"查询测试数据失败, error: {str(e)}")
+            cls.__log__.error(f"查询测试数据失败, error: {str(e)}")
             raise Exception(f"查询测试数据失败, {str(e)}")

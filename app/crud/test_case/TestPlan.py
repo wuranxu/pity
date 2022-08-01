@@ -61,7 +61,7 @@ class PityTestPlanDao(Mapper):
                 result, total = await DatabaseHelper.pagination(page, size, session, sql, False)
                 return result, total
         except Exception as e:
-            PityTestPlanDao.log.error(f"获取测试计划失败: {str(e)}")
+            PityTestPlanDao.__log__.error(f"获取测试计划失败: {str(e)}")
             raise Exception(f"获取测试计划失败: {str(e)}")
 
     @staticmethod
@@ -81,7 +81,7 @@ class PityTestPlanDao(Mapper):
                     session.expunge(test_plan)
                     return test_plan
         except Exception as e:
-            PityTestPlanDao.log.error(f"新增测试计划失败: {str(e)}")
+            PityTestPlanDao.__log__.error(f"新增测试计划失败: {str(e)}")
             raise Exception(f"添加失败: {str(e)}")
 
     @classmethod
@@ -107,8 +107,8 @@ class PityTestPlanDao(Mapper):
                         await asyncio.create_task(
                             cls.insert_log(session, user, OperationType.UPDATE, data, old, plan.id, changed))
         except Exception as e:
-            PityTestPlanDao.log.exception(f"编辑测试计划失败: {str(e)}")
-            PityTestPlanDao.log.error(f"编辑测试计划失败: {str(e)}")
+            PityTestPlanDao.__log__.exception(f"编辑测试计划失败: {str(e)}")
+            PityTestPlanDao.__log__.error(f"编辑测试计划失败: {str(e)}")
             raise Exception(f"编辑失败: {str(e)}")
 
     @staticmethod
@@ -126,7 +126,7 @@ class PityTestPlanDao(Mapper):
                     # session.expunge(data)
                     # return data
         except Exception as e:
-            PityTestPlanDao.log.error(f"编辑测试计划失败: {str(e)}")
+            PityTestPlanDao.__log__.error(f"编辑测试计划失败: {str(e)}")
             raise Exception(f"编辑失败: {str(e)}")
 
     @staticmethod
@@ -137,7 +137,7 @@ class PityTestPlanDao(Mapper):
                 data = await session.execute(sql)
                 return data.scalars().first()
         except Exception as e:
-            PityTestPlanDao.log.error(f"获取测试计划失败: {str(e)}")
+            PityTestPlanDao.__log__.error(f"获取测试计划失败: {str(e)}")
             raise Exception(f"获取测试计划失败: {str(e)}")
 
     # @staticmethod
