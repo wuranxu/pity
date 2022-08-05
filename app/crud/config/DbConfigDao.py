@@ -6,6 +6,7 @@ from typing import List
 from sqlalchemy import select, MetaData, text
 from sqlalchemy.exc import ResourceClosedError
 
+from app.crud import Mapper
 from app.crud.config.EnvironmentDao import EnvironmentDao
 from app.handler.encoder import JsonEncoder
 from app.handler.fatcory import PityResponse
@@ -16,7 +17,7 @@ from app.schema.database import DatabaseForm
 from app.utils.logger import Log
 
 
-class DbConfigDao(object):
+class DbConfigDao(Mapper):
     log = Log("DbConfigDao")
 
     @staticmethod
@@ -71,7 +72,7 @@ class DbConfigDao(object):
                     if query is None:
                         raise Exception("数据库配置不存在")
                     db_helper.remove_connection(query.host, query.port, query.username, query.password, query.database)
-                    DatabaseHelper.update_model(query, data, user)
+                    DbConfigDao.update_model(query, data, user)
         except Exception as e:
             DbConfigDao.log.error(f"编辑数据库配置: {data.name}失败, {e}")
             raise Exception("编辑数据库配置失败")

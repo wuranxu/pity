@@ -2,6 +2,7 @@ from datetime import datetime
 
 from sqlalchemy import select, desc
 
+from app.crud import Mapper
 from app.crud.test_case.TestResult import TestResultDao
 from app.models import async_session
 from app.models.report import PityReport
@@ -9,7 +10,7 @@ from app.models.test_plan import PityTestPlan
 from app.utils.logger import Log
 
 
-class TestReportDao(object):
+class TestReportDao(Mapper):
     log = Log("TestReportDao")
 
     @staticmethod

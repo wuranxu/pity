@@ -25,7 +25,7 @@ class PityNotificationDao(Mapper):
         ninety_days = datetime.now() - timedelta(days=90)
         # 1. 当消息类型不为广播类型时，正常查询
         if msg_type == MessageTypeEnum.others:
-            ans = await cls.list_record(msg_status=msg_status, receiver=receiver, msg_type=msg_type,
+            ans = await cls.select_list(msg_status=msg_status, receiver=receiver, msg_type=msg_type,
                                         condition=[PityNotification.created_at > ninety_days])
         else:
             # 否则需要根据是否已读进行查询 只支持90天内数据

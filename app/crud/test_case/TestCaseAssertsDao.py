@@ -26,7 +26,7 @@ class TestCaseAssertsDao(Mapper):
                     asc(TestCaseAsserts.name))
                 return query.scalars().all()
         except Exception as e:
-            cls.log.error(f"获取用例断言失败: {str(e)}")
+            cls.__log__.error(f"获取用例断言失败: {str(e)}")
             raise Exception("获取用例断言失败")
 
     @classmethod
@@ -38,7 +38,7 @@ class TestCaseAssertsDao(Mapper):
                 case_list = await session.execute(sql)
                 return case_list.scalars().all()
         except Exception as e:
-            cls.log.error(f"获取用例断言失败: {str(e)}")
+            cls.__log__.error(f"获取用例断言失败: {str(e)}")
             raise Exception(f"获取用例断言失败: {str(e)}")
 
     @staticmethod
@@ -62,7 +62,7 @@ class TestCaseAssertsDao(Mapper):
                     return new_assert
             return ans
         except Exception as e:
-            TestCaseAssertsDao.log.error(f"新增用例断言失败, error: {e}")
+            TestCaseAssertsDao.__log__.error(f"新增用例断言失败, error: {e}")
             raise Exception(f"新增用例断言失败, {e}")
 
     @classmethod
@@ -82,12 +82,12 @@ class TestCaseAssertsDao(Mapper):
                     data = result.scalars().first()
                     if data is None:
                         raise Exception("断言信息不存在, 请检查")
-                    DatabaseHelper.update_model(data, form, user_id)
+                    cls.update_model(data, form, user_id)
                     await session.flush()
                     session.expunge(data)
                     return data
         except Exception as e:
-            cls.log.error(f"编辑用例断言失败, error: {e}")
+            cls.__log__.error(f"编辑用例断言失败, error: {e}")
             raise Exception(f"编辑用例断言失败, {e}")
 
     @classmethod
@@ -101,7 +101,7 @@ class TestCaseAssertsDao(Mapper):
                     data = result.scalars().first()
                     if data is None:
                         raise Exception("断言信息不存在, 请检查")
-                    DatabaseHelper.delete_model(data, user_id)
+                    cls.delete_model(data, user_id)
         except Exception as e:
-            cls.log.error(f"编辑用例断言失败, error: {e}")
+            cls.__log__.error(f"编辑用例断言失败, error: {e}")
             raise Exception(f"编辑用例断言失败, {e}")

@@ -76,5 +76,5 @@ class PityTestCaseOutParametersDao(Mapper):
                                 deleted_at=int(time.time() * 1000)))
             return result
         except Exception as e:
-            cls.log.error(f"批量更新出参数据失败: {e}")
+            cls.__log__.error(f"批量更新出参数据失败: {e}")
             raise Exception(f"批量更新出参数据失败: {e}")

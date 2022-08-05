@@ -17,15 +17,15 @@ from app.schema.test_plan import PityTestPlanForm
 @ModelWrapper(PityTestPlan)
 class PityTestPlanDao(Mapper):
 
-    @staticmethod
-    async def list_test_plan(page: int, size: int, project_id: int = None, name: str = '', priority: str = '',
+    @classmethod
+    async def list_test_plan(cls, page: int, size: int, project_id: int = None, name: str = '', priority: str = '',
                              role: str = None, create_user: int = None,
                              user_id: int = None, follow: bool = None):
         try:
             async with async_session() as session:
                 conditions = [PityTestPlan.deleted_at == 0]
                 if project_id:
-                    DatabaseHelper.where(project_id, PityTestPlan.project_id == project_id, conditions)
+                    PityTestPlanDao.where(project_id, PityTestPlan.project_id == project_id, conditions)
                 else:
                     # 找出用户能看到的项目
                     projects = await ProjectDao.list_project_id_by_user(session, user_id, role)
@@ -33,8 +33,8 @@ class PityTestPlanDao(Mapper):
                         # 说明用户一个项目都没有，不需要继续查询了
                         return [], 0
                     if len(projects) > 0:
-                        DatabaseHelper.where(projects, PityTestPlan.project_id.in_(projects), conditions)
-                DatabaseHelper.where(name, PityTestPlan.name.like(f"%{name}%"), conditions) \
+                        cls.where(projects, PityTestPlan.project_id.in_(projects), conditions)
+                cls.where(name, PityTestPlan.name.like(f"%{name}%"), conditions) \
                     .where(priority, PityTestPlan.priority == priority, conditions) \
                     .where(create_user, PityTestPlan.create_user == create_user, conditions)
                 if follow is None:
@@ -49,19 +49,18 @@ class PityTestPlanDao(Mapper):
                     sql = select(PityTestPlan, PityTestPlanFollowUserRel.id) \
                         .outerjoin(PityTestPlanFollowUserRel,
                                    PityTestPlanFollowUserRel.plan_id == PityTestPlan.id,
-                                   ).where(
-                        *conditions, PityTestPlanFollowUserRel.user_id == user_id,
-                                     PityTestPlanFollowUserRel.deleted_at == 0)
+                                   ).where(*conditions, PityTestPlanFollowUserRel.user_id == user_id,
+                                           PityTestPlanFollowUserRel.deleted_at == 0)
                 else:
                     sql = select(PityTestPlan, null().label('null_bar')) \
                         .outerjoin(PityTestPlanFollowUserRel,
                                    PityTestPlanFollowUserRel.plan_id == PityTestPlan.id).where(
                         *conditions, or_(PityTestPlanFollowUserRel.id == None,
                                          PityTestPlanFollowUserRel.deleted_at != 0))
-                result, total = await DatabaseHelper.pagination(page, size, session, sql, False)
+                result, total = await cls.pagination(page, size, session, sql, False)
                 return result, total
         except Exception as e:
-            PityTestPlanDao.log.error(f"获取测试计划失败: {str(e)}")
+            cls.__log__.error(f"获取测试计划失败: {str(e)}")
             raise Exception(f"获取测试计划失败: {str(e)}")
 
     @staticmethod
@@ -81,7 +80,7 @@ class PityTestPlanDao(Mapper):
                     session.expunge(test_plan)
                     return test_plan
         except Exception as e:
-            PityTestPlanDao.log.error(f"新增测试计划失败: {str(e)}")
+            PityTestPlanDao.__log__.error(f"新增测试计划失败: {str(e)}")
             raise Exception(f"添加失败: {str(e)}")
 
     @classmethod
@@ -99,7 +98,7 @@ class PityTestPlanDao(Mapper):
                     plan.receiver = ",".join(map(str, plan.receiver))
                     plan.case_list = ",".join(map(str, plan.case_list))
                     plan.msg_type = ",".join(map(str, plan.msg_type))
-                    changed = DatabaseHelper.update_model(data, plan, user)
+                    changed = cls.update_model(data, plan, user)
                     await session.flush()
                     session.expunge(data)
                 if log:
@@ -107,8 +106,8 @@ class PityTestPlanDao(Mapper):
                         await asyncio.create_task(
                             cls.insert_log(session, user, OperationType.UPDATE, data, old, plan.id, changed))
         except Exception as e:
-            PityTestPlanDao.log.exception(f"编辑测试计划失败: {str(e)}")
-            PityTestPlanDao.log.error(f"编辑测试计划失败: {str(e)}")
+            PityTestPlanDao.__log__.exception(f"编辑测试计划失败: {str(e)}")
+            PityTestPlanDao.__log__.error(f"编辑测试计划失败: {str(e)}")
             raise Exception(f"编辑失败: {str(e)}")
 
     @staticmethod
@@ -126,7 +125,7 @@ class PityTestPlanDao(Mapper):
                     # session.expunge(data)
                     # return data
         except Exception as e:
-            PityTestPlanDao.log.error(f"编辑测试计划失败: {str(e)}")
+            PityTestPlanDao.__log__.error(f"编辑测试计划失败: {str(e)}")
             raise Exception(f"编辑失败: {str(e)}")
 
     @staticmethod
@@ -137,7 +136,7 @@ class PityTestPlanDao(Mapper):
                 data = await session.execute(sql)
                 return data.scalars().first()
         except Exception as e:
-            PityTestPlanDao.log.error(f"获取测试计划失败: {str(e)}")
+            PityTestPlanDao.__log__.error(f"获取测试计划失败: {str(e)}")
             raise Exception(f"获取测试计划失败: {str(e)}")
 
     # @staticmethod
@@ -152,7 +151,7 @@ class PityTestPlanDao(Mapper):
     #                     raise Exception("测试计划不存在")
     #                 DatabaseHelper.delete_model(data, user)
     #     except Exception as e:
-    #         PityTestPlanDao.log.error(f"删除测试计划失败: {str(e)}")
+    #         PityTestPlanDao.__log__.error(f"删除测试计划失败: {str(e)}")
     #         raise Exception(f"删除失败: {str(e)}")
 
     @staticmethod

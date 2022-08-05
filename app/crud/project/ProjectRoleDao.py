@@ -37,7 +37,7 @@ class ProjectRoleDao(Mapper):
                     select(ProjectRole.project_id).where(ProjectRole.user_id == user_id, ProjectRole.deleted_at == 0))
                 return data.scalars().all()
         except Exception as e:
-            cls.log.error(f"查询用户: {user_id}项目失败, {e}")
+            cls.__log__.error(f"查询用户: {user_id}项目失败, {e}")
             raise Exception("获取项目失败")
 
     @staticmethod
@@ -48,7 +48,7 @@ class ProjectRoleDao(Mapper):
                     select(ProjectRole).where(ProjectRole.project_id == project_id, ProjectRole.deleted_at == 0))
                 return query.scalars().all()
         except Exception as e:
-            ProjectRoleDao.log.error(f"查询项目: {project_id}角色列表失败, {e}")
+            ProjectRoleDao.__log__.error(f"查询项目: {project_id}角色列表失败, {e}")
             raise Exception(f"获取项目角色列表失败")
 
     @staticmethod
@@ -147,7 +147,7 @@ class ProjectRoleDao(Mapper):
                     await ProjectRoleDao.has_permission(original.project_id, original.project_role, user_id,
                                                         user_role, True, session=session)
                     old = deepcopy(original)
-                    changed = DatabaseHelper.update_model(original, role, user_id)
+                    changed = ProjectRoleDao.update_model(original, role, user_id)
                     await session.flush()
                     session.expunge(original)
                 async with session.begin():
@@ -155,7 +155,7 @@ class ProjectRoleDao(Mapper):
                         ProjectRoleDao.insert_log(session, user_id, OperationType.UPDATE, original, old, role.id,
                                                   changed=changed))
         except Exception as e:
-            cls.log.error(f"更新用户角色失败: {e}")
+            cls.__log__.error(f"更新用户角色失败: {e}")
             raise Exception(f"更新用户角色失败: {e}")
 
     @staticmethod
@@ -174,7 +174,7 @@ class ProjectRoleDao(Mapper):
                     if role is None:
                         raise Exception("用户角色不存在")
                     await ProjectRoleDao.has_permission(role.project_id, role.project_role, user_id, user_role, True)
-                    DatabaseHelper.delete_model(role, user_id)
+                    ProjectRoleDao.delete_model(role, user_id)
                     await session.flush()
                     session.expunge(role)
                 async with session.begin():

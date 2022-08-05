@@ -13,7 +13,7 @@ from app.crud.test_case.TestCaseOutParametersDao import PityTestCaseOutParameter
 from app.crud.test_case.TestcaseDataDao import PityTestcaseDataDao
 from app.enums.ConstructorEnum import ConstructorType
 from app.middleware.RedisManager import RedisHelper
-from app.models import DatabaseHelper, async_session
+from app.models import async_session
 from app.models.constructor import Constructor
 from app.models.out_parameters import PityTestCaseOutParameters
 from app.models.project import Project
@@ -22,13 +22,10 @@ from app.models.testcase_asserts import TestCaseAsserts
 from app.models.testcase_data import PityTestcaseData
 from app.models.user import User
 from app.schema.testcase_schema import TestCaseForm, TestCaseInfo
-from app.utils.logger import Log
 
 
 @ModelWrapper(TestCase)
 class TestCaseDao(Mapper):
-    log = Log("TestCaseDao")
-
     @classmethod
     async def list_test_case(cls, directory_id: int = None, name: str = "", create_user: str = None):
         try:
@@ -45,7 +42,7 @@ class TestCaseDao(Mapper):
                 result = await session.execute(sql)
                 return result.scalars().all()
         except Exception as e:
-            cls.log.error(f"获取测试用例失败: {str(e)}")
+            cls.__log__.error(f"获取测试用例失败: {str(e)}")
             raise Exception(f"获取测试用例失败: {str(e)}")
 
     @staticmethod
@@ -62,7 +59,7 @@ class TestCaseDao(Mapper):
                     case_map[item.id] = item.name
                 return ans, case_map
         except Exception as e:
-            TestCaseDao.log.error(f"获取测试用例失败: {str(e)}")
+            TestCaseDao.__log__.error(f"获取测试用例失败: {str(e)}")
             raise Exception(f"获取测试用例失败: {str(e)}")
 
     @staticmethod
@@ -86,7 +83,7 @@ class TestCaseDao(Mapper):
                     data = model(**f.dict(), user_id=user_id)
                 else:
                     data = model(**f.dict(), user_id=user_id, case_id=case_id)
-                await md.insert_record(data, ss=session)
+                await md.insert(model=data, session=session)
 
     @staticmethod
     async def insert_test_case(session, data: TestCaseInfo, user_id: int) -> TestCase:
@@ -129,13 +126,13 @@ class TestCaseDao(Mapper):
                     data = query.scalars().first()
                     if data is None:
                         raise Exception("用例不存在")
-                    DatabaseHelper.update_model(data, test_case, user_id)
+                    cls.update_model(data, test_case, user_id)
                     await session.flush()
                     # 释放你的sql数据
                     session.expunge(data)
                     return data
         except Exception as e:
-            cls.log.error(f"编辑用例失败: {str(e)}")
+            cls.__log__.error(f"编辑用例失败: {str(e)}")
             raise Exception(f"编辑用例失败: {str(e)}")
 
     @staticmethod
@@ -153,12 +150,12 @@ class TestCaseDao(Mapper):
                 constructors = await ConstructorDao.list_constructor(case_id)
                 constructors_case = await TestCaseDao.query_test_case_by_constructors(constructors)
                 test_data = await PityTestcaseDataDao.list_testcase_data(case_id)
-                parameters = await PityTestCaseOutParametersDao.list_record(case_id=case_id,
+                parameters = await PityTestCaseOutParametersDao.select_list(case_id=case_id,
                                                                             _sort=(asc(PityTestCaseOutParameters.id),))
                 return dict(asserts=asserts, constructors=constructors, case=data, constructors_case=constructors_case,
                             test_data=test_data, out_parameters=parameters)
         except Exception as e:
-            TestCaseDao.log.error(f"查询用例失败: {str(e)}")
+            TestCaseDao.__log__.error(f"查询用例失败: {str(e)}")
             raise Exception(f"查询用例失败: {str(e)}")
 
     @staticmethod
@@ -172,7 +169,7 @@ class TestCaseDao(Mapper):
                 data = result.scalars().all()
                 return {x.id: x for x in data}
         except Exception as e:
-            TestCaseDao.log.error(f"查询用例失败: {str(e)}")
+            TestCaseDao.__log__.error(f"查询用例失败: {str(e)}")
             raise Exception(f"查询用例失败: {str(e)}")
 
     @staticmethod
@@ -186,7 +183,7 @@ class TestCaseDao(Mapper):
                     return None, "用例不存在"
                 return data, None
         except Exception as e:
-            TestCaseDao.log.error(f"查询用例失败: {str(e)}")
+            TestCaseDao.__log__.error(f"查询用例失败: {str(e)}")
             return None, f"查询用例失败: {str(e)}"
 
     @classmethod
@@ -218,7 +215,7 @@ class TestCaseDao(Mapper):
                     })
                 return result
         except Exception as e:
-            cls.log.error(f"获取用例列表失败: {str(e)}")
+            cls.__log__.error(f"获取用例列表失败: {str(e)}")
             raise Exception("获取用例列表失败")
 
     @staticmethod
@@ -236,7 +233,7 @@ class TestCaseDao(Mapper):
                     desc(Constructor.created_at))
                 return query.scalars().all()
         except Exception as e:
-            TestCaseDao.log.error(f"查询构造数据失败: {str(e)}")
+            TestCaseDao.__log__.error(f"查询构造数据失败: {str(e)}")
 
     @staticmethod
     async def async_select_constructor(case_id: int) -> List[Constructor]:
@@ -252,7 +249,7 @@ class TestCaseDao(Mapper):
                 data = await session.execute(sql)
                 return data.scalars().all()
         except Exception as e:
-            TestCaseDao.log.error(f"查询构造数据失败: {str(e)}")
+            TestCaseDao.__log__.error(f"查询构造数据失败: {str(e)}")
 
     @staticmethod
     async def collect_data(case_id: int, data: List):

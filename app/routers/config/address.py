@@ -10,16 +10,15 @@ from config import Config
 
 
 @router.get("/gateway/list", summary="查询网关地址")
-async def list_gateway(name: str = '', gateway: str = '', env: int = None,
-                       user_info=Depends(Permission(Config.MEMBER))):
-    data = await PityGatewayDao.list_record(env=env, gateway=f"%{gateway}%", name=f"%{name}%")
+async def list_gateway(name: str = '', gateway: str = '', env: int = None, _=Depends(Permission(Config.MEMBER))):
+    data = await PityGatewayDao.select_list(env=env, gateway=f"%{gateway}%", name=f"%{name}%")
     return PityResponse.success(data)
 
 
 @router.post("/gateway/insert", summary="添加网关地址", description="添加网关地址，只有组长可以操作")
 async def insert_gateway(form: PityAddressForm, user_info=Depends(Permission(Config.MANAGER))):
     model = PityGateway(**form.dict(), user_id=user_info['id'])
-    model = await PityGatewayDao.insert_record(model, True)
+    model = await PityGatewayDao.insert(model=model, log=True)
     return PityResponse.success(model)
 
 

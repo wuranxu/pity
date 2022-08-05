@@ -30,7 +30,7 @@ async def create_oss_file(filepath: str, file: UploadFile = File(...),
             record.file_size = file_size
             await PityOssDao.update_record_by_id(user_info['id'], record)
         else:
-            await PityOssDao.insert_record(model, True)
+            await PityOssDao.insert(model=model, log=True)
         return PityResponse.success()
     except Exception as e:
         return PityResponse.failed(f"上传失败: {e}")
@@ -53,7 +53,7 @@ async def upload_avatar(file: UploadFile = File(...), user_info=Depends(Permissi
 @router.get("/list")
 async def list_oss_file(filepath: str = '', _=Depends(Permission(Config.MEMBER))):
     try:
-        records = await PityOssDao.list_record(condition=[PityOssFile.file_path.like(f'%{filepath}%')])
+        records = await PityOssDao.select_list(condition=[PityOssFile.file_path.like(f'%{filepath}%')])
         return PityResponse.records(records)
     except Exception as e:
         return PityResponse.failed(f"获取失败: {e}")

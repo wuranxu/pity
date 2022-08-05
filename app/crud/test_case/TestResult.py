@@ -4,17 +4,18 @@ from typing import List
 from sqlalchemy import asc
 from sqlalchemy.future import select
 
+from app.crud import Mapper
 from app.models import async_session
 from app.models.result import PityTestResult
 from app.models.test_case import TestCase
 from app.utils.logger import Log
 
 
-class TestResultDao(object):
+class TestResultDao(Mapper):
     log = Log("TestResultDao")
 
     @staticmethod
-    async def insert(report_id: int, case_id: int, case_name: str, status: int,
+    async def insert_report(report_id: int, case_id: int, case_name: str, status: int,
                      case_log: str, start_at: datetime, finished_at: datetime,
                      url: str, body: str, request_method: str, request_headers: str, cost: str,
                      asserts: str, response_headers: str, response: str,

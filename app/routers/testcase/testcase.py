@@ -44,7 +44,7 @@ async def insert_testcase(data: TestCaseForm, user_info=Depends(Permission())):
         if record is not None:
             return PityResponse.failed("用例已存在")
         model = TestCase(**data.dict(), create_user=user_info['id'])
-        model = await TestCaseDao.insert_record(model, True)
+        model = await TestCaseDao.insert(model=model, log=True)
         return PityResponse.success(model.id)
     except Exception as e:
         return PityResponse.failed(e)
@@ -298,7 +298,7 @@ async def insert_testcase_out_parameters(form: PityTestCaseOutParametersForm, us
     if query is not None:
         return PityResponse.failed("参数名称已存在")
     data = PityTestCaseOutParameters(**form.dict(), user_id=user_info['id'])
-    data = await PityTestCaseOutParametersDao.insert_record(data)
+    data = await PityTestCaseOutParametersDao.insert(model=data)
     return PityResponse.success(data)
 
 

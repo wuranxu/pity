@@ -10,7 +10,7 @@ from config import Config
 
 @router.get("/gconfig/list")
 async def list_gconfig(page: int = 1, size: int = 8, env=None, key: str = "", _=Depends(Permission())):
-    data, total = await GConfigDao.list_record_with_pagination(page, size, env=env, key=key)
+    data, total = await GConfigDao.list_record_with_pagination(page=page, size=size, env=env, key=key)
     return PityResponse.success_with_size(data=data, total=total)
 
 

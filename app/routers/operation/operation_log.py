@@ -17,7 +17,7 @@ async def list_user_operation(start_time: str, end_time: str, user_id: int, tag:
     try:
         start = datetime.strptime(start_time, "%Y-%m-%d")
         end = datetime.strptime(end_time, "%Y-%m-%d")
-        records = await PityOperationDao.list_record(user_id=user_id, tag=tag, condition=[
+        records = await PityOperationDao.select_list(user_id=user_id, tag=tag, condition=[
             PityOperationLog.operate_time.between(start, end)], _sort=[desc(PityOperationLog.operate_time)])
         return PityResponse.records(records)
     except Exception as e:

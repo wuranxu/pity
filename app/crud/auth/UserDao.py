@@ -6,6 +6,7 @@ from datetime import datetime
 from sqlalchemy import or_, select, func
 from sqlalchemy import update
 
+from app.crud import Mapper
 from app.middleware.Jwt import UserToken
 from app.middleware.RedisManager import RedisHelper
 from app.models import async_session, DatabaseHelper
@@ -15,7 +16,7 @@ from app.utils.logger import Log
 from config import Config
 
 
-class UserDao(object):
+class UserDao(Mapper):
     log = Log("UserDao")
 
     @staticmethod
@@ -47,7 +48,7 @@ class UserDao(object):
                     if not user:
                         raise Exception("该用户不存在, 请检查")
                     # 开启not_null，这样只有非空字段才修改
-                    DatabaseHelper.update_model(user, user_info, user_id, True)
+                    UserDao.update_model(user, user_info, user_id, True)
                     await session.flush()
                     session.expunge(user)
                     return user

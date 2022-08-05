@@ -34,7 +34,7 @@ class EnvironmentDao(Mapper):
                     env = Environment(**data.dict(), user=user)
                     session.add(env)
         except Exception as e:
-            EnvironmentDao.log.error(f"新增环境: {data.name}失败, {e}")
+            EnvironmentDao.__log__.error(f"新增环境: {data.name}失败, {e}")
             raise Exception(f"添加失败: {str(e)}")
 
     @classmethod
@@ -56,5 +56,5 @@ class EnvironmentDao(Mapper):
                 data = await session.execute(sql)
                 return data.scalars().all(), total
         except Exception as e:
-            cls.log.error(f"获取环境列表失败, {str(e)}")
+            cls.__log__.error(f"获取环境列表失败, {str(e)}")
             raise Exception(f"获取环境数据失败: {str(e)}")

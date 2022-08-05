@@ -1,7 +1,3 @@
-import time
-from datetime import datetime
-from typing import List
-
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine
@@ -83,92 +79,6 @@ class DatabaseHelper(object):
         key = f"{host}:{port}:{database}:{username}:{password}:{database}"
         if self.connections.get(key):
             self.connections.pop(key)
-
-    @staticmethod
-    def update_model(dist, source, update_user=None, not_null=False):
-        """
-        :param dist:
-        :param source:
-        :param not_null:
-        :param update_user:
-        :return:
-        """
-        changed = []
-        for var, value in vars(source).items():
-            if not_null:
-                if value is None:
-                    continue
-                if isinstance(value, bool) or isinstance(value, int) or value:
-                    # 如果是bool值或者int, false和0也是可以接受的
-                    if not hasattr(dist, var):
-                        continue
-                    if getattr(dist, var) != value:
-                        changed.append(var)
-                        setattr(dist, var, value)
-            else:
-                if getattr(dist, var) != value:
-                    changed.append(var)
-                    setattr(dist, var, value)
-        if update_user:
-            setattr(dist, 'update_user', update_user)
-        setattr(dist, 'updated_at', datetime.now())
-        return changed
-
-    @staticmethod
-    def delete_model(dist, update_user):
-        """
-        删除数据，兼容老的deleted_at
-        :param dist:
-        :param update_user:
-        :return:
-        """
-        if str(dist.__class__.deleted_at.property.columns[0].type) == "DATETIME":
-            dist.deleted_at = datetime.now()
-        else:
-            dist.deleted_at = int(time.time() * 1000)
-        dist.updated_at = datetime.now()
-        dist.update_user = update_user
-
-    @classmethod
-    def where(cls, param, sentence, condition: List):
-        if param is None:
-            return cls
-        if isinstance(param, bool):
-            condition.append(sentence)
-            return cls
-        if isinstance(param, int):
-            condition.append(sentence)
-            return cls
-        if param:
-            condition.append(sentence)
-        return cls
-
-    @staticmethod
-    async def pagination(page: int, size: int, session, sql: str, scalars=True):
-        """
-        分页查询
-        :param scalars:
-        :param session:
-        :param page:
-        :param size:
-        :param sql:
-        :return:
-        """
-        data = await session.execute(sql)
-        total = data.raw.rowcount
-        if total == 0:
-            return [], 0
-        sql = sql.offset((page - 1) * size).limit(size)
-        data = await session.execute(sql)
-        if scalars:
-            return data.scalars().all(), total
-        return data.all(), total
-
-    @staticmethod
-    def like(s: str):
-        if s:
-            return f"%{s}%"
-        return s
 
 
 db_helper = DatabaseHelper()

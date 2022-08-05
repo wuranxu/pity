@@ -15,11 +15,10 @@ from config import Config
 
 @router.get("/redis/list")
 async def list_redis_config(name: str = '', addr: str = '', env: int = None,
-                            cluster: bool = None,
-                            user_info=Depends(Permission(Config.MEMBER))):
+                            cluster: bool = None, _=Depends(Permission(Config.MEMBER))):
     try:
-        data = await PityRedisConfigDao.list_record(
-            name=DatabaseHelper.like(name), addr=DatabaseHelper.like(addr),
+        data = await PityRedisConfigDao.select_list(
+            name=PityRedisConfigDao.like(name), addr=PityRedisConfigDao.like(addr),
             env=env, cluster=cluster
         )
         return PityResponse.success(data=data)
@@ -35,7 +34,7 @@ async def insert_redis_config(form: RedisConfigForm,
         if query is not None:
             raise Exception("数据已存在, 请勿重复添加")
         data = PityRedis(**form.dict(), user=user_info['id'])
-        result = await PityRedisConfigDao.insert_record(data, log=True)
+        result = await PityRedisConfigDao.insert(model=data, log=True)
         return PityResponse.success(data=result)
     except Exception as err:
         return PityResponse.failed(err)

@@ -63,7 +63,7 @@ class ConstructorDao(Mapper):
                     query = result.scalars().first()
                     if query is None:
                         raise Exception(f"{data.name}不存在")
-                    DatabaseHelper.update_model(query, data, user_id)
+                    ConstructorDao.update_model(query, data, user_id)
         except Exception as e:
             ConstructorDao.__log__.error(f"编辑前后置条件: {data.name}失败, {e}")
             raise Exception(f"编辑前后置条件失败, {e}")
@@ -84,7 +84,7 @@ class ConstructorDao(Mapper):
                     query = result.scalars().first()
                     if query is None:
                         raise Exception(f"前后置条件{id}不存在")
-                    DatabaseHelper.delete_model(query, user_id)
+                    ConstructorDao.delete_model(query, user_id)
         except Exception as e:
             cls.__log__.error(f"删除前后置条件: {id}失败, {e}")
             raise Exception(f"删除前后置条件失败, {e}")

@@ -25,7 +25,7 @@ class GConfigDao(Mapper):
                     config = GConfig(**form.dict(), user=user_id)
                     session.add(config)
         except Exception as e:
-            cls.log.error(f"新增变量: {data.key}失败, {e}")
+            cls.__log__.error(f"新增变量: {data.key}失败, {e}")
             raise Exception(f"新增变量: {data.key}失败")
 
     @staticmethod

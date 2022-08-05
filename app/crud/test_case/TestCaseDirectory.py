@@ -4,13 +4,14 @@ from datetime import datetime
 
 from sqlalchemy import select, asc, or_
 
+from app.crud import Mapper
 from app.models import async_session
 from app.schema.testcase_directory import PityTestcaseDirectoryForm
 from app.models.testcase_directory import PityTestcaseDirectory
 from app.utils.logger import Log
 
 
-class PityTestcaseDirectoryDao(object):
+class PityTestcaseDirectoryDao(Mapper):
     log = Log("PityTestcaseDirectoryDao")
 
     @staticmethod

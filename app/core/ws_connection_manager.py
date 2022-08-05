@@ -107,7 +107,7 @@ class ConnectionManager:
                     await self.send_personal_message(user_id, WebSocketMessage.msg_count())
             # 判断是否要落入推送表
             if notice is not None:
-                await PityNotificationDao.insert_record(notice)
+                await PityNotificationDao.insert(model=notice)
         except Exception as e:
             ConnectionManager.logger.error(f"发送消息失败, {e}")
 

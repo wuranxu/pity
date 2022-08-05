@@ -306,7 +306,7 @@ class Executor(object):
             asserts = await TestCaseAssertsDao.async_list_test_case_asserts(case_id)
 
             # 获取出参信息
-            out_parameters = await PityTestCaseOutParametersDao.list_record(case_id=case_id)
+            out_parameters = await PityTestCaseOutParametersDao.select_list(case_id=case_id)
 
             for ast in asserts:
                 await self.parse_gconfig(ast, GconfigType.asserts, env, "expected", "actually")
@@ -444,7 +444,7 @@ class Executor(object):
             cookies = result.get("cookies")
             req = json.dumps(request_param, ensure_ascii=False)
             data[case_id].append(status)
-            await TestResultDao.insert(report_id, case_id, case_name, status,
+            await TestResultDao.insert_report(report_id, case_id, case_name, status,
                                        case_logs, start_at, finished_at,
                                        url, body, request_method, request_headers, cost,
                                        asserts, response_headers, response,

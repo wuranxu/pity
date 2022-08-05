@@ -97,7 +97,7 @@ async def insert_project_role(role: ProjectRoleForm, user_info=Depends(Permissio
             raise Exception("该用户已存在")
         await ProjectRoleDao.has_permission(role.project_id, role.project_role, user_info['id'], user_info['role'])
         model = ProjectRole(**role.dict(), create_user=user_info['id'])
-        await ProjectRoleDao.insert_record(model, True)
+        await ProjectRoleDao.insert(model=model, log=True)
     except Exception as e:
         return PityResponse.failed(e)
     return PityResponse.success()
