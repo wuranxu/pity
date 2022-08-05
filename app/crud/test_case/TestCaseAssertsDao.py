@@ -103,5 +103,5 @@ class TestCaseAssertsDao(Mapper):
                         raise Exception("断言信息不存在, 请检查")
                     cls.delete_model(data, user_id)
         except Exception as e:
-            cls.__log__.error(f"编辑用例断言失败, error: {e}")
-            raise Exception(f"编辑用例断言失败, {e}")
+            cls.__log__.error(f"删除用例断言失败, error: {e}")
+            raise Exception(f"删除用例断言失败, {e}")

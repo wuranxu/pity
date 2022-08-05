@@ -77,7 +77,6 @@ class PityTestResult(Base):
         self.case_log = case_log
         self.start_at = start_at
         self.finished_at = finished_at
-        self.status = status
         self.retry = retry
         self.status_code = status_code
         self.url = url

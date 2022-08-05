@@ -2,12 +2,11 @@ import asyncio
 import json
 import random
 import uuid
-from collections import deque
 from json import JSONDecodeError
 from typing import List, Dict
 
 from fastapi import Depends, APIRouter
-deque
+
 from app.core.executor import Executor
 from app.crud.test_case.TestcaseDataDao import PityTestcaseDataDao
 from app.enums.CertEnum import CertType

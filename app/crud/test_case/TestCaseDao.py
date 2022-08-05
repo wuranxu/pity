@@ -287,6 +287,8 @@ class TestCaseDao(Mapper):
                 temp["label"] = "[REDIS]: " + temp["label"]
             elif c.type == ConstructorType.py_script:
                 temp["label"] = "[PyScript]: " + temp["label"]
+            elif c.type == ConstructorType.http:
+                temp["label"] = "[HTTP Request]: " + temp["label"]
             # 否则正常添加数据
             if c.suffix:
                 suffix.get("children").append(temp)
