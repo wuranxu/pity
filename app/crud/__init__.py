@@ -6,6 +6,7 @@ import os
 import sys
 import time
 from collections import defaultdict
+from collections.abc import Iterable
 from copy import deepcopy
 from datetime import datetime
 from typing import Tuple, List, TypeVar, Any, Callable
@@ -34,14 +35,27 @@ from app.utils.logger import Log
 from config import Config
 
 Transaction = TypeVar("Transaction", bool, Callable)
-TupleAndList = TypeVar("TupleAndList", tuple, list)
+
+
+class ModelWrapper:
+
+    def __init__(self, model, log=None):
+        self.__model__ = model
+        if log is None:
+            self.__log__ = Log(f"{model.__name__}Dao")
+        else:
+            self.__log__ = log
+
+    def __call__(self, cls):
+        setattr(cls, "__model__", self.__model__)
+        setattr(cls, "__log__", self.__log__)
+        return cls
 
 
 # 类装饰器，支持自动创建session，支持事务
 def connect(transaction: Transaction = False):
     """
     自动获取session连接，简化model相关操作
-    :param session: 是否有外部session，有则沿用外部session，否则自动创建session
     :param transaction: 是否开启事务，开启则会被session.begin包裹
     :return:
     """
@@ -52,9 +66,9 @@ def connect(transaction: Transaction = False):
             try:
                 session = kwargs.get("session")
                 if session is not None:
-                    return await transaction(cls, session, *args[1:], **kwargs)
+                    return await transaction(cls, *args, session=session, **kwargs)
                 async with async_session() as ss:
-                    return await transaction(cls, ss, *args[1:], **kwargs)
+                    return await transaction(cls, *args, session=ss, **kwargs)
             except Exception as e:
                 # 这边调用cls本身的log参数，写入日志+抛出异常
                 cls.__log__.error(f"操作{cls.__model__.__name__}失败: {e}")
@@ -70,13 +84,13 @@ def connect(transaction: Transaction = False):
                 if session is not None:
                     if transaction:
                         async with session.begin():
-                            return await func(cls, session, *args[1:], **kwargs)
-                    return await func(cls, session, *args[1:], **kwargs)
+                            return await func(cls, *args, session=session, **kwargs)
+                    return await func(cls, *args[1:], session=session, **kwargs)
                 async with async_session() as ss:
                     if transaction:
                         async with ss.begin():
-                            return await func(cls, ss, *args[1:], **kwargs)
-                    return await func(cls, ss, *args[1:], **kwargs)
+                            return await func(cls, *args, session=ss, **kwargs)
+                    return await func(cls, *args, session=ss, **kwargs)
             except Exception as e:
                 cls.__log__.error(f"操作{cls.__model__.__name__}失败: {e}")
                 raise DBError(f"操作数据失败: {e}")
@@ -94,7 +108,7 @@ class Mapper(object):
     @classmethod
     @RedisHelper.cache("dao")
     @connect
-    async def select_list(cls, session: AsyncSession, *, condition: list = None, **kwargs):
+    async def select_list(cls, *, session: AsyncSession = None, condition: list = None, **kwargs):
         """
         基础model查询条件
         :param session: 查询session
@@ -103,7 +117,6 @@ class Mapper(object):
         :return:
         """
         sql = cls.query_wrapper(condition, **kwargs)
-        print(sql)
         result = await session.execute(sql)
         return result.scalars().all()
 
@@ -213,7 +226,7 @@ class Mapper(object):
     @classmethod
     @RedisHelper.cache("dao")
     @connect
-    async def list_record_with_pagination(cls, session, *, page, size, **kwargs):
+    async def list_record_with_pagination(cls, page, size, /, *, session=None, **kwargs):
         """
         通过分页获取数据
         :param session:
@@ -267,7 +280,7 @@ class Mapper(object):
             cls.where(v, getattr(cls.__model__, k).like(v) if like else getattr(cls.__model__, k) == v,
                       conditions)
         sql = select(cls.__model__).where(*conditions)
-        if _sort and iter(_sort):
+        if _sort and isinstance(_sort, Iterable):
             for d in _sort:
                 sql = getattr(sql, "order_by")(d)
         return sql
@@ -275,7 +288,7 @@ class Mapper(object):
     @classmethod
     @RedisHelper.cache("dao")
     @connect
-    async def query_record(cls, session, **kwargs):
+    async def query_record(cls, session: AsyncSession = None, **kwargs):
         sql = cls.query_wrapper(**kwargs)
         result = await session.execute(sql)
         return result.scalars().first()
@@ -295,7 +308,7 @@ class Mapper(object):
     @classmethod
     @RedisHelper.up_cache("dao")
     @connect(True)
-    async def insert(cls, session: AsyncSession, *, model: PityBase, log=False):
+    async def insert(cls, *, model: PityBase, session: AsyncSession = None, log=False):
         session.add(model)
         await session.flush()
         session.expunge(model)
@@ -336,41 +349,37 @@ class Mapper(object):
 
     @classmethod
     @RedisHelper.up_cache("dao")
-    async def update_by_map(cls, user, *condition, **kwargs):
-        try:
-            async with async_session() as session:
-                async with session.begin():
-                    sql = update(cls.__model__).where(*condition).values(**kwargs, updated_at=datetime.now(),
-                                                                         update_user=user)
-                    await session.execute(sql)
-        except Exception as e:
-            cls.__log__.error(f"更新数据失败: {e}")
-            raise Exception("更新数据失败")
+    @connect(True)
+    async def update_by_map(cls, user, *condition, session=None, **kwargs):
+        sql = update(cls.__model__).where(*condition).values(**kwargs, updated_at=datetime.now(),
+                                                             update_user=user)
+        await session.execute(sql)
+        # try:
+        #     async with async_session() as session:
+        #         async with session.begin():
+        #             sql = update(cls.__model__).where(*condition).values(**kwargs, updated_at=datetime.now(),
+        #                                                                  update_user=user)
+        #             await session.execute(sql)
+        # except Exception as e:
+        #     cls.__log__.error(f"更新数据失败: {e}")
+        #     raise Exception("更新数据失败")
 
     @classmethod
     @RedisHelper.up_cache("dao")
-    async def update_record_by_id(cls, user: int, model, not_null=False, log=False):
-        try:
-            async with async_session() as session:
-                async with session.begin():
-                    query = cls.query_wrapper(id=model.id)
-                    result = await session.execute(query)
-                    now = result.scalars().first()
-                    if now is None:
-                        raise Exception("数据不存在")
-                    old = deepcopy(now)
-                    changed = cls.update_model(now, model, user, not_null)
-                    await session.flush()
-                    session.expunge_all()
-                if log:
-                    async with session.begin():
-                        await asyncio.create_task(
-                            cls.insert_log(session, user, OperationType.UPDATE, now, old, model.id,
-                                           changed=changed))
-                return now
-        except Exception as e:
-            cls.__log__.error(f"更新{cls.__model__}记录失败, error: {e}")
-            raise Exception(f"更新数据失败")
+    @connect(True)
+    async def update_record_by_id(cls, user: int, model, not_null=False, log=False, session=None):
+        query = cls.query_wrapper(id=model.id)
+        result = await session.execute(query)
+        now = result.scalars().first()
+        if now is None:
+            raise Exception("数据不存在")
+        old = deepcopy(now)
+        changed = cls.update_model(now, model, user, not_null)
+        await session.flush()
+        session.expunge_all()
+        if log:
+            await asyncio.create_task(
+                cls.insert_log(session, user, OperationType.UPDATE, now, old, model.id, changed=changed))
 
     @classmethod
     async def _inner_delete(cls, session, user, value, log, key, exists):
@@ -607,39 +616,19 @@ class Mapper(object):
 
     @classmethod
     @RedisHelper.up_cache("dao")
-    async def delete_by_id(cls, id):
+    @connect(True)
+    async def delete_by_id(cls, id, session=None):
         """
         物理删除
         :param id:
         :return:
         """
-        try:
-            async with async_session() as session:
-                async with session.begin():
-                    query = cls.query_wrapper(id=id)
-                    result = await session.execute(query)
-                    original = result.scalars().first()
-                    if original is None:
-                        raise Exception("记录不存在")
-                    session.delete(original)
-        except Exception as e:
-            cls.__log__.error(f"逻辑删除{cls.__model__}记录失败, error: {e}")
-            raise Exception(f"删除记录失败")
-
-
-class ModelWrapper:
-
-    def __init__(self, model, log=None):
-        self.__model__ = model
-        if log is None:
-            self.__log__ = Log(f"{model.__name__}Dao")
-        else:
-            self.__log__ = log
-
-    def __call__(self, cls):
-        setattr(cls, "__model__", self.__model__)
-        setattr(cls, "__log__", self.__log__)
-        return cls
+        query = cls.query_wrapper(id=id)
+        result = await session.execute(query)
+        original = result.scalars().first()
+        if original is None:
+            raise Exception("记录不存在")
+        session.delete(original)
 
 
 def get_dao_path():
