@@ -52,7 +52,7 @@ class ModelWrapper:
         return cls
 
 
-# 类装饰器，支持自动创建session，支持事务
+# 装饰器，支持自动创建session，支持事务
 def connect(transaction: Transaction = False):
     """
     自动获取session连接，简化model相关操作
@@ -633,26 +633,23 @@ class Mapper(object):
 
 def get_dao_path():
     """获取dao目录下所有的xxxDao.py"""
-    dao_path_list = []
-    for file in os.listdir(Config.DAO_PATH):
+    for f in os.listdir(Config.DAO_PATH):
         # 拼接目录
-        file_path = os.path.join(Config.DAO_PATH, file)
+        file_path = os.path.join(Config.DAO_PATH, f)
         # 判断过滤, 取有效目录
-        if os.path.isdir(file_path) and '__pycache__' not in file:
+        if os.path.isdir(file_path) and '__pycache__' not in f:
             path_dict = defaultdict(list)
             # 获取目录下所有的xxxDao.py
             for py_file in os.listdir(file_path):
-                if py_file.endswith('py') and 'init' not in py_file:
-                    path_dict[file].append(py_file.split('.')[0])
-            dao_path_list.append(path_dict)
-    return dao_path_list
+                if py_file.endswith('.py') and '__init__' not in py_file:
+                    path_dict[f].append(py_file.split('.')[0])
+            yield path_dict
 
 
-dao_path_list = get_dao_path()
-for path in dao_path_list:
-    for file_path, pys in path.items():
+for path in get_dao_path():
+    for file, pys in path.items():
         # 拼接对应的dao目录
-        son_dao_path = os.path.join(Config.DAO_PATH, file_path)
+        son_dao_path = os.path.join(Config.DAO_PATH, file)
         # 导包时, 默认在这个路径下查找
         sys.path.append(son_dao_path)
         for py in pys:
