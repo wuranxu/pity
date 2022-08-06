@@ -241,9 +241,10 @@ class RedisHelper(object):
     def get_key(_redis_key: str, args_key: bool = True, *args, **kwargs):
         if not args_key:
             return f"{RedisHelper.pity_prefix}:{_redis_key}"
-        filter_args = [a for a in args if not str(a).startswith('<class')]
+        filter_args = [a for a in args if not str(a).startswith(('<class', '<sqlalchemy', '(<sqlalchemy'))]
         for v in kwargs.values():
-            filter_args.append(str(v))
+            if v and not str(v).startswith(('<class', '<sqlalchemy', '(<sqlalchemy')):
+                filter_args.append(str(v))
         return f"{RedisHelper.pity_prefix}:{_redis_key}" \
                f"{':' + ':'.join(str(a) for a in filter_args) if len(filter_args) > 0 else ''}"
 

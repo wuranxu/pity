@@ -80,7 +80,7 @@ def connect(transaction: Transaction = False):
         @functools.wraps(func)
         async def wrapper(cls, *args, **kwargs):
             try:
-                session = kwargs.get("session")
+                session: AsyncSession = kwargs.get("session")
                 if session is not None:
                     if transaction:
                         async with session.begin():
