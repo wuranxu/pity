@@ -3,9 +3,10 @@ from datetime import datetime, timedelta
 from typing import List, Dict
 
 from sqlalchemy import desc, func, and_, asc
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from app.crud import Mapper, ModelWrapper
+from app.crud import Mapper, ModelWrapper, connect
 from app.crud.test_case.ConstructorDao import ConstructorDao
 from app.crud.test_case.TestCaseAssertsDao import TestCaseAssertsDao
 from app.crud.test_case.TestCaseDirectory import PityTestcaseDirectoryDao
@@ -313,25 +314,40 @@ class TestCaseDao(Mapper):
         result["children"] = children
         return result
 
-    @staticmethod
+    @classmethod
+    async def generate_sql(cls):
+        return select(TestCase.create_user, func.count(TestCase.id)) \
+            .outerjoin(User, and_(User.deleted_at == 0, TestCase.create_user == User.id)).where(
+            TestCase.deleted_at == 0).group_by(TestCase.create_user).order_by(
+            desc(func.count(TestCase.id)))
+
+    @classmethod
     @RedisHelper.cache("rank")
-    async def query_user_case_list() -> Dict[str, List]:
+    @connect
+    async def query_user_case_list(cls, session: AsyncSession = None) -> Dict[str, List]:
         """
         created by woody at 2022-02-13 12:59
         查询用户case数量和排名
         :return:
         """
         ans = dict()
-        async with async_session() as session:
-            async with session.begin():
-                sql = select(TestCase.create_user, func.count(TestCase.id)) \
-                    .outerjoin(User, and_(User.deleted_at == 0, TestCase.create_user == User.id)).where(
-                    TestCase.deleted_at == 0).group_by(TestCase.create_user).order_by(
-                    desc(func.count(TestCase.id)))
-                query = await session.execute(sql)
-                for i, q in enumerate(query.all()):
-                    user, count = q
-                    ans[str(user)] = [count, i + 1]
+        sql = await cls.generate_sql()
+        query = await session.execute(sql)
+        for i, q in enumerate(query.all()):
+            user, count = q
+            ans[str(user)] = [count, i + 1]
+        return ans
+
+    @classmethod
+    @RedisHelper.cache("rank_detail")
+    @connect
+    async def query_user_case_rank(cls, session: AsyncSession = None) -> List:
+        ans = []
+        sql = await cls.generate_sql()
+        query = await session.execute(sql)
+        for i, q in enumerate(query.all()):
+            user, count = q
+            ans.append(dict(id=user, count=count, rank=i + 1))
         return ans
 
     @staticmethod

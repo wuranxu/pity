@@ -22,6 +22,9 @@
 
   [🎁 快点我](https://github.com/wuranxu/pityWeb)
 
+![](https://static.pity.fun/picture/20220807220041.png)
+
+
 ## ☕ 说明
 
 这是一个具备完整`开发手册`(开发手册，手把手教那种)，严格按照`写一块内容`，`补一篇文章`的形式创作而成，其中也经历了从`Flask`到`FastApi`

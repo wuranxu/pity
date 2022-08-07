@@ -33,6 +33,9 @@ class ConnectionManager:
         self.active_connections: dict[int, WebSocket] = {}
         self.log = Log("websocket")
 
+    def get_clients(self):
+        return {key: True for key in self.active_connections.keys()}
+
     async def connect(self, websocket: WebSocket, client_id: int) -> None:
         await websocket.accept()
         exist: WebSocket = self.active_connections.get(client_id)

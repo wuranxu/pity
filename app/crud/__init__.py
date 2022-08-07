@@ -71,7 +71,7 @@ def connect(transaction: Transaction = False):
                     return await transaction(cls, *args, session=ss, **kwargs)
             except Exception as e:
                 # 这边调用cls本身的log参数，写入日志+抛出异常
-                cls.__log__.error(f"操作{cls.__model__.__name__}失败: {e}")
+                cls.__log__.error(f"操作Model: {cls.__model__.__name__}失败: {e}")
                 raise DBError(f"操作数据库失败: {e}")
 
         return wrap
@@ -92,7 +92,7 @@ def connect(transaction: Transaction = False):
                             return await func(cls, *args, session=ss, **kwargs)
                     return await func(cls, *args, session=ss, **kwargs)
             except Exception as e:
-                cls.__log__.error(f"操作{cls.__model__.__name__}失败: {e}")
+                cls.__log__.error(f"操作Model: {cls.__model__.__name__}失败: {e}")
                 raise DBError(f"操作数据失败: {e}")
 
         return wrapper
@@ -102,8 +102,8 @@ def connect(transaction: Transaction = False):
 
 # Mapper单表类，类似mybatis-plus
 class Mapper(object):
-    __log__ = None
-    __model__ = None
+    __log__ = Log("PityBase")
+    __model__ = PityBase
 
     @classmethod
     @RedisHelper.cache("dao")
