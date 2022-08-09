@@ -50,11 +50,11 @@ class DashboardDao(Mapper):
             result[idx[date]]["failed"] = result[idx[date]].get("failed", 0) + item.failed_count
             result[idx[date]]["error"] = result[idx[date]].get("error", 0) + item.error_count
             result[idx[date]]["skip"] = result[idx[date]].get("skip", 0) + item.skipped_count
-            total = result[idx[date]]["success"] + result[idx[date]]["failed"] + result[idx[date]]["error"]
+            date_total = result[idx[date]]["success"] + result[idx[date]]["failed"] + result[idx[date]]["error"]
             if total == 0:
                 result[idx[date]]["rate"] = 0.00
             else:
-                result[idx[date]]["rate"] = round(result[idx[date]]["success"] / total * 100, 2)
+                result[idx[date]]["rate"] = round(result[idx[date]]["success"] / date_total * 100, 2)
         rate = round(total_pass / total * 100, 2) if total > 0 else 0.00
         return dict(count=count, success=success, failed=failed, skip=skip, error=error, data=result, rate=rate)
 
