@@ -55,7 +55,7 @@ class DashboardDao(Mapper):
                 result[idx[date]]["rate"] = 0.00
             else:
                 result[idx[date]]["rate"] = round(result[idx[date]]["success"] / total * 100, 2)
-        rate = round(total_pass / total, 2) if total > 0 else 0.00
+        rate = round(total_pass / total * 100, 2) if total > 0 else 0.00
         return dict(count=count, success=success, failed=failed, skip=skip, error=error, data=result, rate=rate)
 
     @classmethod
