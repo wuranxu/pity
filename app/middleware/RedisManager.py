@@ -280,7 +280,7 @@ class RedisHelper(object):
                     # 获取最新数据
                     new_data = await func(*args, **kwargs)
                     info = pickle.dumps(new_data)
-                    logger.bind(name=None).debug(f"set redis key: {redis_key}")
+                    # logger.bind(name=None).debug(f"set redis key: {redis_key}")
                     RedisHelper.pity_redis_client.set(redis_key, info.hex(), ex=expired_time)
                     return new_data
 
@@ -299,7 +299,7 @@ class RedisHelper(object):
                     # 获取最新数据
                     new_data = func(*args, **kwargs)
                     info = pickle.dumps(new_data)
-                    logger.bind(name=None).debug(f"set redis key: {redis_key}")
+                    # logger.bind(name=None).debug(f"set redis key: {redis_key}")
                     # 添加随机数防止缓存雪崩
                     RedisHelper.pity_redis_client.set(redis_key, info.hex(), ex=expired_time + Random().randint(10, 59))
                     return new_data

@@ -64,7 +64,7 @@ def connect(transaction: Transaction = False):
         @functools.wraps(transaction)
         async def wrap(cls, *args, **kwargs):
             try:
-                session = kwargs.get("session")
+                session = kwargs.get("session", None)
                 if session is not None:
                     return await transaction(cls, *args, session=session, **kwargs)
                 async with async_session() as ss:
@@ -80,14 +80,15 @@ def connect(transaction: Transaction = False):
         @functools.wraps(func)
         async def wrapper(cls, *args, **kwargs):
             try:
-                session: AsyncSession = kwargs.get("session")
+                session: AsyncSession = kwargs.pop("session", None)
+                begin = kwargs.get("begin")
                 if session is not None:
-                    if transaction:
+                    if transaction and begin:
                         async with session.begin():
                             return await func(cls, *args, session=session, **kwargs)
                     return await func(cls, *args[1:], session=session, **kwargs)
                 async with async_session() as ss:
-                    if transaction:
+                    if transaction and begin:
                         async with ss.begin():
                             return await func(cls, *args, session=ss, **kwargs)
                     return await func(cls, *args, session=ss, **kwargs)
@@ -308,7 +309,7 @@ class Mapper(object):
     @classmethod
     @RedisHelper.up_cache("dao")
     @connect(True)
-    async def insert(cls, *, model: PityBase, session: AsyncSession = None, log=False):
+    async def insert(cls, *, model: PityBase, session: AsyncSession = None, log=False, begin=True):
         session.add(model)
         await session.flush()
         session.expunge(model)

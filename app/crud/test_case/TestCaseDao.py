@@ -84,7 +84,7 @@ class TestCaseDao(Mapper):
                     data = model(**f.dict(), user_id=user_id)
                 else:
                     data = model(**f.dict(), user_id=user_id, case_id=case_id)
-                await md.insert(model=data, session=session)
+                await md.insert(model=data, session=session, begin=False)
 
     @staticmethod
     async def insert_test_case(session, data: TestCaseInfo, user_id: int) -> TestCase:
