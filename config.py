@@ -11,6 +11,7 @@ class BaseConfig(BaseSettings):
     LOG_DIR = os.path.join(ROOT, 'logs')
     LOG_NAME = os.path.join(LOG_DIR, 'pity.log')
 
+    SERVER_HOST: str = "0.0.0.0"
     SERVER_PORT: int
 
     HEARTBEAT: int = 48
@@ -102,6 +103,7 @@ class ProConfig(BaseConfig):
         env_file = os.path.join(ROOT, "conf", "pro.env")
 
     SERVER_REPORT = "https://pity.fun/#/record/report/"
+    SERVER_HOST = "127.0.0.1"
 
 
 # 获取pity环境变量
