@@ -445,10 +445,10 @@ class Executor(object):
             req = json.dumps(request_param, ensure_ascii=False)
             data[case_id].append(status)
             await TestResultDao.insert_report(report_id, case_id, case_name, status,
-                                       case_logs, start_at, finished_at,
-                                       url, body, request_method, request_headers, cost,
-                                       asserts, response_headers, response,
-                                       status_code, cookies, times, req, name, data_id)
+                                              case_logs, start_at, finished_at,
+                                              url, body, request_method, request_headers, cost,
+                                              asserts, response_headers, response,
+                                              status_code, cookies, times, req, name, data_id)
             break
 
     @staticmethod
@@ -680,7 +680,8 @@ class Executor(object):
                             Executor.log.debug("项目未配置钉钉通知机器人")
                             continue
                         ding = DingTalk(project.dingtalk_url)
-                        await ding.send_msg("pity测试报告", render_markdown, None, users)
+                        await ding.send_msg("pity测试报告", render_markdown, None, users,
+                                            link=report_dict[e]['report_url'])
 
     @staticmethod
     @lock("test_plan")
@@ -726,7 +727,7 @@ class Executor(object):
                 user = await UserDao.query_user(executor)
                 name = user.name if user is not None else "未知"
             else:
-                name = "CPU"
+                name = "pity机器人"
             st = time.perf_counter()
             # step1: 新增测试报告数据
             report_id = await TestReportDao.start(executor, env, mode, plan_id=plan_id)

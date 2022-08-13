@@ -1,4 +1,5 @@
 import os
+from urllib.parse import quote
 
 from app.core.msg.notification import Notification
 from app.middleware.AsyncHttpClient import AsyncRequest
@@ -21,17 +22,29 @@ class DingTalk(Notification):
             markdown_text = f.read()
             return markdown_text.format(**testdata)
 
-    async def send_msg(self, subject, content, attachment=None, *receiver):
+    async def send_msg(self, subject, content, attachment=None, *receiver, **kwargs):
         data = {
-            "msgtype": "markdown",
-            "markdown": {
+            "msgtype": "actionCard",
+            "actionCard": {
                 "title": subject,
-                "text": content,
+                "text": "![screenshot](https://static.pity.fun/picture/走势监测.png)\n%s" % content,
+                "singleTitle": '👉 查看报告',
+                "singleURL": f"""dingtalk://dingtalkclient/page/link?url={quote(kwargs.get("link"))}&pc_slide=false"""
             },
             "at": {
                 "atMobiles": receiver,
             }
         }
+        # data = {
+        #     "msgtype": "markdown",
+        #     "markdown": {
+        #         "title": subject,
+        #         "text": content,
+        #     },
+        #     "at": {
+        #         "atMobiles": receiver,
+        #     }
+        # }
         r = AsyncRequest(self.openapi, headers={'Content-Type': 'application/json'}, timeout=15, json=data)
         response = await r.invoke("POST")
         if not response.get("status"):
