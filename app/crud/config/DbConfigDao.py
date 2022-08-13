@@ -6,13 +6,14 @@ from typing import List
 from sqlalchemy import select, MetaData, text
 from sqlalchemy.exc import ResourceClosedError
 
-from app.crud import Mapper
+from app.crud import Mapper, ModelWrapper
 from app.crud.config.EnvironmentDao import EnvironmentDao
 from app.handler.encoder import JsonEncoder
 from app.handler.fatcory import PityResponse
 from app.middleware.RedisManager import RedisHelper
-from app.models import async_session, DatabaseHelper, db_helper
+from app.models import async_session, db_helper
 from app.models.database import PityDatabase
+from app.models.sql_log import PitySQLHistory
 from app.schema.database import DatabaseForm
 from app.utils.logger import Log
 
@@ -207,10 +208,12 @@ class DbConfigDao(Mapper):
         async with session() as s:
             async with s.begin():
                 try:
+                    start = time.perf_counter()
                     result = await s.execute(text(sql))
+                    cost = time.perf_counter() - start
                     row_count = result.rowcount
                     ans = result.mappings().all()
-                    return ans
+                    return ans, int(cost * 1000)
                 except ResourceClosedError:
                     # 说明是update或其他语句
                     return [{"rowCount": row_count}]
@@ -233,3 +236,8 @@ class DbConfigDao(Mapper):
         except Exception as e:
             DbConfigDao.log.error(f"查询数据库配置失败, error: {e}")
             raise Exception(f"执行SQL失败: {e}")
+
+
+@ModelWrapper(PitySQLHistory)
+class PitySQLHistoryDao(Mapper):
+    pass

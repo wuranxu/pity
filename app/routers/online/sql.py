@@ -1,7 +1,10 @@
 from fastapi import APIRouter, Depends
 
-from app.crud.config.DbConfigDao import DbConfigDao
+from app.crud.config.DbConfigDao import DbConfigDao, PitySQLHistoryDao
 from app.handler.fatcory import PityResponse
+from app.models.database import PityDatabase
+from app.models.environment import Environment
+from app.models.sql_log import PitySQLHistory
 from app.routers import Permission
 from app.schema.online_sql import OnlineSQLForm
 
@@ -9,13 +12,31 @@ router = APIRouter(prefix="/online")
 
 
 @router.post("/sql")
-async def execute_sql(data: OnlineSQLForm, _=Depends(Permission())):
+async def execute_sql(data: OnlineSQLForm, user=Depends(Permission())):
     try:
-        result = await DbConfigDao.online_sql(data.id, data.sql)
+        result, elapsed = await DbConfigDao.online_sql(data.id, data.sql)
         columns, result = PityResponse.parse_sql_result(result)
-        return PityResponse.success(data=dict(result=result, columns=columns))
+        await PitySQLHistoryDao.insert(model=PitySQLHistory(data.sql, elapsed, data.id, user['id']))
+        return PityResponse.success(data=dict(result=result, columns=columns, elapsed=elapsed))
     except Exception as err:
         return PityResponse.failed(err)
+
+
+@router.get("/history/query", summary="获取sql执行历史记录")
+async def query_sql_history(page: int = 1, size: int = 4, _=Depends(Permission())):
+    data, total = await PitySQLHistoryDao.list_with_pagination(page, size,
+                                                               _sort=[PitySQLHistory.created_at.desc()],
+                                                               _select=[PityDatabase, Environment],
+                                                               _join=[(PityDatabase,
+                                                                       PityDatabase.id == PitySQLHistory.database_id),
+                                                                      (Environment, Environment.id == PityDatabase.env)
+                                                                      ])
+    ans = []
+    for history, database, env in data:
+        database.env_info = env
+        history.database = database
+        ans.append(history)
+    return PityResponse.success(dict(data=ans, total=total))
 
 
 @router.get("/tables")
