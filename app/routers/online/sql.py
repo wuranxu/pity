@@ -6,6 +6,7 @@ from app.models.database import PityDatabase
 from app.models.environment import Environment
 from app.models.sql_log import PitySQLHistory
 from app.routers import Permission
+from app.schema.database import DatabaseForm
 from app.schema.online_sql import OnlineSQLForm
 
 router = APIRouter(prefix="/online")
@@ -44,5 +45,23 @@ async def list_tables(_=Depends(Permission())):
     try:
         result, table_map = await DbConfigDao.query_database_and_tables()
         return PityResponse.success(dict(database=result, tables=table_map))
+    except Exception as err:
+        return PityResponse.failed(err)
+
+
+@router.get("/database/list")
+async def list_databases(_=Depends(Permission())):
+    try:
+        result = await DbConfigDao.query_database_tree()
+        return PityResponse.success(result)
+    except Exception as err:
+        return PityResponse.failed(err)
+
+
+@router.post("/tables/list", summary="获取数据库表和字段")
+async def list_tables(form: DatabaseForm, _=Depends(Permission())):
+    try:
+        children, tables = await DbConfigDao.get_tables(form)
+        return PityResponse.success(dict(children=children, tables=tables))
     except Exception as err:
         return PityResponse.failed(err)

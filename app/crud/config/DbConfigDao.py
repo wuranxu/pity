@@ -1,7 +1,5 @@
 import json
 import time
-from collections import defaultdict
-from typing import List
 
 from sqlalchemy import select, MetaData, text
 from sqlalchemy.exc import ResourceClosedError
@@ -120,9 +118,9 @@ class DbConfigDao(Mapper):
 
     @staticmethod
     @RedisHelper.cache("database:cache", expired_time=3600 * 3)
-    async def query_database_and_tables():
+    async def query_database_tree():
         """
-        方法会查询所有数据库表配置的信息
+        方法会查询所有数据库表配置的信息, 不包括表信息
         :return:
         """
         try:
@@ -132,7 +130,6 @@ class DbConfigDao(Mapper):
             env_data, _ = await EnvironmentDao.list_env(1, 1, exactly=True)
             env_map = {env.id: env.name for env in env_data}
             # 获取数据库相关的信息
-            table_map = defaultdict(set)
             async with async_session() as session:
                 query = await session.execute(select(PityDatabase).where(PityDatabase.deleted_at == 0))
                 data = query.scalars().all()
@@ -143,50 +140,52 @@ class DbConfigDao(Mapper):
                         result.append(dict(title=name, key=f"env_{name}", children=list()))
                         idx = len(result) - 1
                         env_index[name] = idx
-                    await DbConfigDao.get_tables(table_map, d, result[idx]['children'])
-                return result, table_map
+                    result[env_index[name]]['children'].append(
+                        dict(title=f"{d.database}（{d.host}:{d.port}）", key=f"database_{d.id}",
+                             children=list(), sql_type=d.sql_type, data=d)
+                    )
+                return result
         except Exception as err:
             DbConfigDao.log.error(f"获取数据库配置详情失败, error: {err}")
             raise Exception(f"获取数据库配置详情失败: {err}")
 
     @staticmethod
-    async def get_tables(table_map: dict, data: PityDatabase, children: List):
+    @RedisHelper.cache("database:table:cache", expired_time=1800)
+    async def get_tables(data: DatabaseForm):
         conn = await db_helper.get_connection(data.sql_type, data.host, data.port, data.username, data.password,
                                               data.database)
         database_child = list()
-        dbs = dict(title=f"{data.database}（{data.host}:{data.port}）", key=f"database_{data.id}",
-                   children=database_child, sql_type=data.sql_type)
         eng = conn.get('engine')
+        table_set = set()
         async with eng.connect() as conn:
-            await conn.run_sync(DbConfigDao.load_table, table_map, data, database_child, children, dbs)
+            await conn.run_sync(DbConfigDao.load_table, table_set, data, database_child)
+        return database_child, table_set
 
     @staticmethod
-    def load_table(conn, table_map, data, database_child, children, dbs):
+    def load_table(conn, table_map, data, database_child):
         """
         异步加载table及字段
         :param conn:
         :param table_map:
         :param data:
         :param database_child:
-        :param children:
-        :param dbs:
         :return:
         """
         meta = MetaData(bind=conn)
         meta.reflect()
         for t in meta.sorted_tables:
-            table_map[data.id].add(str(t))
+            table_map.add(str(t))
             temp = []
             database_child.append(dict(title=str(t), key=f"table_{data.id}_{t}", children=temp))
             for k, v in t.c.items():
-                table_map[data.id].add(k)
+                table_map.add(k)
                 temp.append(dict(
                     title=k,
                     primary_key=v.primary_key,
                     type={str(v.type)},
+                    isLeaf=True,
                     key=f"column_{t}_{data.id}_{k}",
                 ))
-        children.append(dbs)
 
     @staticmethod
     async def online_sql(id: int, sql: str):
