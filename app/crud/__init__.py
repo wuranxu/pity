@@ -170,7 +170,6 @@ class Mapper(object):
         :return:
         """
         data = await session.execute(sql)
-        print(sql)
         total = data.raw.rowcount
         if total == 0:
             return [], 0
