@@ -1,14 +1,17 @@
+import asyncio
+
 import requests
 from fastapi import APIRouter, Depends
 from starlette import status
 
+from app.core.msg.mail import Email
 from app.crud.auth.UserDao import UserDao
 from app.excpetions.RequestException import AuthException
 from app.handler.fatcory import PityResponse
 from app.middleware.Jwt import UserToken
 from app.routers import Permission, FORBIDDEN
-from app.routers.auth.user_schema import UserDto, UserForm
-from app.schema.user import UserUpdateForm
+from app.schema.user import UserUpdateForm, UserForm, UserDto, ResetPwdForm
+from app.utils.des import Des
 from config import Config
 
 router = APIRouter(prefix="/auth")
@@ -106,3 +109,34 @@ async def delete_user(id: int, user=Depends(Permission(Config.ADMIN))):
         return PityResponse.success(user)
     except Exception as e:
         return PityResponse.failed(e)
+
+
+@router.post("/reset", summary="重置用户密码")
+async def reset_user(form: ResetPwdForm):
+    email = Des.des_decrypt(form.token)
+    await UserDao.reset_password(email, form.password)
+    return PityResponse.success()
+
+
+@router.get("/reset/generate/{email}", summary="生成重置密码链接")
+async def generate_reset_url(email: str):
+    try:
+        user = await UserDao.query_user_by_email(email)
+        if user is not None:
+            # 说明邮件存在，发送邮件
+            em = Des.des_encrypt(email)
+            link = f"""https://pity.fun/#/user/resetPassword?token={em}"""
+            render_html = Email.render_html(Config.PASSWORD_HTML_PATH, link=link, name=user.name)
+            asyncio.create_task(Email.send_msg("重置你的pity密码", render_html, None, email))
+        return PityResponse.success(None)
+    except Exception as e:
+        return PityResponse.failed(str(e))
+
+
+@router.get("/reset/check/{token}", summary="检测生成的链接是否正确")
+async def check_reset_url(token: str):
+    try:
+        email = Des.des_decrypt(token)
+        return PityResponse.success(email)
+    except:
+        return PityResponse.failed("重置链接不存在, 请不要无脑尝试")

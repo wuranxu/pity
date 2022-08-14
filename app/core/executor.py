@@ -666,7 +666,7 @@ class Executor(object):
                 for m in msg_types:
                     if int(m) == NoticeType.EMAIL:
                         render_html = Email.render_html(plan_name=plan.name, **report_dict[e])
-                        Email.send_msg(
+                        await Email.send_msg(
                             f"【{report_dict[e].get('env')}】测试计划【{plan.name}】执行完毕（{report_dict[e].get('plan_result')}）",
                             render_html, None, *[r.get("email") for r in users])
                     if int(m) == NoticeType.DINGDING:

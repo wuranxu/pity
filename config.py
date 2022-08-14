@@ -61,6 +61,9 @@ class BaseConfig(BaseSettings):
     # 测试报告路径
     REPORT_PATH = os.path.join(ROOT, "templates", "report.html")
 
+    # 重置密码路径
+    PASSWORD_HTML_PATH = os.path.join(ROOT, "templates", "reset_password.html")
+
     # APP 路径
     APP_PATH = os.path.join(ROOT, "app")
 

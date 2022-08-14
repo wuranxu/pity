@@ -1,4 +1,3 @@
-import asyncio
 import random
 import time
 from datetime import datetime
@@ -9,7 +8,7 @@ from sqlalchemy import update
 from app.crud import Mapper
 from app.middleware.Jwt import UserToken
 from app.middleware.RedisManager import RedisHelper
-from app.models import async_session, DatabaseHelper
+from app.models import async_session
 from app.models.user import User
 from app.schema.user import UserUpdateForm
 from app.utils.logger import Log
@@ -149,7 +148,7 @@ class UserDao(Mapper):
                 async with session.begin():
                     # 查询用户名/密码匹配且没有被删除的用户
                     query = await session.execute(
-                        select(User).where(User.username == username, User.password == pwd,
+                        select(User).where(or_(User.username == username, User.email == username), User.password == pwd,
                                            User.deleted_at == 0))
                     user = query.scalars().first()
                     if user is None:
@@ -195,3 +194,22 @@ class UserDao(Mapper):
         except Exception as e:
             UserDao.log.error(f"获取用户联系方式失败: {str(e)}")
             raise Exception(f"获取用户联系方式失败: {e}")
+
+    @staticmethod
+    async def reset_password(email: str, password: str):
+        pwd = UserToken.add_salt(password)
+        try:
+            async with async_session() as session:
+                async with session.begin():
+                    sql = update(User).where(User.email == email).values(password=pwd)
+                    await session.execute(sql)
+        except Exception as e:
+            UserDao.log.error(f"重置用户: {email}密码失败: {str(e)}")
+            raise Exception(f"重置{email}密码失败")
+
+    @staticmethod
+    async def query_user_by_email(email: str):
+        async with async_session() as session:
+            sql = select(User).where(User.email == email, User.is_valid == True)
+            query = await session.execute(sql)
+            return query.scalars().first()
