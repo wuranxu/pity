@@ -64,7 +64,7 @@ def connect(transaction: Transaction = False):
         @functools.wraps(transaction)
         async def wrap(cls, *args, **kwargs):
             try:
-                session = kwargs.get("session", None)
+                session: AsyncSession = kwargs.pop("session", None)
                 if session is not None:
                     return await transaction(cls, *args, session=session, **kwargs)
                 async with async_session() as ss:
@@ -293,24 +293,11 @@ class Mapper(object):
         return where
 
     @classmethod
-    @RedisHelper.cache("dao")
     @connect
     async def query_record(cls, session: AsyncSession = None, **kwargs):
         sql = cls.query_wrapper(**kwargs)
         result = await session.execute(sql)
         return result.scalars().first()
-        # try:
-        #     if session:
-        #         sql = cls.query_wrapper(**kwargs)
-        #         result = await session.execute(sql)
-        #         return result.scalars().first()
-        #     async with async_session() as session:
-        #         sql = cls.query_wrapper(**kwargs)
-        #         result = await session.execute(sql)
-        #         return result.scalars().first()
-        # except Exception as e:
-        #     cls.__log__.error(f"查询{cls.__model__}失败, error: {e}")
-        #     raise Exception(f"查询记录失败")
 
     @classmethod
     @RedisHelper.up_cache("dao")
@@ -387,6 +374,7 @@ class Mapper(object):
         if log:
             await asyncio.create_task(
                 cls.insert_log(session, user, OperationType.UPDATE, now, old, model.id, changed=changed))
+        return now
 
     @classmethod
     async def _inner_delete(cls, session, user, value, log, key, exists):

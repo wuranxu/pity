@@ -1,4 +1,3 @@
-import asyncio
 from copy import deepcopy
 from typing import List
 
@@ -8,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.crud import Mapper, ModelWrapper
 from app.enums.OperationEnum import OperationType
 from app.excpetions.AuthException import AuthException
-from app.models import async_session, DatabaseHelper
+from app.models import async_session
 from app.models.project import Project
 from app.models.project_role import ProjectRole
 from app.routers.project.project_schema import ProjectRoleEditForm
@@ -150,10 +149,8 @@ class ProjectRoleDao(Mapper):
                     changed = ProjectRoleDao.update_model(original, role, user_id)
                     await session.flush()
                     session.expunge(original)
-                async with session.begin():
-                    await asyncio.create_task(
-                        ProjectRoleDao.insert_log(session, user_id, OperationType.UPDATE, original, old, role.id,
-                                                  changed=changed))
+                    await ProjectRoleDao.insert_log(session, user_id, OperationType.UPDATE, original, old, role.id,
+                                                    changed=changed)
         except Exception as e:
             cls.__log__.error(f"更新用户角色失败: {e}")
             raise Exception(f"更新用户角色失败: {e}")
@@ -173,12 +170,11 @@ class ProjectRoleDao(Mapper):
                     role = await ProjectRoleDao.query_record(session=session, id=role_id, deleted_at=0)
                     if role is None:
                         raise Exception("用户角色不存在")
-                    await ProjectRoleDao.has_permission(role.project_id, role.project_role, user_id, user_role, True)
+                    await ProjectRoleDao.has_permission(role.project_id, role.project_role, user_id, user_role, True,
+                                                        session=session)
                     ProjectRoleDao.delete_model(role, user_id)
                     await session.flush()
                     session.expunge(role)
-                async with session.begin():
-                    await asyncio.create_task(
-                        ProjectRoleDao.insert_log(session, user_id, OperationType.DELETE, role, key=role_id))
+                    await ProjectRoleDao.insert_log(session, user_id, OperationType.DELETE, role, key=role_id)
         except Exception as e:
             raise Exception(f"删除用户角色失败: {e}")
