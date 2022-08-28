@@ -1,0 +1,8 @@
+etcd: 127.0.0.1:2379
+version: v1
+service: user
+port: 10001
+username: woody
+password: woody123
+method:
+  login:

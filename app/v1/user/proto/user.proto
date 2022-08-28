@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+message LoginRequestDto {
+  string username = 1;
+  string password = 2;
+}
+
+message Request {
+  bytes requestJson = 1;
+}
+
+message Response {
+  int32 code = 1;
+  string msg = 2;
+  bytes resultJson = 3;
+}
+
+
+message UserDto {
+
+}
+
+message LoginResponseDto {
+  UserDto user = 1;
+  string token = 2;
+  int64 expired = 3;
+}
+
+service user {
+  // login
+  rpc login(Request) returns (Response){
+
+  }
+}
