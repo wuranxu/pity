@@ -1,6 +1,7 @@
 import socket
 
 import yaml
+from yaml import FullLoader
 
 
 class ServiceRegister(object):
@@ -13,7 +14,7 @@ class ServiceRegister(object):
         :return:
         """
         with open(filepath, 'r', encoding='UTF-8') as f:
-            data = yaml.load(f)
+            data = yaml.load(f, FullLoader)
             return data
 
     @staticmethod
