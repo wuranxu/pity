@@ -27,10 +27,10 @@ class RpcService(object):
         service_port = cfg.get("port")
         etcd = EtcdClient(host, port)
         await RpcService.register_service(client=etcd,
-                                    service=service,
-                                    instance=instance,
-                                    cfg=cfg,
-                                    port=f":{service_port}")
+                                          service=service,
+                                          instance=instance,
+                                          cfg=cfg,
+                                          port=f":{service_port}")
 
     @staticmethod
     def load_service_config(config: str):
@@ -70,10 +70,6 @@ class RpcService(object):
     @staticmethod
     async def thread_wrapper(instance, cfg):
         await asyncio.to_thread(RpcService.register(instance, cfg))
-
-    @staticmethod
-    async def server_wrapper(port, dispatch, instance):
-        await asyncio.to_thread(RpcService.listen(port, dispatch, instance))
 
     @staticmethod
     async def start(config: str, dispatch: Callable, instance):
