@@ -1,3 +1,4 @@
+import asyncio
 import json
 import time
 
@@ -14,12 +15,12 @@ class EtcdClient(object):
     def unregister_service(self, name, addr):
         self.client.delete("/{}/{}/{}".format(self.scheme, name, addr))
 
-    def register_service(self, name, addr, ttl):
+    async def register_service(self, name, addr, ttl):
         while True:
             value, meta = self.client.get("/{}/{}/{}".format(self.scheme, name, addr))
             if value is None:
-                self.with_alive(name, addr, ttl)
-            time.sleep(ttl)
+                await self.with_alive(name, addr, ttl)
+            await asyncio.sleep(ttl)
 
     @staticmethod
     def lower_first(s: str):
@@ -47,18 +48,18 @@ class EtcdClient(object):
                 "path": "/{}/{}".format(service, method_name)}
         self.client.put(key, json.dumps(info, ensure_ascii=False))
 
-    def with_alive(self, name, addr, ttl):
+    async def with_alive(self, name, addr, ttl):
         lease = self.client.lease(ttl)
         key = "/{}/{}/{}".format(self.scheme, name, addr)
         print("service alive: {}".format(key))
         self.client.put(key, addr, lease=lease)
-        self.refresh_lease(lease, ttl)
+        await self.refresh_lease(lease, ttl)
 
-    def refresh_lease(self, lease, ttl):
+    async def refresh_lease(self, lease, ttl):
         try:
             while True:
                 next(self.client.refresh_lease(lease.id))
                 print("续租了")
-                time.sleep(ttl - 5)
+                await asyncio.sleep(ttl - 5)
         except Exception as err:
             print("续租失败, error: ", err)

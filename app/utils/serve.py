@@ -15,7 +15,7 @@ class RpcService(object):
     MAX_MESSAGE_LENGTH = 205109840
 
     @staticmethod
-    def register(instance, cfg: dict):
+    async def register(instance, cfg: dict):
         """
 
         :param cfg: 配置文件路径，默认为service.yml
@@ -24,12 +24,13 @@ class RpcService(object):
         """
         host, port = RpcService.get_etcd_host_port(cfg.get("etcd"))
         service = cfg.get("service")
+        service_port = cfg.get("port")
         etcd = EtcdClient(host, port)
-        RpcService.register_service(client=etcd,
+        await RpcService.register_service(client=etcd,
                                     service=service,
                                     instance=instance,
                                     cfg=cfg,
-                                    port=port)
+                                    port=f":{service_port}")
 
     @staticmethod
     def load_service_config(config: str):
@@ -71,16 +72,20 @@ class RpcService(object):
         await asyncio.to_thread(RpcService.register(instance, cfg))
 
     @staticmethod
+    async def server_wrapper(port, dispatch, instance):
+        await asyncio.to_thread(RpcService.listen(port, dispatch, instance))
+
+    @staticmethod
     async def start(config: str, dispatch: Callable, instance):
         cfg = RpcService.load_service_config(config)
         port = cfg.get("port")
         if port is None:
             raise RpcError("请指定端口号, 不建议随机端口")
         server = asyncio.create_task(RpcService.listen(port, dispatch, instance))
-        register = asyncio.create_task(RpcService.thread_wrapper(instance, cfg))
+        register = asyncio.create_task(RpcService.register(instance, cfg))
         await asyncio.gather(server, register)
 
     @staticmethod
-    def register_service(*, client, service, instance, cfg, port):
+    async def register_service(*, client, service, instance, cfg, port):
         client.register_api(service, instance, cfg)
-        client.register_service(service, ServiceRegister.get_ip_address() + port, 10)
+        await client.register_service(service, ServiceRegister.get_ip_address() + port, 10)
