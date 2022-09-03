@@ -504,10 +504,11 @@ class Executor(object):
                 # 判断请求返回是否是json格式，如果不是则不进行loads操作
                 actually = self.translate(item.actually)
                 status, err = self.ops(item.assert_type, expected, actually)
+                if not status:
+                    ok = False
                 result[item.id] = {"status": status, "msg": err}
             except Exception as e:
-                if ok is True:
-                    ok = False
+                ok = False
                 self.append(f"预期结果: {item.expected}\n实际结果: {item.actually}\n")
                 result[item.id] = {"status": False, "msg": f"断言取值失败, 请检查断言语句: {e}"}
         return json.dumps(result, ensure_ascii=False), ok
