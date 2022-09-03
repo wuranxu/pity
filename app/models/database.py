@@ -18,7 +18,7 @@ class PityDatabase(PityBase):
     password = Column(String(64), nullable=False)
     database = Column(String(36), nullable=False)
     sql_type = Column(INT, nullable=False, comment="0: mysql 1: postgresql 2: mongo")
-    env_data: Environment
+    env_info: Environment
 
     def __init__(self, env, name, host, port, username, password, database, sql_type, user, id=None):
         super().__init__(user, id)
