@@ -4,3 +4,6 @@ service: user
 port: 10077
 method:
   login:
+  listUser:
+    authorization: true
+  register:

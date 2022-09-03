@@ -1,21 +1,11 @@
 syntax = "proto3";
+import "request.proto";
+
 
 message LoginRequestDto {
   string username = 1;
   string password = 2;
 }
-
-message Request {
-  bytes requestJson = 1;
-}
-
-message Response {
-  int32 code = 1;
-  string msg = 2;
-  bytes resultJson = 3;
-}
-
-
 message UserDto {
 
 }
@@ -28,7 +18,10 @@ message LoginResponseDto {
 
 service user {
   // login
-  rpc login(Request) returns (Response){
+  rpc login(app.v1.Request) returns (app.v1.Response){
 
   }
+  rpc listUser(app.v1.Request) returns (app.v1.Response) {}
+
+  rpc register(app.v1.Request) returns (app.v1.Response) {}
 }

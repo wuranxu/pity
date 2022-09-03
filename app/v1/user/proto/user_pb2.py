@@ -12,15 +12,14 @@ from google.protobuf import symbol_database as _symbol_database
 _sym_db = _symbol_database.Default()
 
 
+import app.v1.request_pb2 as request__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nuser.proto\"5\n\x0fLoginRequestDto\x12\x10\n\x08username\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\"\x1e\n\x07Request\x12\x13\n\x0brequestJson\x18\x01 \x01(\x0c\"9\n\x08Response\x12\x0c\n\x04\x63ode\x18\x01 \x01(\x05\x12\x0b\n\x03msg\x18\x02 \x01(\t\x12\x12\n\nresultJson\x18\x03 \x01(\x0c\"\t\n\x07UserDto\"J\n\x10LoginResponseDto\x12\x16\n\x04user\x18\x01 \x01(\x0b\x32\x08.UserDto\x12\r\n\x05token\x18\x02 \x01(\t\x12\x0f\n\x07\x65xpired\x18\x03 \x01(\x03\x32&\n\x04user\x12\x1e\n\x05login\x12\x08.Request\x1a\t.Response\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nuser.proto\x1a\rrequest.proto\"5\n\x0fLoginRequestDto\x12\x10\n\x08username\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\"\t\n\x07UserDto\"J\n\x10LoginResponseDto\x12\x16\n\x04user\x18\x01 \x01(\x0b\x32\x08.UserDto\x12\r\n\x05token\x18\x02 \x01(\t\x12\x0f\n\x07\x65xpired\x18\x03 \x01(\x03\x32\x96\x01\n\x04user\x12,\n\x05login\x12\x0f.app.v1.Request\x1a\x10.app.v1.Response\"\x00\x12/\n\x08listUser\x12\x0f.app.v1.Request\x1a\x10.app.v1.Response\"\x00\x12/\n\x08register\x12\x0f.app.v1.Request\x1a\x10.app.v1.Response\"\x00\x62\x06proto3')
 
 
 
 _LOGINREQUESTDTO = DESCRIPTOR.message_types_by_name['LoginRequestDto']
-_REQUEST = DESCRIPTOR.message_types_by_name['Request']
-_RESPONSE = DESCRIPTOR.message_types_by_name['Response']
 _USERDTO = DESCRIPTOR.message_types_by_name['UserDto']
 _LOGINRESPONSEDTO = DESCRIPTOR.message_types_by_name['LoginResponseDto']
 LoginRequestDto = _reflection.GeneratedProtocolMessageType('LoginRequestDto', (_message.Message,), {
@@ -29,20 +28,6 @@ LoginRequestDto = _reflection.GeneratedProtocolMessageType('LoginRequestDto', (_
   # @@protoc_insertion_point(class_scope:LoginRequestDto)
   })
 _sym_db.RegisterMessage(LoginRequestDto)
-
-Request = _reflection.GeneratedProtocolMessageType('Request', (_message.Message,), {
-  'DESCRIPTOR' : _REQUEST,
-  '__module__' : 'user_pb2'
-  # @@protoc_insertion_point(class_scope:Request)
-  })
-_sym_db.RegisterMessage(Request)
-
-Response = _reflection.GeneratedProtocolMessageType('Response', (_message.Message,), {
-  'DESCRIPTOR' : _RESPONSE,
-  '__module__' : 'user_pb2'
-  # @@protoc_insertion_point(class_scope:Response)
-  })
-_sym_db.RegisterMessage(Response)
 
 UserDto = _reflection.GeneratedProtocolMessageType('UserDto', (_message.Message,), {
   'DESCRIPTOR' : _USERDTO,
@@ -62,16 +47,12 @@ _USER = DESCRIPTOR.services_by_name['user']
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  _LOGINREQUESTDTO._serialized_start=14
-  _LOGINREQUESTDTO._serialized_end=67
-  _REQUEST._serialized_start=69
-  _REQUEST._serialized_end=99
-  _RESPONSE._serialized_start=101
-  _RESPONSE._serialized_end=158
-  _USERDTO._serialized_start=160
-  _USERDTO._serialized_end=169
-  _LOGINRESPONSEDTO._serialized_start=171
-  _LOGINRESPONSEDTO._serialized_end=245
-  _USER._serialized_start=247
-  _USER._serialized_end=285
+  _LOGINREQUESTDTO._serialized_start=29
+  _LOGINREQUESTDTO._serialized_end=82
+  _USERDTO._serialized_start=84
+  _USERDTO._serialized_end=93
+  _LOGINRESPONSEDTO._serialized_start=95
+  _LOGINRESPONSEDTO._serialized_end=169
+  _USER._serialized_start=172
+  _USER._serialized_end=322
 # @@protoc_insertion_point(module_scope)

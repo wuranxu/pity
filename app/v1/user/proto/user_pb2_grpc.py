@@ -2,7 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-import app.v1.user.proto.user_pb2 as user__pb2
+import app.v1.request_pb2 as request__pb2
 
 
 class userStub(object):
@@ -16,8 +16,18 @@ class userStub(object):
         """
         self.login = channel.unary_unary(
                 '/user/login',
-                request_serializer=user__pb2.Request.SerializeToString,
-                response_deserializer=user__pb2.Response.FromString,
+                request_serializer=request__pb2.Request.SerializeToString,
+                response_deserializer=request__pb2.Response.FromString,
+                )
+        self.listUser = channel.unary_unary(
+                '/user/listUser',
+                request_serializer=request__pb2.Request.SerializeToString,
+                response_deserializer=request__pb2.Response.FromString,
+                )
+        self.register = channel.unary_unary(
+                '/user/register',
+                request_serializer=request__pb2.Request.SerializeToString,
+                response_deserializer=request__pb2.Response.FromString,
                 )
 
 
@@ -31,13 +41,35 @@ class userServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def listUser(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def register(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_userServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'login': grpc.unary_unary_rpc_method_handler(
                     servicer.login,
-                    request_deserializer=user__pb2.Request.FromString,
-                    response_serializer=user__pb2.Response.SerializeToString,
+                    request_deserializer=request__pb2.Request.FromString,
+                    response_serializer=request__pb2.Response.SerializeToString,
+            ),
+            'listUser': grpc.unary_unary_rpc_method_handler(
+                    servicer.listUser,
+                    request_deserializer=request__pb2.Request.FromString,
+                    response_serializer=request__pb2.Response.SerializeToString,
+            ),
+            'register': grpc.unary_unary_rpc_method_handler(
+                    servicer.register,
+                    request_deserializer=request__pb2.Request.FromString,
+                    response_serializer=request__pb2.Response.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -61,7 +93,41 @@ class user(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/user/login',
-            user__pb2.Request.SerializeToString,
-            user__pb2.Response.FromString,
+            request__pb2.Request.SerializeToString,
+            request__pb2.Response.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def listUser(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/user/listUser',
+            request__pb2.Request.SerializeToString,
+            request__pb2.Response.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def register(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/user/register',
+            request__pb2.Request.SerializeToString,
+            request__pb2.Response.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

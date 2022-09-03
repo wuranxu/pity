@@ -1,6 +1,5 @@
 import asyncio
 import json
-import time
 
 from aioetcd3.client import client
 
@@ -17,9 +16,10 @@ class EtcdClient(object):
 
     async def register_service(self, name, addr, ttl):
         while True:
-            value, meta = await self.client.get("/{}/{}/{}".format(self.scheme, name, addr))
+            service = EtcdClient.lower_first(name)
+            value, meta = await self.client.get("/{}/{}/{}".format(self.scheme, service, addr))
             if value is None:
-                await self.with_alive(name, addr, ttl)
+                await self.with_alive(service, addr, ttl)
             await asyncio.sleep(ttl)
 
     @staticmethod
@@ -45,7 +45,7 @@ class EtcdClient(object):
     async def register_single(self, version, service, method_name, no_auth=None):
         key = "{}.{}.{}".format(version, EtcdClient.lower_first(service), EtcdClient.lower_first(method_name))
         info = {"authorization": False if no_auth is None else no_auth.get("authorization"),
-                "path": "/{}/{}".format(service, method_name)}
+                "path": "/{}/{}".format(EtcdClient.lower_first(service), EtcdClient.lower_first(method_name))}
         await self.client.put(key, json.dumps(info, ensure_ascii=False))
 
     async def with_alive(self, name, addr, ttl):
@@ -58,7 +58,6 @@ class EtcdClient(object):
     async def refresh_lease(self, lease, ttl):
         try:
             while True:
-                # next(self.client.refresh_lease(lease.id))
                 await self.client.refresh_lease(lease)
                 print("续租了")
                 await asyncio.sleep(ttl - 5)
