@@ -22,10 +22,10 @@ class RpcService(object):
         :param instance: grpc服务注册实例
         :return:
         """
-        host, port = RpcService.get_etcd_host_port(cfg.get("etcd"))
+        host = cfg.get("etcd")
         service = cfg.get("service")
         service_port = cfg.get("port")
-        etcd = EtcdClient(host, port)
+        etcd = EtcdClient(host)
         await RpcService.register_service(client=etcd,
                                           service=service,
                                           instance=instance,
@@ -83,5 +83,5 @@ class RpcService(object):
 
     @staticmethod
     async def register_service(*, client, service, instance, cfg, port):
-        client.register_api(service, instance, cfg)
+        await client.register_api(service, instance, cfg)
         await client.register_service(service, ServiceRegister.get_ip_address() + port, 10)
