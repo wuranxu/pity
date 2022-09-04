@@ -18,3 +18,11 @@ class UserRegisterRequest(BaseModel):
     password: str
     username: str
     email: EmailStr
+
+
+class UserQueryRequest(BaseModel):
+    token: str
+
+
+class GenerateUrlRequest(BaseModel):
+    email: EmailStr

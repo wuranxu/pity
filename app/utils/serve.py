@@ -6,6 +6,7 @@ from typing import Callable
 
 import grpc
 from grpc_reflection.v1alpha import reflection
+from loguru import logger
 
 from app.excpetions.RpcError import RpcError
 from app.utils.etcd import EtcdClient
@@ -52,6 +53,7 @@ class RpcService(object):
                                      ('grpc.max_send_message_length', RpcService.MAX_MESSAGE_LENGTH),
                                      ('grpc.max_receive_message_length', RpcService.MAX_MESSAGE_LENGTH),
                                  ])
+        logger.info("开始注册服务到etcd. 👏")
         register(instance, server)
         SERVICE_NAMES = (
             pb.DESCRIPTOR.services_by_name[service].full_name,
@@ -59,7 +61,7 @@ class RpcService(object):
         )
         reflection.enable_server_reflection(SERVICE_NAMES, server)
         server.add_insecure_port('[::]:{}'.format(port))
-        print("服务启动成功, 端口: ", port)
+        logger.info(f"服务启动成功, 端口: {port}. 🎉")
         await server.start()
         await server.wait_for_termination()
 
@@ -75,12 +77,9 @@ class RpcService(object):
         return addr.split(":")
 
     @staticmethod
-    async def thread_wrapper(instance, cfg):
-        await asyncio.to_thread(RpcService.register(instance, cfg))
-
-    @staticmethod
     async def start(config: str, dispatch: Callable, instance, pb):
         cfg = RpcService.load_service_config(config)
+        logger.info("服务配置加载成功. ✔")
         port = cfg.get("port")
         service = cfg.get("service")
         if port is None:

@@ -7,3 +7,11 @@ method:
   listUser:
     authorization: true
   register:
+  delete:
+    authorization: true
+  query:
+  update:
+    authorization: true
+  checkToken:
+  resetPassword:
+  generatePassword:

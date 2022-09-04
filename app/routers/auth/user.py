@@ -128,7 +128,7 @@ async def generate_reset_url(email: str):
             link = f"""https://pity.fun/#/user/resetPassword?token={em}"""
             render_html = Email.render_html(Config.PASSWORD_HTML_PATH, link=link, name=user.name)
             asyncio.create_task(Email.send_msg("重置你的pity密码", render_html, None, email))
-        return PityResponse.success(None)
+        return PityResponse.success()
     except Exception as e:
         return PityResponse.failed(str(e))
 

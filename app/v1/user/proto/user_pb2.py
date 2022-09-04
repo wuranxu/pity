@@ -15,7 +15,7 @@ _sym_db = _symbol_database.Default()
 import app.v1.request_pb2 as request__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nuser.proto\x1a\rrequest.proto\"5\n\x0fLoginRequestDto\x12\x10\n\x08username\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\"\t\n\x07UserDto\"J\n\x10LoginResponseDto\x12\x16\n\x04user\x18\x01 \x01(\x0b\x32\x08.UserDto\x12\r\n\x05token\x18\x02 \x01(\t\x12\x0f\n\x07\x65xpired\x18\x03 \x01(\x03\x32\x96\x01\n\x04user\x12,\n\x05login\x12\x0f.app.v1.Request\x1a\x10.app.v1.Response\"\x00\x12/\n\x08listUser\x12\x0f.app.v1.Request\x1a\x10.app.v1.Response\"\x00\x12/\n\x08register\x12\x0f.app.v1.Request\x1a\x10.app.v1.Response\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nuser.proto\x1a\rrequest.proto\"5\n\x0fLoginRequestDto\x12\x10\n\x08username\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\"\t\n\x07UserDto\"J\n\x10LoginResponseDto\x12\x16\n\x04user\x18\x01 \x01(\x0b\x32\x08.UserDto\x12\r\n\x05token\x18\x02 \x01(\t\x12\x0f\n\x07\x65xpired\x18\x03 \x01(\x03\x32\xc4\x03\n\x04user\x12,\n\x05login\x12\x0f.app.v1.Request\x1a\x10.app.v1.Response\"\x00\x12/\n\x08listUser\x12\x0f.app.v1.Request\x1a\x10.app.v1.Response\"\x00\x12/\n\x08register\x12\x0f.app.v1.Request\x1a\x10.app.v1.Response\"\x00\x12-\n\x06\x64\x65lete\x12\x0f.app.v1.Request\x1a\x10.app.v1.Response\"\x00\x12\x34\n\rresetPassword\x12\x0f.app.v1.Request\x1a\x10.app.v1.Response\"\x00\x12-\n\x06update\x12\x0f.app.v1.Request\x1a\x10.app.v1.Response\"\x00\x12\x37\n\x10generatePassword\x12\x0f.app.v1.Request\x1a\x10.app.v1.Response\"\x00\x12\x31\n\ncheckToken\x12\x0f.app.v1.Request\x1a\x10.app.v1.Response\"\x00\x12,\n\x05query\x12\x0f.app.v1.Request\x1a\x10.app.v1.Response\"\x00\x62\x06proto3')
 
 
 
@@ -54,5 +54,5 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _LOGINRESPONSEDTO._serialized_start=95
   _LOGINRESPONSEDTO._serialized_end=169
   _USER._serialized_start=172
-  _USER._serialized_end=322
+  _USER._serialized_end=624
 # @@protoc_insertion_point(module_scope)
