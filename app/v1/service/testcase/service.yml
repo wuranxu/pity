@@ -1,0 +1,83 @@
+etcd: 127.0.0.1:2379
+version: v1
+service: testcase
+port: 10013
+method:
+  listTestCase:
+    authorization: true
+  insertTestCase:
+    authorization: true
+  createTestCase:
+    authorization: true
+  updateTestCase:
+    authorization: true
+  deleteTestCase:
+    authorization: true
+  queryTestCase:
+    authorization: true
+  moveTestCase:
+    authorization: true
+  insertAsserts:
+    authorization: true
+  updateAsserts:
+    authorization: true
+  deleteAsserts:
+    authorization: true
+  insertConstructor:
+    authorization: true
+  updateConstructor:
+    authorization: true
+  deleteConstructor:
+    authorization: true
+  reorderConstructor:
+    authorization: true
+  queryConstructorTree:
+    authorization: true
+  queryConstructor:
+    authorization: true
+  listConstructor:
+    authorization: true
+  queryTestReport:
+    authorization: true
+  listTestReport:
+    authorization: true
+  queryXmindData:
+    authorization: true
+  queryTestCaseDirTree:
+    authorization: true
+  queryTestCaseTree:
+    authorization: true
+  queryTestCaseDir:
+    authorization: true
+  insertTestCaseDir:
+    authorization: true
+  updateTestCaseDir:
+    authorization: true
+  deleteTestCaseDir:
+    authorization: true
+  insertTestData:
+    authorization: true
+  updateTestData:
+    authorization: true
+  deleteTestData:
+    authorization: true
+  insertParams:
+    authorization: true
+  updateParams:
+    authorization: true
+  batchUpdateParams:
+    authorization: true
+  deleteParams:
+    authorization: true
+  startRecord:
+    authorization: true
+  stopRecord:
+    authorization: true
+  removeRecord:
+    authorization: true
+  queryRecordStatus:
+    authorization: true
+  generateTestCase:
+    authorization: true
+  importTestCase:
+    authorization: true

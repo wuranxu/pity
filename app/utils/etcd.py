@@ -1,28 +1,57 @@
 import asyncio
+import functools
 import json
 
 from aioetcd3.client import client
+from aioetcd3.kv import _kv, _range_request, _static_builder, _range_keys_response
 from loguru import logger
+
+
+async def range_(self, key_range, limit=None, revision=None, timeout=10, sort_order=None,
+                 sort_target='key',
+                 serializable=None, keys_only=None, count_only=None, min_mod_revision=None, max_mod_revision=None,
+                 min_create_revision=None, max_create_revision=None, range_end=None):
+    # implemented in decorator
+    pass
 
 
 class EtcdClient(object):
     client = None
     scheme = "pity"
 
-    def __init__(self, host, **kwargs):
+    def __init__(self, host):
         self.client = client(host)
 
     async def unregister_service(self, name, addr):
-        await self.client.delete("/{}/{}/{}".format(self.scheme, name, addr))
+        await self.client.delete("{}/{}".format(name, addr))
+
+    async def unregister_methods(self, name, cfg):
+        version = cfg.get("version")
+        methods = cfg.get("method", {})
+        for m in methods.keys():
+            key = f"{version}.{name}.{m}"
+            await self.client.delete(key)
+
+    async def list_server(self, name, range_end):
+        res = await _kv(functools.partial(_range_request), _static_builder(_range_keys_response),
+                        lambda x: x._kv_stub.Range)(range_)(self.client, name, range_end=range_end.encode("utf-8"))
+        ans = []
+        for r in res:
+            srv = r[0].decode("utf-8")
+            service, addr = srv.split("/")
+            if service != name:
+                continue
+            ans.append(addr)
+        return ans
 
     async def register_service(self, name, addr, ttl):
-        while True:
-            service = EtcdClient.lower_first(name)
-            value, meta = await self.client.get("/{}/{}/{}".format(self.scheme, service, addr))
-            if value is None:
-                await self.with_alive(service, addr, ttl)
-                logger.info(f"注册服务: {service} 成功. 📢")
-            await asyncio.sleep(ttl)
+        # while True:
+        service = EtcdClient.lower_first(name)
+        value, meta = await self.client.get("{}/{}".format(service, addr))
+        if value is None:
+            await self.with_alive(service, addr, ttl)
+            logger.info(f"注册服务: {service} 成功. 📢")
+            # await asyncio.sleep(ttl)
 
     @staticmethod
     def lower_first(s: str):
@@ -54,10 +83,11 @@ class EtcdClient(object):
         logger.info(f"服务: {srv} 方法: {md} 注册成功. 🍦")
 
     async def with_alive(self, name, addr, ttl):
-        lease = await self.client.grant_lease(ttl)
-        key = f"/{self.scheme}/{name}/{addr}"
-        await self.client.put(key, addr, lease=lease)
-        await self.refresh_lease(lease, ttl)
+        # lease = await self.client.grant_lease(ttl)
+        key = f"{name}/{addr}"
+        etcd_op = dict(Op=0, Addr=addr)
+        await self.client.put(key, json.dumps(etcd_op, ensure_ascii=False))
+        # await self.refresh_lease(lease, ttl)
 
     async def refresh_lease(self, lease, ttl):
         try:

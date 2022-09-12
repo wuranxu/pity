@@ -1,0 +1,9 @@
+etcd: 127.0.0.1:2379
+version: v1
+service: dashboard
+port: 10012
+method:
+  queryTestPlanData:
+    authorization: true
+  statistics:
+    authorization: true

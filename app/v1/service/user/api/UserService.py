@@ -8,8 +8,8 @@ from app.middleware.Jwt import UserToken
 from app.routers import FORBIDDEN
 from app.schema.user import UserUpdateForm, ResetPwdForm
 from app.utils.des import Des
-from app.v1.dto.User import UserLoginRequest, UserQueryRequest, GenerateUrlRequest
-from app.v1.user.proto.user_pb2_grpc import userServicer
+from app.v1.dto.User import UserLoginRequest, UserQueryRequest, GenerateUrlRequest, UserRegisterRequest
+from app.v1.service.user.proto.user_pb2_grpc import userServicer
 from app.v1.utils.context import Context, ctx
 from config import Config
 
@@ -49,7 +49,7 @@ class UserServiceApi(userServicer):
         :param context:
         :return:
         """
-        data = Context.parse_args(request, UserLoginRequest)
+        data = Context.parse_args(request, UserRegisterRequest)
         await UserDao.register_user(**data.dict())
         return Context.success()
 

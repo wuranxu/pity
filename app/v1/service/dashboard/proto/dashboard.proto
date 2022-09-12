@@ -1,0 +1,9 @@
+syntax = "proto3";
+import "request.proto";
+
+service dashboard {
+  // login
+  rpc queryTestPlanData(app.v1.Request) returns (app.v1.Response) {}
+  rpc statistics(app.v1.Request) returns (app.v1.Response) {}
+  rpc workspace(app.v1.Request) returns (app.v1.Response) {}
+}

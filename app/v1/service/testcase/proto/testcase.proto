@@ -1,0 +1,44 @@
+syntax = "proto3";
+import "request.proto";
+
+service testcase {
+  rpc listTestCase(app.v1.Request) returns (app.v1.Response) {}
+  rpc insertTestCase(app.v1.Request) returns (app.v1.Response) {}
+  rpc createTestCase(app.v1.Request) returns (app.v1.Response) {}
+  rpc updateTestCase(app.v1.Request) returns (app.v1.Response) {}
+  rpc deleteTestCase(app.v1.Request) returns (app.v1.Response) {}
+  rpc queryTestCase(app.v1.Request) returns (app.v1.Response) {}
+  rpc moveTestCase(app.v1.Request) returns (app.v1.Response) {}
+  rpc insertAsserts(app.v1.Request) returns (app.v1.Response) {}
+  rpc updateAsserts(app.v1.Request) returns (app.v1.Response) {}
+  rpc deleteAsserts(app.v1.Request) returns (app.v1.Response) {}
+  rpc insertConstructor(app.v1.Request) returns (app.v1.Response) {}
+  rpc updateConstructor(app.v1.Request) returns (app.v1.Response) {}
+  rpc deleteConstructor(app.v1.Request) returns (app.v1.Response) {}
+  rpc reorderConstructor(app.v1.Request) returns (app.v1.Response) {}
+  rpc queryConstructorTree(app.v1.Request) returns (app.v1.Response) {}
+  rpc queryConstructor(app.v1.Request) returns (app.v1.Response) {}
+  rpc listConstructor(app.v1.Request) returns (app.v1.Response) {}
+  rpc queryTestReport(app.v1.Request) returns (app.v1.Response) {}
+  rpc listTestReport(app.v1.Request) returns (app.v1.Response) {}
+  rpc queryXmindData(app.v1.Request) returns (app.v1.Response) {}
+  rpc queryTestCaseDirTree(app.v1.Request) returns (app.v1.Response) {}
+  rpc queryTestCaseTree(app.v1.Request) returns (app.v1.Response) {}
+  rpc queryTestCaseDir(app.v1.Request) returns (app.v1.Response) {}
+  rpc insertTestCaseDir(app.v1.Request) returns (app.v1.Response) {}
+  rpc updateTestCaseDir(app.v1.Request) returns (app.v1.Response) {}
+  rpc deleteTestCaseDir(app.v1.Request) returns (app.v1.Response) {}
+  rpc insertTestData(app.v1.Request) returns (app.v1.Response) {}
+  rpc updateTestData(app.v1.Request) returns (app.v1.Response) {}
+  rpc deleteTestData(app.v1.Request) returns (app.v1.Response) {}
+  rpc insertParams(app.v1.Request) returns (app.v1.Response) {}
+  rpc updateParams(app.v1.Request) returns (app.v1.Response) {}
+  rpc batchUpdateParams(app.v1.Request) returns (app.v1.Response) {}
+  rpc deleteParams(app.v1.Request) returns (app.v1.Response) {}
+  rpc startRecord(app.v1.Request) returns (app.v1.Response) {}
+  rpc stopRecord(app.v1.Request) returns (app.v1.Response) {}
+  rpc removeRecord(app.v1.Request) returns (app.v1.Response) {}
+  rpc queryRecordStatus(app.v1.Request) returns (app.v1.Response) {}
+  rpc generateTestCase(app.v1.Request) returns (app.v1.Response) {}
+  rpc importTestCase(app.v1.Request) returns (app.v1.Response) {}
+}

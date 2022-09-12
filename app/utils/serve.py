@@ -1,6 +1,5 @@
 """rpc service 注册类
 """
-import asyncio
 from concurrent import futures
 from typing import Callable
 
@@ -48,11 +47,13 @@ class RpcService(object):
         :param register:
         :return:
         """
-        server = grpc.aio.server(futures.ThreadPoolExecutor(max_workers=50),
-                                 options=[
-                                     ('grpc.max_send_message_length', RpcService.MAX_MESSAGE_LENGTH),
-                                     ('grpc.max_receive_message_length', RpcService.MAX_MESSAGE_LENGTH),
-                                 ])
+        grpc.aio.init_grpc_aio()
+        server = grpc.aio.server(
+            migration_thread_pool=futures.ThreadPoolExecutor(max_workers=500),
+            options=[
+                ('grpc.max_send_message_length', RpcService.MAX_MESSAGE_LENGTH),
+                ('grpc.max_receive_message_length', RpcService.MAX_MESSAGE_LENGTH),
+            ])
         logger.info("开始注册服务到etcd. 👏")
         register(instance, server)
         SERVICE_NAMES = (
@@ -84,11 +85,23 @@ class RpcService(object):
         service = cfg.get("service")
         if port is None:
             raise RpcError("请指定端口号, 不建议随机端口")
-        server = asyncio.create_task(RpcService.listen(service, port, dispatch, instance, pb))
-        register = asyncio.create_task(RpcService.register(instance, cfg))
-        await asyncio.gather(server, register)
+        await RpcService.register(instance, cfg)
+        await RpcService.listen(service, port, dispatch, instance, pb)
+
+    @staticmethod
+    async def shutdown(cfg_file="./service.yml"):
+        cfg = RpcService.load_service_config(cfg_file)
+        etcd = EtcdClient(cfg.get("etcd"))
+        service = cfg.get("service")
+        addr = f"{ServiceRegister.get_ip_address()}:{cfg.get('port')}"
+        await RpcService.unregister(client=etcd, service=service, cfg=cfg, addr=addr)
 
     @staticmethod
     async def register_service(*, client, service, instance, cfg, port):
         await client.register_api(service, instance, cfg)
         await client.register_service(service, ServiceRegister.get_ip_address() + port, 300)
+
+    @staticmethod
+    async def unregister(*, client, service, cfg, addr):
+        await client.unregister_service(service, addr)
+        await client.unregister_methods(service, cfg)

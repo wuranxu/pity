@@ -26,6 +26,9 @@ class BaseConfig(BaseSettings):
     MYSQL_PWD: str
     DBNAME: str
 
+    # etcd server
+    ETCD_ENDPOINT: str
+
     # WARNING: close redis can make job run multiple times at the same time
     REDIS_ON: bool
     REDIS_HOST: str

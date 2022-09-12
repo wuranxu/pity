@@ -1,7 +1,7 @@
 etcd: 127.0.0.1:2379
 version: v1
 service: user
-port: 10077
+port: 10011
 method:
   login:
   listUser:

@@ -6,7 +6,7 @@ from app import error_map
 from app.excpetions.ParamsException import ParamsError
 from app.handler.fatcory import PityResponse
 from app.v1.dto.User import UserInfo
-from app.v1.request_pb2 import Response
+from app.v1.service.request_pb2 import Response
 
 
 def ctx(func):
@@ -57,3 +57,16 @@ class Context:
         :return:
         """
         return json.dumps(PityResponse.encode_json(data, *exclude), ensure_ascii=False).encode("utf-8")
+
+    @staticmethod
+    def success_json(data: Any, *exclude, code=0, msg="操作成功"):
+        """
+        序列化为bytes并返回response
+        :param code:
+        :param msg:
+        :param data:
+        :param exclude:
+        :return:
+        """
+        resp = json.dumps(PityResponse.encode_json(data, *exclude), ensure_ascii=False).encode("utf-8")
+        return Context.success(resp, code, msg)
