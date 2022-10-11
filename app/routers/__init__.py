@@ -1,5 +1,3 @@
-import asyncio
-
 from fastapi import Header
 from starlette import status
 
@@ -8,7 +6,6 @@ from app.excpetions.RequestException import AuthException, PermissionException
 from app.handler.fatcory import PityResponse
 from app.middleware.Jwt import UserToken
 from app.models import async_session
-from app.utils.internal import synchronize_async_helper
 from config import Config
 
 FORBIDDEN = "对不起, 你没有足够的权限"
