@@ -112,7 +112,7 @@ async def insert_testcase_asserts(data: TestCaseAssertsForm, user_info=Depends(P
 
 
 @router.post("/asserts/update")
-async def insert_testcase_asserts(data: TestCaseAssertsForm, user_info=Depends(Permission())):
+async def update_testcase_asserts(data: TestCaseAssertsForm, user_info=Depends(Permission())):
     try:
         updated = await TestCaseAssertsDao.update_test_case_asserts(data, user_id=user_info["id"])
         return PityResponse.success(updated)
@@ -121,7 +121,7 @@ async def insert_testcase_asserts(data: TestCaseAssertsForm, user_info=Depends(P
 
 
 @router.get("/asserts/delete")
-async def insert_testcase_asserts(id: int, user_info=Depends(Permission())):
+async def delete_testcase_asserts(id: int, user_info=Depends(Permission())):
     await TestCaseAssertsDao.delete_test_case_asserts(id, user_id=user_info["id"])
     return PityResponse.success()
 
@@ -139,7 +139,7 @@ async def update_constructor(data: ConstructorForm, user_info=Depends(Permission
 
 
 @router.get("/constructor/delete")
-async def update_constructor(id: int, user_info=Depends(Permission())):
+async def delete_constructor(id: int, user_info=Depends(Permission())):
     await ConstructorDao.delete_constructor(id, user_id=user_info["id"])
     return PityResponse.success()
 
@@ -158,7 +158,7 @@ async def get_constructor_tree(suffix: bool, name: str = "", user_info=Depends(P
 
 # 获取数据构造器树
 @router.get("/constructor")
-async def get_constructor_tree(id: int, user_info=Depends(Permission())):
+async def get_constructor(id: int, user_info=Depends(Permission())):
     result = await ConstructorDao.get_constructor_data(id)
     return PityResponse.success(result)
 
@@ -235,7 +235,7 @@ async def insert_testcase_directory(form: PityTestcaseDirectoryForm, user_info=D
 
 
 @router.post("/directory/update")
-async def insert_testcase_directory(form: PityTestcaseDirectoryForm, user_info=Depends(Permission())):
+async def update_testcase_directory(form: PityTestcaseDirectoryForm, user_info=Depends(Permission())):
     try:
         await PityTestcaseDirectoryDao.update_directory(form, user_info['id'])
         return PityResponse.success()
@@ -244,7 +244,7 @@ async def insert_testcase_directory(form: PityTestcaseDirectoryForm, user_info=D
 
 
 @router.get("/directory/delete")
-async def insert_testcase_directory(id: int, user_info=Depends(Permission())):
+async def delete_testcase_directory(id: int, user_info=Depends(Permission())):
     try:
         await PityTestcaseDirectoryDao.delete_directory(id, user_info['id'])
         return PityResponse.success()
@@ -321,19 +321,19 @@ async def delete_testcase_out_parameters(id: int, user_info=Depends(Permission()
     return PityResponse.success()
 
 
-@router.get("/record/start", summary="开始录制接口请求")
+@router.get("/record/start", summary="开始录制接口请求")  # TODO
 async def record_requests(request: Request, regex: str, user_info=Depends(Permission())):
     await RedisHelper.set_address_record(user_info['id'], request.client.host, regex)
     return PityResponse.success(msg="开始录制，可以在浏览器/app上操作啦！")
 
 
-@router.get("/record/stop", summary="停止录制接口请求")
+@router.get("/record/stop", summary="停止录制接口请求")  # TODO
 async def record_requests(request: Request, _=Depends(Permission())):
     await RedisHelper.remove_address_record(request.client.host)
     return PityResponse.success(msg="停止成功，快去生成用例吧~")
 
 
-@router.get("/record/status", summary="获取录制接口请求状态")
+@router.get("/record/status", summary="获取录制接口请求状态")  # TODO
 async def record_requests(request: Request, _=Depends(Permission())):
     record = await RedisHelper.get_address_record(request.client.host)
     status = False
@@ -346,7 +346,7 @@ async def record_requests(request: Request, _=Depends(Permission())):
     return PityResponse.success(dict(data=data, regex=regex, status=status))
 
 
-@router.get("/record/remove", summary="删除录制接口")
+@router.get("/record/remove", summary="删除录制接口")  # TODO
 async def remove_record(index: int, request: Request, _=Depends(Permission())):
     await RedisHelper.remove_record_data(request.client.host, index)
     return PityResponse.success()
