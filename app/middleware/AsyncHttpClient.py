@@ -30,8 +30,7 @@ class AsyncRequest(object):
         start = time.time()
         async with aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar(unsafe=True)) as session:
             async with session.request(method, self.url, timeout=self.timeout, proxy=self.proxy,
-                                       ssl=False,
-                                       **self.kwargs) as resp:
+                                       ssl=False, **self.kwargs) as resp:
                 if resp.status != 200:
                     # 修复bug，当http状态码不为200的时候给出提示
                     return await self.collect(False, self.get_data(self.kwargs), resp.status, msg="http状态码不为200")
