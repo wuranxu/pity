@@ -10,6 +10,16 @@ from app.schema.testcase_data import PityTestcaseDataForm
 from app.schema.testcase_out_parameters import PityTestCaseOutParametersForm
 
 
+class ListTestCaseForm(BaseModel):
+    directory_id: int = None
+    name: str = ""
+    create_user: str = ""
+
+
+class DeleteTestCaseDto(BaseModel):
+    data: List[int]
+
+
 class TestCaseForm(BaseModel):
     id: int = None
     priority: str

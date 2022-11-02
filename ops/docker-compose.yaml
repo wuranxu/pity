@@ -46,5 +46,21 @@ services:
       - ./dev.env.ops:/pity/conf/dev.env
     command: bash -c '/pity/ops/wait-for-it.sh pity_mysql:3306 -- /pity/ops/wait-for-it.sh pity_redis:6379 -- /pity/venv/bin/supervisord -c /pity/ops/supervisor.conf'
 
+
+  user:
+    build:
+      context: ../
+      dockerfile: app/v1/service/user/dockerfile
+    container_name: pity_user
+    ports:
+      - "10011:10011"
+    restart: always
+    networks:
+      pity_net:
+        aliases:
+        - pity_user
+    command: bash -c '/pityUser/ops/wait-for-it.sh pity_mysql:3306 && /pityUser/ops/wait-for-it.sh pity_redis:6379 && cd /pityUser/app/v1/service/user && /pityUser/venv/bin/python server.py'
+
+
 networks:
   pity_net:

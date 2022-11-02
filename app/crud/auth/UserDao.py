@@ -132,7 +132,7 @@ class UserDao(Mapper):
                     session.add(user)
         except Exception as e:
             UserDao.log.error(f"用户注册失败: {str(e)}")
-            raise Exception("注册失败")
+            raise Exception(f"注册失败: {e}")
 
     @staticmethod
     async def login(username, password):

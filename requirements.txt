@@ -35,3 +35,6 @@ starlette_context
 gunicorn
 supervisor
 pyDes~=2.0.1
+aioetcd3
+grpcio
+pydantic[email]

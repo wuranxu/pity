@@ -18,6 +18,8 @@ from app.excpetions.RequestException import AuthException
 from app.excpetions.RequestException import PermissionException
 from config import Config
 
+sys.path.append(__file__)
+
 # from starlette_context import middleware, plugins
 
 pity = FastAPI()
