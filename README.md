@@ -5,7 +5,9 @@
 ![png](https://img.shields.io/badge/FastApi-green)
 ![png](https://img.shields.io/badge/contributors-3-green)
 
-> pity正在微服务化中，近期功能迭代暂缓。
+> ~~pity正在微服务化中，近期功能迭代暂缓。~~
+> 
+> 由于微服务个人来做能力实在有限，不走弯路了，继续开发功能...
 
 ### 🎉 技术栈
 
@@ -264,6 +266,7 @@ $ python pity.py
 - Vic
 - 老虎哥
 - 晴天
+- 春熙路
 - 方总
 - 榜一大哥
 - 汤总
