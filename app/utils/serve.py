@@ -7,7 +7,7 @@ import grpc
 from grpc_reflection.v1alpha import reflection
 from loguru import logger
 
-from app.excpetions.RpcError import RpcError
+from app.exception.error import RpcError
 from app.utils.etcd import EtcdClient
 from app.utils.register import ServiceRegister
 

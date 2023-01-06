@@ -1,7 +1,7 @@
 from pydantic import BaseModel, validator
 
 # 都可以为空，为空则不进行更改
-from app.excpetions.ParamsException import ParamsError
+from app.exception.error import ParamsError
 from app.schema.base import PityModel
 
 

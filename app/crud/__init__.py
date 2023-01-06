@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.enums.OperationEnum import OperationType
 from app.enums.ProjectEnum import ProjectRoleEnum
-from app.excpetions.database.DbException import DBError
+from app.exception.database import DBError
 from app.middleware.RedisManager import RedisHelper
 from app.models import Base, async_session, async_engine
 from app.models.address import PityGateway

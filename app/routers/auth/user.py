@@ -6,7 +6,7 @@ from starlette import status
 
 from app.core.msg.mail import Email
 from app.crud.auth.UserDao import UserDao
-from app.excpetions.RequestException import AuthException
+from app.exception.request import AuthException
 from app.handler.fatcory import PityResponse
 from app.middleware.Jwt import UserToken
 from app.routers import Permission, FORBIDDEN

@@ -1,6 +1,6 @@
 from pydantic import validator, BaseModel
 
-from app.excpetions.ParamsException import ParamsError
+from app.exception.error import ParamsError
 
 
 class ProjectForm(BaseModel):

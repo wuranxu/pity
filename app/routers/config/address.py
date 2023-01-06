@@ -23,7 +23,7 @@ async def insert_gateway(form: PityAddressForm, user_info=Depends(Permission(Con
 
 
 @router.post("/gateway/update", summary="编辑网关地址", description="编辑网关地址，只有组长可以操作")
-async def insert_gateway(form: PityAddressForm, user_info=Depends(Permission(Config.MANAGER))):
+async def update_gateway(form: PityAddressForm, user_info=Depends(Permission(Config.MANAGER))):
     model = await PityGatewayDao.update_record_by_id(user_info['id'], form, True, log=True)
     return PityResponse.success(model)
 

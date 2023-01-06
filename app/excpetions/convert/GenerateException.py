@@ -1,2 +1,0 @@
-class GenerateException(Exception):
-    pass

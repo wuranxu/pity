@@ -15,7 +15,7 @@ from app.crud.test_case.TestCaseOutParametersDao import PityTestCaseOutParameter
 from app.crud.test_case.TestReport import TestReportDao
 from app.crud.test_case.TestcaseDataDao import PityTestcaseDataDao
 from app.enums.ConvertorEnum import CaseConvertorType
-from app.excpetions.AuthException import AuthException
+from app.exception.error import AuthError
 from app.handler.fatcory import PityResponse
 from app.middleware.RedisManager import RedisHelper
 from app.models.out_parameters import PityTestCaseOutParameters
@@ -219,7 +219,7 @@ async def query_testcase_directory(directory_id: int, user_info=Depends(Permissi
         data = await PityTestcaseDirectoryDao.query_directory(directory_id)
         await ProjectRoleDao.read_permission(data.project_id, user_info["id"], user_info['role'])
         return PityResponse.success(data)
-    except AuthException:
+    except AuthError:
         return PityResponse.forbidden()
     except Exception as e:
         return PityResponse.failed(e)
@@ -286,7 +286,7 @@ async def move_testcase(form: PityMoveTestCaseDto, user_info=Depends(Permission(
         await ProjectRoleDao.read_permission(form.project_id, user_info["id"], user_info['role'])
         await TestCaseDao.update_by_map(user_info['id'], TestCase.id.in_(form.id_list), directory_id=form.directory_id)
         return PityResponse.success()
-    except AuthException:
+    except AuthError:
         return PityResponse.forbidden()
     except Exception as e:
         return PityResponse.failed(e)

@@ -136,3 +136,4 @@ dmypy.json
 
 .qiniu_pythonsdk_hostscache.json
 
+.vscode

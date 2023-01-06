@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud import Mapper, ModelWrapper
 from app.enums.OperationEnum import OperationType
-from app.excpetions.AuthException import AuthException
+from app.exception.error import AuthError
 from app.models import async_session
 from app.models.project import Project
 from app.models.project_role import ProjectRole
@@ -82,7 +82,7 @@ class ProjectRoleDao(Mapper):
         if user_role == Config.ADMIN or not project.private or user == project.owner:
             return
         if not any([r.user_id == user for r in roles]):
-            raise AuthException("没有权限访问项目")
+            raise AuthError("没有权限访问项目")
 
     @staticmethod
     async def read_permission(project_id: int, user_id: int, user_role: int):
@@ -107,7 +107,7 @@ class ProjectRoleDao(Mapper):
                                                                         ProjectRole.deleted_at == 0))
                 role = query.scalars().first()
                 if role is None:
-                    raise AuthException("没有权限访问项目")
+                    raise AuthError("没有权限访问项目")
 
     @staticmethod
     async def has_permission(project_id: int, project_role: int, user_id: int, user_role: int,

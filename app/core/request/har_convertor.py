@@ -3,7 +3,7 @@ import re
 from typing import List
 
 from app.core.request.convertor import Convertor
-from app.excpetions.convert.ConvertException import HarConvertException
+from app.exception.convert import HarConvertError
 from app.schema.request import RequestInfo
 
 
@@ -24,7 +24,7 @@ class HarConvertor(Convertor):
             ans = []
             entries = data.get("log", {}).get("entries")
             if not entries:
-                raise HarConvertException("entries数据为空")
+                raise HarConvertError("entries数据为空")
             for entry in entries:
                 # 如果是fetch或xhr接口，说明是http请求（暂不支持js)
                 if entry.get("_resourceType").lower() in ("fetch", "xhr"):
@@ -46,10 +46,10 @@ class HarConvertor(Convertor):
                                        )
                     ans.append(info)
             return ans
-        except HarConvertException as e:
-            raise HarConvertException(f"har文件转换异常: {e}")
+        except HarConvertError as e:
+            raise HarConvertError(f"har文件转换异常: {e}")
         except Exception as e:
-            raise HarConvertException(f"har文件转换失败: {e}")
+            raise HarConvertError(f"har文件转换失败: {e}")
 
     @staticmethod
     def convert(file_data, regex: str = None) -> List[RequestInfo]:

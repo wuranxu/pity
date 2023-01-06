@@ -14,7 +14,7 @@ from loguru import logger
 from redis import ConnectionPool, StrictRedis
 from rediscluster import RedisCluster, ClusterConnectionPool
 
-from app.excpetions.RedisException import RedisException
+from app.exception.error import RedisError
 from config import Config
 
 
@@ -117,7 +117,7 @@ class PityRedisManager(object):
             client = RedisCluster(connection_pool=pool, decode_responses=True)
             return client
         except Exception as e:
-            raise RedisException(f"获取Redis连接失败, {e}")
+            raise RedisError(f"获取Redis连接失败, {e}")
 
 
 class RedisHelper(object):

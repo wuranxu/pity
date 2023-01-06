@@ -2,7 +2,7 @@ from fastapi import Header
 from starlette import status
 
 from app.crud.auth.UserDao import UserDao
-from app.excpetions.RequestException import AuthException, PermissionException
+from app.exception.request import AuthException, PermissionException
 from app.handler.fatcory import PityResponse
 from app.middleware.Jwt import UserToken
 from app.models import async_session

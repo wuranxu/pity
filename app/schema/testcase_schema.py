@@ -2,7 +2,7 @@ from typing import List
 
 from pydantic import BaseModel, validator
 
-from app.excpetions.ParamsException import ParamsError
+from app.exception.error import ParamsError
 from app.schema.base import PityModel
 from app.schema.constructor import ConstructorForm
 from app.schema.request import RequestInfo

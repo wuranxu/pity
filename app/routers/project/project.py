@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, File, UploadFile
 from app.crud.project.ProjectDao import ProjectDao
 from app.crud.project.ProjectRoleDao import ProjectRoleDao
 from app.crud.test_case.TestPlan import PityTestPlanDao
-from app.excpetions.AuthException import AuthException
+from app.exception.error import AuthError
 from app.handler.fatcory import PityResponse
 from app.middleware.oss import OssClient
 from app.models.project_role import ProjectRole
@@ -65,7 +65,7 @@ async def query_project(projectId: int, user_info=Depends(Permission())):
         await ProjectRoleDao.access(user_info["id"], user_info["role"], roles, data)
         result.update({"project": data, "roles": roles})
         return PityResponse.success(result)
-    except AuthException:
+    except AuthError:
         return PityResponse.forbidden()
     except Exception as e:
         return PityResponse.failed(e)

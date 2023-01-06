@@ -1,6 +1,6 @@
 from pydantic import BaseModel, validator
 
-from app.excpetions.ParamsException import ParamsError
+from app.exception.error import ParamsError
 from app.schema.base import PityModel
 
 

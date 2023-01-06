@@ -1,4 +1,4 @@
-from app.excpetions.ParamsException import ParamsError
+from app.exception.error import ParamsError
 
 
 class PityModel(object):

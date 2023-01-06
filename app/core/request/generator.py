@@ -11,7 +11,7 @@ from app.enums.CaseStatusEnum import CaseStatus
 from app.enums.ConstructorEnum import ConstructorType
 from app.enums.RequestBodyEnum import BodyType
 from app.enums.RequestTypeEnum import RequestType
-from app.excpetions.convert.GenerateException import GenerateException
+from app.exception.convert import GenerateError
 from app.schema.constructor import ConstructorForm
 from app.schema.request import RequestInfo
 from app.schema.testcase_schema import TestCaseForm
@@ -135,14 +135,14 @@ class CaseGenerator(object):
                 # 可能body不是JSON，跳过
                 pass
             except Exception as e:
-                raise GenerateException(f"解析接口body变量出错: {e}")
+                raise GenerateError(f"解析接口body变量出错: {e}")
 
     @staticmethod
     def split_headers(request: RequestInfo, ans: dict, var_name: str = ""):
         try:
             CaseGenerator.dfs(request.response_headers, var_name, ans, True)
         except Exception as e:
-            raise GenerateException(f"解析接口headers变量出错: {e}")
+            raise GenerateError(f"解析接口headers变量出错: {e}")
 
     @staticmethod
     def replace_headers(request: RequestInfo, ans: dict, replaced: list):

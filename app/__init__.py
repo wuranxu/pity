@@ -14,8 +14,8 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.errors import ServerErrorMiddleware
 from starlette.types import Message
 
-from app.excpetions.RequestException import AuthException
-from app.excpetions.RequestException import PermissionException
+from app.exception.request import AuthException
+from app.exception.request import PermissionException
 from config import Config
 
 sys.path.append(__file__)

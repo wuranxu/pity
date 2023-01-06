@@ -1,7 +1,7 @@
 from pydantic import BaseModel, validator
 
 from app.enums.RequestBodyEnum import BodyType
-from app.excpetions.ParamsException import ParamsError
+from app.exception.error import ParamsError
 
 
 class HttpRequestForm(BaseModel):
