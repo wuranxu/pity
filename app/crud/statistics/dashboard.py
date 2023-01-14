@@ -1,3 +1,4 @@
+import traceback
 from datetime import datetime, timedelta
 
 from sqlalchemy import select, func
@@ -54,7 +55,8 @@ class DashboardDao(Mapper):
             if total == 0:
                 result[idx[date]]["rate"] = 0.00
             else:
-                result[idx[date]]["rate"] = round(result[idx[date]]["success"] / date_total * 100, 2)
+                result[idx[date]]["rate"] = round(result[idx[date]]["success"] / date_total * 100, 2) \
+                    if date_total > 0 else 0.00
         rate = round(total_pass / total * 100, 2) if total > 0 else 0.00
         return dict(count=count, success=success, failed=failed, skip=skip, error=error, data=result, rate=rate)
 
