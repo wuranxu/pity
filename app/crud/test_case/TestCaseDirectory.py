@@ -112,6 +112,8 @@ class PityTestcaseDirectoryDao(Mapper):
                 ans.append(dict(
                     title=directory.name,
                     key=directory.id,
+                    value=directory.id,
+                    label=directory.name,
                     children=list(),
                 ))
             else:
@@ -145,6 +147,8 @@ class PityTestcaseDirectoryDao(Mapper):
                 title=temp.name,
                 key=temp.id,
                 children=child,
+                label=temp.name,
+                value=temp.id,
                 disabled=len(child) == 0 and not move
             ))
             await PityTestcaseDirectoryDao.get_directory(ans_map, parent_map, temp.id, child, case_node, move=move)
