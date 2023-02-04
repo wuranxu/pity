@@ -60,7 +60,7 @@ class PityTestCaseOutParametersDao(Mapper):
                                 session.add(temp)
                             else:
                                 temp.name = item.name
-                                temp.case_id = case_id
+                                # temp.case_id = case_id
                                 temp.expression = item.expression
                                 temp.source = item.source
                                 temp.match_index = item.match_index

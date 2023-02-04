@@ -24,7 +24,7 @@ from app.routers import Permission, get_session
 from app.schema.constructor import ConstructorForm, ConstructorIndex
 from app.schema.testcase_data import PityTestcaseDataForm
 from app.schema.testcase_directory import PityTestcaseDirectoryForm, PityMoveTestCaseDto
-from app.schema.testcase_out_parameters import PityTestCaseOutParametersForm
+from app.schema.testcase_out_parameters import PityTestCaseOutParametersForm, PityTestCaseParametersDto
 from app.schema.testcase_schema import TestCaseAssertsForm, TestCaseForm, TestCaseInfo, TestCaseGeneratorForm
 
 router = APIRouter(prefix="/testcase")
@@ -293,7 +293,7 @@ async def move_testcase(form: PityMoveTestCaseDto, user_info=Depends(Permission(
 
 
 @router.post("/parameters/insert")
-async def insert_testcase_out_parameters(form: PityTestCaseOutParametersForm, user_info=Depends(Permission())):
+async def insert_testcase_out_parameters(form: PityTestCaseParametersDto, user_info=Depends(Permission())):
     query = await PityTestCaseOutParametersDao.query_record(name=form.name, case_id=form.case_id)
     if query is not None:
         return PityResponse.failed("参数名称已存在")
