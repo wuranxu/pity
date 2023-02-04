@@ -13,7 +13,7 @@ from app.core.constructor.redis_constructor import RedisConstructor
 from app.core.constructor.sql_constructor import SqlConstructor
 from app.core.msg.dingtalk import DingTalk
 from app.core.msg.mail import Email
-from app.core.paramters import ParametersParser
+from app.core.paramters import parameters_parser
 from app.core.ws_connection_manager import ws_manage
 from app.crud.auth.UserDao import UserDao
 from app.crud.config.AddressDao import PityGatewayDao
@@ -262,7 +262,7 @@ class Executor(object):
         """提取出参数据"""
         result = dict()
         for d in data:
-            p = ParametersParser(d.source)
+            p = parameters_parser(d.source)
             result[d.name] = p(response_info, d.expression, d.match_index)
         return result
 
@@ -353,6 +353,7 @@ class Executor(object):
             req_params.update(out_dict)
 
             # 写入response
+            # TODO
             req_params["response"] = res.get("response", "")
 
             self.replace_asserts(req_params, asserts)

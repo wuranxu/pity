@@ -5,12 +5,12 @@ from app.core.paramters.status_code_parser import StatusCodeParser
 from app.enums.CaseParametersEnum import CaseParametersEnum
 
 
-def ParametersParser(parameter_type: CaseParametersEnum):
-    if parameter_type == CaseParametersEnum.TEXT:
+def parameters_parser(parameter_type: CaseParametersEnum):
+    if parameter_type in (CaseParametersEnum.TEXT, CaseParametersEnum.BODY_REGEX):
         return RegexParser.parse
-    if parameter_type == CaseParametersEnum.JSON:
+    if parameter_type in (CaseParametersEnum.JSON, CaseParametersEnum.BODY_JSON):
         return JSONPathParser.parse
-    if parameter_type == CaseParametersEnum.HEADER:
+    if parameter_type in (CaseParametersEnum.HEADER, CaseParametersEnum.REQUEST_HEADER):
         return HeaderParser.parse
     if parameter_type == CaseParametersEnum.COOKIE:
         return CookieParser.parse
