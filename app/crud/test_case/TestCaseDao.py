@@ -22,6 +22,7 @@ from app.models.test_case import TestCase
 from app.models.testcase_asserts import TestCaseAsserts
 from app.models.testcase_data import PityTestcaseData
 from app.models.user import User
+from app.schema.testcase_out_parameters import PityTestCaseVariablesDto
 from app.schema.testcase_schema import TestCaseForm, TestCaseInfo
 
 
@@ -172,6 +173,48 @@ class TestCaseDao(Mapper):
         except Exception as e:
             TestCaseDao.__log__.error(f"查询用例失败: {str(e)}")
             raise Exception(f"查询用例失败: {str(e)}")
+
+    @staticmethod
+    async def query_test_case_out_parameters(session, case_list: List[PityTestCaseVariablesDto], case_set=None,
+                                             var_list=None):
+        """
+        根据前置场景id获取对应的参数
+        :param case_list:
+        :param session:
+        :param case_set:
+        :param var_list:
+        :return:
+        """
+        if len(case_list) == 0:
+            return
+        if case_set is None:
+            case_set = set(list(c.case_id for c in case_list))
+        if var_list is None:
+            var_list = dict()
+        cs_list = list(c.case_id for c in case_list)
+        step_case = list()
+        name_dict = {c.case_id: c.step_name for c in case_list}
+        # 获取用例的前后置步骤和出参
+        out = select(PityTestCaseOutParameters).where(PityTestCaseOutParameters.case_id.in_(cs_list),
+                                                      PityTestCaseOutParameters.deleted_at == 0)
+        parameters = await session.execute(out)
+        for p in parameters.scalars().all():
+            var_list.append(dict(stepName=name_dict[p.case_id], name="${%s}" % p.name))
+        sql = select(Constructor).where(Constructor.case_id.in_(cs_list), Constructor.deleted_at == 0)
+        steps = await session.execute(sql)
+        for s in steps.scalars().all():
+            if s.value:
+                var_list.append(dict(stepName=s.name, name="${%s}" % s.value))
+                continue
+            if s.type == ConstructorType.testcase:
+                data = json.loads(s.constructor_json)
+                case_id = data.get("constructor_case_id")
+                if not case_id:
+                    continue
+                if case_id in case_set:
+                    raise Exception("场景存在循环依赖")
+                step_case.append(PityTestCaseVariablesDto(case_id=case_id, step_name=s.name))
+        await TestCaseDao.query_test_case_out_parameters(session, step_case, case_set, var_list)
 
     @staticmethod
     async def async_query_test_case(case_id) -> [TestCase, str]:

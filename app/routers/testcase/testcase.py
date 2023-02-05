@@ -24,7 +24,8 @@ from app.routers import Permission, get_session
 from app.schema.constructor import ConstructorForm, ConstructorIndex
 from app.schema.testcase_data import PityTestcaseDataForm
 from app.schema.testcase_directory import PityTestcaseDirectoryForm, PityMoveTestCaseDto
-from app.schema.testcase_out_parameters import PityTestCaseOutParametersForm, PityTestCaseParametersDto
+from app.schema.testcase_out_parameters import PityTestCaseOutParametersForm, PityTestCaseParametersDto, \
+    PityTestCaseVariablesDto
 from app.schema.testcase_schema import TestCaseAssertsForm, TestCaseForm, TestCaseInfo, TestCaseGeneratorForm
 
 router = APIRouter(prefix="/testcase")
@@ -374,3 +375,10 @@ async def convert_case(import_type: CaseConvertorType, file: UploadFile = File(.
         return PityResponse.failed(f"请传入{file_ext}后缀文件")
     requests = convert(file.file)
     return PityResponse.success(requests)
+
+
+@router.post("/variables", summary="根据前后置步骤查询变量名", tags=["测试用例"])
+async def query_variables(steps: List[PityTestCaseVariablesDto], session=Depends(get_session)):
+    var_list = list()
+    await TestCaseDao.query_test_case_out_parameters(session, steps, var_list=var_list)
+    return PityResponse.success(var_list)

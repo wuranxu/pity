@@ -154,7 +154,9 @@ class Executor(object):
                     result = result.get(branch)
                 if result is None:
                     raise Exception(f"变量路径: {v}不存在, 请检查JSON或路径!")
-            if field_name != "request_headers" and not isinstance(result, str):
+            if field_name == "request_headers":
+                new_value = json.loads(result)
+            elif not isinstance(result, str):
                 new_value = json.dumps(result, ensure_ascii=False)
             else:
                 new_value = result
@@ -263,7 +265,7 @@ class Executor(object):
         result = dict()
         for d in data:
             p = parameters_parser(d.source)
-            result[d.name] = p(response_info, d.expression, d.match_index)
+            result[d.name] = p(response_info, d.expression, index=d.match_index)
         return result
 
     async def run(self, env: int, case_id: int, params_pool: dict = None, request_param: dict = None, path="主case"):
@@ -350,11 +352,11 @@ class Executor(object):
             out_dict = self.extract_out_parameters(response_info, out_parameters)
 
             # 替换主变量
-            req_params.update(out_dict)
+            case_params.update(out_dict)
 
             # 写入response
             # TODO
-            req_params["response"] = res.get("response", "")
+            # req_params["response"] = res.get("response", "")
 
             self.replace_asserts(req_params, asserts)
             self.replace_constructors(req_params, constructors)

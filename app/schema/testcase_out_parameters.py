@@ -18,3 +18,8 @@ class PityTestCaseOutParametersForm(BaseModel):
 
 class PityTestCaseParametersDto(PityTestCaseOutParametersForm):
     case_id: int = None
+
+
+class PityTestCaseVariablesDto(BaseModel):
+    case_id: int
+    step_name: str
