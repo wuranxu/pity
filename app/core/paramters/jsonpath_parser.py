@@ -14,7 +14,7 @@ from app.exception.error import CaseParametersError
 class JSONPathParser(Parser):
 
     @staticmethod
-    def parse(source: dict, expression: str = "", idx: str = None) -> Any:
+    def parse(source: dict, expression: str = "", **kwargs) -> Any:
         source = source.get("response")
         if not source or not expression:
             raise CaseParametersError(f"parse out parameters failed, source or expression is empty")
@@ -26,7 +26,7 @@ class JSONPathParser(Parser):
                     # 说明想要全匹配并且没数据，直接返回data
                     return json.dumps(data, ensure_ascii=False)
                 raise CaseParametersError("jsonpath match failed, please check your response or jsonpath.")
-            return Parser.parse_result(results, idx)
+            return Parser.parse_result(results, None)
         except CaseParametersError as e:
             raise e
         except Exception as err:

@@ -5,7 +5,7 @@ from app.schema.base import PityModel
 
 class PityTestCaseOutParametersForm(BaseModel):
     id: int = None
-    case_id = None
+    # case_id = None
     name: str
     expression: str = None
     match_index: str = None

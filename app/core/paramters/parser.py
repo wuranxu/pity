@@ -8,7 +8,7 @@ from app.exception.error import CaseParametersError
 class Parser(object):
 
     @staticmethod
-    def parse(source: dict, expression: str = "", idx: str = None) -> Any:
+    def parse(source: dict, expression: str = "", **kwargs) -> Any:
         raise NotImplementedError
 
     @staticmethod
