@@ -4,7 +4,7 @@ from typing import List
 from sqlalchemy import select, update
 
 from app.crud import Mapper, ModelWrapper
-from app.models import async_session, DatabaseHelper
+from app.models import async_session
 from app.models.constructor import Constructor
 from app.models.test_case import TestCase
 from app.schema.constructor import ConstructorForm, ConstructorIndex
@@ -178,6 +178,7 @@ class ConstructorDao(Mapper):
                 constructors[q.case_id].append({
                     "title": q.name,
                     "key": f"constructor_{q.id}",
+                    "value": f"constructor_{q.id}",
                     "isLeaf": True,
                     # 这里是为了拿到具体的代码，因为树一般只有name和id，我们这还需要其他数据
                     "constructor_json": q.constructor_json,
