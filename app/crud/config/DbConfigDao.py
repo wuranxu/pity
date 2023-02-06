@@ -229,7 +229,7 @@ class DbConfigDao(Mapper):
             data = await db_helper.get_connection(query.sql_type, query.host, query.port, query.username,
                                                   query.password,
                                                   query.database)
-            result = await DbConfigDao.execute(data, sql)
+            result, _ = await DbConfigDao.execute(data, sql)
             _, result = PityResponse.parse_sql_result(result)
             return json.dumps(result, cls=JsonEncoder, ensure_ascii=False)
         except Exception as e:
