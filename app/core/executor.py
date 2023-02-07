@@ -265,7 +265,7 @@ class Executor(object):
         result = dict()
         for d in data:
             p = parameters_parser(d.source)
-            result[d.name] = p(response_info, d.expression, index=d.match_index)
+            result[d.name] = p(response_info, d.expression, idx=d.match_index)
         return result
 
     async def run(self, env: int, case_id: int, params_pool: dict = None, request_param: dict = None, path="主case"):
