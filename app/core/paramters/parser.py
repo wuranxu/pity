@@ -19,7 +19,7 @@ class Parser(object):
         length = len(data)
         if match_index is not None:
             if match_index.isdigit():
-                idx = int(match_index) - 1
+                idx = int(match_index)
                 if idx >= length or idx < -length:
                     raise CaseParametersError(f"results length is {length}, index is not in [{-length}, {length})")
                 return json.dumps(data[idx], ensure_ascii=False)
