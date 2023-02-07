@@ -9,7 +9,6 @@ class ConstructorForm(BaseModel):
     value: str = ""
     type: int
     name: str
-    index: int = 0
     constructor_json: str
     enable: bool
     case_id: int = None
@@ -24,6 +23,10 @@ class ConstructorForm(BaseModel):
             if not v:
                 raise ParamsError("不能为空")
         return v
+
+
+class IndexConstructorForm(ConstructorForm):
+    index: int = 0
 
 
 class ConstructorIndex(BaseModel):

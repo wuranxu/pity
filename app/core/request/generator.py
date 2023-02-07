@@ -12,7 +12,7 @@ from app.enums.ConstructorEnum import ConstructorType
 from app.enums.RequestBodyEnum import BodyType
 from app.enums.RequestTypeEnum import RequestType
 from app.exception.convert import GenerateError
-from app.schema.constructor import ConstructorForm
+from app.schema.constructor import ConstructorForm, IndexConstructorForm
 from app.schema.request import RequestInfo
 from app.schema.testcase_schema import TestCaseForm
 
@@ -59,9 +59,9 @@ class CaseGenerator(object):
                 request_method=requests[r].request_method,
                 body_type=CaseGenerator.get_body_type(requests[r].request_headers),
             ), ensure_ascii=False)
-            c = ConstructorForm(name=name, value=f"http_res_{r + 1}", constructor_json=constructor_json,
-                                enable=True, public=True, suffix=False, index=r + 1,
-                                type=ConstructorType.http.value)
+            c = IndexConstructorForm(name=name, value=f"http_res_{r + 1}", constructor_json=constructor_json,
+                                     enable=True, public=True, suffix=False, index=r + 1,
+                                     type=ConstructorType.http.value)
             constructors.append(c)
         return constructors
 
