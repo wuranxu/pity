@@ -289,7 +289,7 @@ class TestCaseDao(Mapper):
         try:
             async with async_session() as session:
                 sql = select(Constructor).where(Constructor.case_id == case_id,
-                                                Constructor.deleted_at == 0).order_by(Constructor.created_at)
+                                                Constructor.deleted_at == 0).order_by(Constructor.index)
                 data = await session.execute(sql)
                 return data.scalars().all()
         except Exception as e:
