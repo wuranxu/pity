@@ -358,8 +358,8 @@ class Executor(object):
             # TODO
             # req_params["response"] = res.get("response", "")
 
-            self.replace_asserts(req_params, asserts)
-            self.replace_constructors(req_params, constructors)
+            self.replace_asserts(asserts, req_params, case_params)
+            self.replace_constructors(constructors, req_params, case_params)
 
             # Step10: 执行后置条件
             await self.execute_constructors(env, path, case_info, case_params, req_params, constructors, asserts, True)
@@ -397,22 +397,24 @@ class Executor(object):
 
     def replace_args(self, params, data: TestCase, constructors: List[Constructor], asserts: List[TestCaseAsserts]):
         self.replace_testcase(params, data)
-        self.replace_constructors(params, constructors)
-        self.replace_asserts(params, asserts)
+        self.replace_constructors(constructors, params)
+        self.replace_asserts(asserts, params)
 
     def replace_testcase(self, params: dict, data: TestCase):
         """替换测试用例中的参数"""
         self.replace_cls(params, data, "request_headers", "body", "url")
 
-    def replace_constructors(self, params: dict, constructors: List[Constructor]):
+    def replace_constructors(self, constructors: List[Constructor], *params: dict):
         """替换数据构造器中的参数"""
         for c in constructors:
-            self.replace_cls(params, c, "constructor_json")
+            for par in params:
+                self.replace_cls(par, c, "constructor_json")
 
-    def replace_asserts(self, params, asserts: List[TestCaseAsserts]):
+    def replace_asserts(self, asserts: List[TestCaseAsserts], *params):
         """替换断言中的参数"""
         for a in asserts:
-            self.replace_cls(params, a, "expected", "actually")
+            for p in params:
+                self.replace_cls(p, a, "expected", "actually")
 
     @staticmethod
     async def run_with_test_data(env, data, report_id, case_id, params_pool: dict = None, request_param: dict = None,
