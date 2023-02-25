@@ -24,10 +24,7 @@ class PityTestCaseOutParametersDao(Mapper):
         """
         data = []
         for b in before:
-            for a in after:
-                if a.id == b.id:
-                    break
-            else:
+            if b.id not in after:
                 data.append(b.id)
         return data
 
@@ -43,32 +40,33 @@ class PityTestCaseOutParametersDao(Mapper):
                         PityTestCaseOutParameters.deleted_at == 0,
                     ))
                     before = source.scalars().all()
-                    should_remove = await cls.should_remove(before, data)
                     for item in data:
-                        if item.id is None:
-                            # add
+                        # if item.id is None:
+                        #     # add
+                        #     temp = PityTestCaseOutParameters(**item.dict(), case_id=case_id, user_id=user_id)
+                        #     session.add(temp)
+                        # else:
+                        query = await session.execute(select(PityTestCaseOutParameters).where(
+                            PityTestCaseOutParameters.name == item.name, PityTestCaseOutParameters.case_id == case_id,
+                            PityTestCaseOutParameters.deleted_at == 0
+                        ))
+                        temp = query.scalars().first()
+                        if temp is None:
+                            # 走新增逻辑
                             temp = PityTestCaseOutParameters(**item.dict(), case_id=case_id, user_id=user_id)
                             session.add(temp)
                         else:
-                            query = await session.execute(select(PityTestCaseOutParameters).where(
-                                PityTestCaseOutParameters.id == item.id,
-                            ))
-                            temp = query.scalars().first()
-                            if temp is None:
-                                # 走新增逻辑
-                                temp = PityTestCaseOutParameters(**item.dict(), case_id=case_id, user_id=user_id)
-                                session.add(temp)
-                            else:
-                                temp.name = item.name
-                                # temp.case_id = case_id
-                                temp.expression = item.expression
-                                temp.source = item.source
-                                temp.match_index = item.match_index
-                                temp.update_user = user_id
-                                temp.updated_at = datetime.now()
+                            temp.name = item.name
+                            # temp.case_id = case_id
+                            temp.expression = item.expression
+                            temp.source = item.source
+                            temp.match_index = item.match_index
+                            temp.update_user = user_id
+                            temp.updated_at = datetime.now()
                         await session.flush()
                         session.expunge(temp)
                         result.append(temp)
+                    should_remove = await cls.should_remove(before, [x.id for x in result])
                     if should_remove:
                         await session.execute(
                             update(PityTestCaseOutParameters).where(
