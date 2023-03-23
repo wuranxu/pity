@@ -20,7 +20,7 @@ yagmail
 oss2~=2.15.0
 python-multipart
 awaits~=0.0.1
-aioify~=0.4.1
+aioify~=0.4.0
 grpc-requests
 loguru~=0.6.0
 qiniu~=7.6.0
