@@ -22,7 +22,7 @@ class Request(object):
     def get_elapsed(timer: datetime.timedelta):
         if timer.seconds > 0:
             return f"{timer.seconds}.{timer.microseconds // 1000}s"
-        return f"{timer.microseconds // 100}ms"
+        return f"{timer.microseconds // 1000}ms"
 
     def request(self, method: str):
         status_code = 0
