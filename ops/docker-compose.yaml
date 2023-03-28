@@ -12,8 +12,6 @@ services:
       pity_net:
         aliases:
           - pity_mysql
-    ports:
-      - "3306:3306"
 
   redis:
     image: redis

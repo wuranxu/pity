@@ -1,1 +1,0 @@
-(window.webpackJsonp=window.webpackJsonp||[]).push([[9],{"Sx/Y":function(o,t,n){"use strict";n.r(t);var r=n("T9Mk"),E=n.n(r),a=n("ikfJ"),s=n.n(a),d=E.a.Fragment,e=function(u){var c=u.children;return Object(a.jsx)(d,{children:c})};t.default=e}}]);
