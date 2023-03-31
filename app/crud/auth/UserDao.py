@@ -129,7 +129,11 @@ class UserDao(Mapper):
                     # 如果用户数量为0 则注册为超管
                     if counts.scalars().first() == 0:
                         user.role = Config.ADMIN
+                    user.last_login_at = datetime.now()
                     session.add(user)
+                    await session.flush()
+                    session.expunge(user)
+                    return user
         except Exception as e:
             UserDao.log.error(f"用户注册失败: {str(e)}")
             raise Exception(f"注册失败: {e}")
