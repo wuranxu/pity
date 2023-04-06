@@ -10,10 +10,14 @@ from app.exception.error import CaseParametersError
 
 class RegexParser(Parser):
 
-    @staticmethod
-    def parse(source: dict, expression: str = "", idx: str = None) -> Any:
+    @classmethod
+    def get_source(cls, source: dict):
+        return source.get("response")
+
+    @classmethod
+    def parse(cls, source: dict, expression: str = "", idx: str = None) -> Any:
         try:
-            source = source.get("response")
+            source = cls.get_source(source)
             if not source or not expression:
                 raise CaseParametersError(f"parse out parameters failed, source or expression is empty")
             if idx is None:
@@ -27,3 +31,9 @@ class RegexParser(Parser):
             raise e
         except Exception as err:
             raise CaseParametersError(f"parse regex text error, please check regex or text: {err}")
+
+
+class BodyRegexParser(RegexParser):
+    @classmethod
+    def get_source(cls, source: dict):
+        return source.get("request_data")

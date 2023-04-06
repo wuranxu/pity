@@ -13,9 +13,13 @@ from app.exception.error import CaseParametersError
 
 class JSONPathParser(Parser):
 
-    @staticmethod
-    def parse(source: dict, expression: str = "", **kwargs) -> Any:
-        source = source.get("response")
+    @classmethod
+    def get_source(cls, source):
+        return source.get("response")
+
+    @classmethod
+    def parse(cls, source: dict, expression: str = "", **kwargs) -> Any:
+        source = cls.get_source(source)
         if not source or not expression:
             raise CaseParametersError(f"parse out parameters failed, source or expression is empty")
         try:
@@ -36,3 +40,9 @@ class JSONPathParser(Parser):
     @lru_cache()
     def get_object(json_str):
         return json.loads(json_str)
+
+
+class BodyJSONPathParser(JSONPathParser):
+    @classmethod
+    def get_source(cls, source):
+        return source.get("request_data")

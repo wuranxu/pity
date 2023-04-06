@@ -9,8 +9,8 @@ from app.exception.error import CaseParametersError
 
 class HeaderParser(Parser):
 
-    @staticmethod
-    def get_source(data: dict):
+    @classmethod
+    def get_source(cls, data: dict):
         return json.loads(data.get("response_headers"))
 
     @classmethod
@@ -33,6 +33,12 @@ class HeaderParser(Parser):
 
 
 class CookieParser(HeaderParser):
-    @staticmethod
-    def get_source(data: dict):
+    @classmethod
+    def get_source(cls, data: dict):
         return json.loads(data.get("cookies"))
+
+
+class RequestHeaderParser(HeaderParser):
+    @classmethod
+    def get_source(cls, data: dict):
+        return json.loads(data.get("request_headers"))
