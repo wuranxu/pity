@@ -41,7 +41,7 @@ async def login(data: UserForm):
 
 
 @router.get("/listUser")
-async def list_users(user_info=Depends(Permission())):
+async def list_users(_=Depends(Permission())):
     try:
         user = await UserDao.list_users()
         return PityResponse.success(user, exclude=("password",))
