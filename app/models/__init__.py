@@ -23,7 +23,7 @@ create_database()
 # 同步engine
 # engine = create_engine(Config.SQLALCHEMY_DATABASE_URI, pool_recycle=1500)
 # 异步engine
-async_engine = create_async_engine(Config.ASYNC_SQLALCHEMY_URI, pool_recycle=1500)
+async_engine = create_async_engine(Config.ASYNC_SQLALCHEMY_URI, max_overflow=0, pool_size=20, pool_recycle=1500)
 
 # Session = sessionmaker(engine)
 
