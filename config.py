@@ -113,7 +113,7 @@ class ProConfig(BaseConfig):
 
 
 # 获取pity环境变量
-PITY_ENV = os.environ.get("pity_env", "dev")
+PITY_ENV = os.environ.get("pity_env", "pro")
 # 如果pity_env存在且为prod
 Config = ProConfig() if PITY_ENV and PITY_ENV.lower() == "pro" else DevConfig()
 
