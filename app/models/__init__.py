@@ -1,5 +1,7 @@
+from asyncio import current_task
+
 from sqlalchemy import create_engine
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_scoped_session
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -27,7 +29,15 @@ async_engine = create_async_engine(Config.ASYNC_SQLALCHEMY_URI, max_overflow=0, 
 
 # Session = sessionmaker(engine)
 
-async_session = sessionmaker(async_engine, class_=AsyncSession)
+
+async_session = async_scoped_session(
+    sessionmaker(
+        async_engine,
+        class_=AsyncSession,
+        expire_on_commit=False
+    ),
+    scopefunc=current_task,
+)
 
 # 创建对象的基类:
 Base = declarative_base()

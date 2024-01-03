@@ -1,7 +1,7 @@
 pyjwt==2.1.0
 mysql-connector-python==8.0.26
 requests~=2.23.0
-sqlalchemy==1.4.11
+sqlalchemy==1.4.47
 jsonschema
 fastapi==0.75.0
 uvicorn[standard]==0.17.6

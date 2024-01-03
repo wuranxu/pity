@@ -679,14 +679,14 @@ class Executor(object):
                         report_dict[e]['result_color'] = '#67C23A' if report_dict[e]['plan_result'] == '通过' \
                             else '#E6A23C'
                         # 批量获取用户手机号
-                        users = [r.get("phone") for r in users]
-                        report_dict[e]['notification_user'] = " ".join(map(lambda x: f"@{x}", users))
+                        ding_users = [r.get("phone") for r in users]
+                        report_dict[e]['notification_user'] = " ".join(map(lambda x: f"@{x}", ding_users))
                         render_markdown = DingTalk.render_markdown(**report_dict[e], plan_name=plan.name)
                         if not project.dingtalk_url:
                             Executor.log.debug("项目未配置钉钉通知机器人")
                             continue
                         ding = DingTalk(project.dingtalk_url)
-                        await ding.send_msg("pity测试报告", render_markdown, None, users,
+                        await ding.send_msg("pity测试报告", render_markdown, None, ding_users,
                                             link=report_dict[e]['report_url'])
 
     @staticmethod
