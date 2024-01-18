@@ -11,6 +11,9 @@ from config import Config
 
 
 def create_database():
+    """
+    当db不存在时，自动创建db
+    """
     engine = create_engine('mysql+mysqlconnector://{}:{}@{}:{}'.format(
         Config.MYSQL_USER, Config.MYSQL_PWD, Config.MYSQL_HOST, Config.MYSQL_PORT), echo=True)
     with engine.connect() as conn:
