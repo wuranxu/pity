@@ -11,6 +11,7 @@ from app.core.functions import PityFunction
 def get_env():
     my_env = Environment()
     for func in dir(PityFunction):
+        # 过滤掉内置方法
         if func.startswith("__"):
             continue
         my_env.globals[func] = getattr(PityFunction, func)
