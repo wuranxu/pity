@@ -16,7 +16,11 @@ class GConfigParser(object):
 
     @staticmethod
     def parse(value, jsonpath):
-        pass
+        raise NotImplementedError
+
+    @staticmethod
+    def get_data(value):
+        raise NotImplementedError
 
     @staticmethod
     def get(data, key):
@@ -65,6 +69,10 @@ class StringGConfigParser(GConfigParser):
     @staticmethod
     def parse(value, jsonpath):
         """String解析器"""
+        return value
+
+    @staticmethod
+    def get_data(value):
         return value
 
 

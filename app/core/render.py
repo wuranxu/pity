@@ -15,6 +15,8 @@ def get_env():
         if func.startswith("__"):
             continue
         my_env.globals[func] = getattr(PityFunction, func)
+        my_env.variable_start_string = "${"
+        my_env.variable_end_string = "}"
     return my_env
 
 

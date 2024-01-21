@@ -1,3 +1,5 @@
+from typing import List
+
 from sqlalchemy import select
 
 from app.crud import Mapper, ModelWrapper
@@ -37,5 +39,19 @@ class GConfigDao(Mapper):
                 sql = select(GConfig).where(*filters)
                 result = await session.execute(sql)
                 return result.scalars().first()
+        except Exception as e:
+            raise Exception(f"查询全局变量失败: {str(e)}")
+
+    @staticmethod
+    async def list_gconfig(env: int) -> List[GConfig]:
+        """
+        get available gconfig
+        """
+        try:
+            filters = [GConfig.deleted_at == 0, GConfig.enable == True, GConfig.env == env]
+            async with async_session() as session:
+                sql = select(GConfig).where(*filters)
+                result = await session.execute(sql)
+                return result.scalars().all()
         except Exception as e:
             raise Exception(f"查询全局变量失败: {str(e)}")

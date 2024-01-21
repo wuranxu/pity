@@ -4,7 +4,7 @@ import re
 import time
 from collections import defaultdict
 from datetime import datetime
-from typing import List, Any
+from typing import List, Any, Callable
 
 from app.core.constructor.case_constructor import TestcaseConstructor
 from app.core.constructor.http_constructor import HttpConstructor
@@ -14,6 +14,7 @@ from app.core.constructor.sql_constructor import SqlConstructor
 from app.core.msg.dingtalk import DingTalk
 from app.core.msg.mail import Email
 from app.core.paramters import parameters_parser
+from app.core.render import Render
 from app.core.ws_connection_manager import ws_manage
 from app.crud.auth.UserDao import UserDao
 from app.crud.config.AddressDao import PityGatewayDao
@@ -45,15 +46,33 @@ from app.utils.json_compare import JsonCompare
 from app.utils.logger import Log
 from config import Config
 
+# construct method mapping
+construct_type = {
+    ConstructorType.testcase: TestcaseConstructor,
+    ConstructorType.sql: SqlConstructor,
+    ConstructorType.redis: RedisConstructor,
+    ConstructorType.py_script: PythonConstructor,
+    ConstructorType.http: HttpConstructor,
+}
+
+# gconfig parser mapping
+gconfig_parser = {
+    GConfigParserEnum.string: StringGConfigParser.get_data,
+    GConfigParserEnum.json: JSONGConfigParser.get_data,
+    GConfigParserEnum.yaml: YamlGConfigParser.get_data,
+}
+
 
 class Executor(object):
     log = Log("Executor")
     el_exp = r"\$\{(.+?)\}"
     pattern = re.compile(el_exp)
     # 需要替换全局变量的字段
-    fields = ['body', 'url', 'request_headers']
+    fields = ['url', 'request_headers']
 
     def __init__(self, log: CaseLog = None):
+        # 这里是一个彩蛋, 奔驰大G LB（括弧1.3T）
+        self.glb = None
         if log is None:
             self._logger = CaseLog()
             self._main = True
@@ -67,17 +86,7 @@ class Executor(object):
 
     @staticmethod
     def get_constructor_type(c: Constructor):
-        if c.type == ConstructorType.testcase:
-            return TestcaseConstructor
-        if c.type == ConstructorType.sql:
-            return SqlConstructor
-        if c.type == ConstructorType.redis:
-            return RedisConstructor
-        if c.type == ConstructorType.py_script:
-            return PythonConstructor
-        if c.type == ConstructorType.http:
-            return HttpConstructor
-        return None
+        return construct_type.get(c.type)
 
     def append(self, content, end=False):
         if end:
@@ -93,17 +102,36 @@ class Executor(object):
         for f in fields:
             await self.parse_field(data, f, GconfigType.text(type_), env)
 
+    async def parse_gconfig_v2(self, data, type_, *fields):
+        """upgrade for replacing global variables"""
+        for f in fields:
+            self.append("解析{}: [{}]中的全局变量".format(GconfigType.text(type_), data, f))
+            origin_field = getattr(data, f)
+            # if not None or ""
+            if origin_field:
+                rendered = Render.render(self.glb, origin_field)
+                if rendered != origin_field:
+                    self.append("替换全局变量成功, [{}]:\n\n[{}] -> [{}]\n".format(f, origin_field, rendered))
+                    setattr(data, f, rendered)
+
     @case_log
-    def get_parser(self, key_type):
+    async def query_gconfig(self, env: int):
+        """加载全局变量"""
+        gconfig_list = await GConfigDao.list_gconfig(env)
+        gconfig_map = dict()
+        for g in gconfig_list:
+            parser = Executor.get_parser(g.key_type)
+            gconfig_map[g.key] = parser(g.value)
+        self.glb = gconfig_map
+
+    @staticmethod
+    def get_parser(key_type) -> Callable:
         """获取变量解析器
         """
-        if key_type == GConfigParserEnum.string:
-            return StringGConfigParser.parse
-        if key_type == GConfigParserEnum.json:
-            return JSONGConfigParser.parse
-        if key_type == GConfigParserEnum.yaml:
-            return YamlGConfigParser.parse
-        raise Exception(f"全局变量类型: {key_type}不合法, 请检查!")
+        parser = gconfig_parser.get(key_type)
+        if parser is None:
+            raise Exception(f"全局变量类型: {key_type}不合法, 请检查!")
+        return parser
 
     async def parse_field(self, data, field, name, env):
         """
@@ -283,26 +311,26 @@ class Executor(object):
         if req_params is None:
             req_params = dict()
 
+        # 加载全局变量
+        await self.query_gconfig(env)
+
+        # 挂载全局变量
+        case_params.update(self.glb)
+        request_param.update(self.glb)
+
         try:
-            case_info, err = await TestCaseDao.async_query_test_case(case_id)
-            if err:
-                return response_info, err
+            case_info = await TestCaseDao.async_query_test_case(case_id)
             response_info['case_id'] = case_info.id
             response_info["case_name"] = case_info.name
             method = case_info.request_method.upper()
             response_info["request_method"] = method
 
-            # Step1: 替换全局变量
-            await self.parse_gconfig(case_info, GconfigType.case, env, *Executor.fields)
-
-            self.append("解析全局变量", True)
-
             # Step2: 获取构造数据
             constructors = await self.get_constructor(case_id)
 
-            #  Step3: 解析前后置条件的全局变量
-            for c in constructors:
-                await self.parse_gconfig(c, GconfigType.constructor, env, "constructor_json")
+            # #  Step3: 解析前后置条件的全局变量
+            # for c in constructors:
+            #     await self.parse_gconfig_v2(c, GconfigType.constructor, "constructor_json")
 
             # Step4: 获取断言
             asserts = await TestCaseAssertsDao.async_list_test_case_asserts(case_id)
@@ -310,14 +338,17 @@ class Executor(object):
             # 获取出参信息
             out_parameters = await PityTestCaseOutParametersDao.select_list(case_id=case_id)
 
-            for ast in asserts:
-                await self.parse_gconfig(ast, GconfigType.asserts, env, "expected", "actually")
+            # for ast in asserts:
+            #     await self.parse_gconfig_v2(ast, GconfigType.asserts, "expected", "actually")
 
             # Step5: 替换参数
             self.replace_args(req_params, case_info, constructors, asserts)
 
             # Step6: 执行前置条件
             await self.execute_constructors(env, path, case_info, case_params, req_params, constructors, asserts)
+
+            # 获取全局变量更新body url headers
+            await self.parse_gconfig_v2(case_info, GconfigType.case, *Executor.fields)
 
             # Step7: 批量改写主方法参数
             await self.parse_params(case_info, case_params)
@@ -338,6 +369,7 @@ class Executor(object):
                 case_info.url = f"{base_path}{case_info.url}"
 
             response_info["url"] = case_info.url
+            response_info["request_data"] = body
 
             # Step9: 完成http请求
             request_obj = await AsyncRequest.client(url=case_info.url, body_type=case_info.body_type, headers=headers,
@@ -356,7 +388,6 @@ class Executor(object):
 
             # 写入response
             # TODO
-            # req_params["response"] = res.get("response", "")
 
             self.replace_asserts(asserts, req_params, case_params)
             self.replace_constructors(constructors, req_params, case_params)
@@ -472,17 +503,10 @@ class Executor(object):
     @case_log
     def replace_body(self, req_params, body, body_type=1):
         """根据传入的构造参数进行参数替换"""
-        if body_type != BodyType.json:
-            self.append("当前请求数据不为json, 跳过替换")
-            return body
         try:
             if body:
-                data = json.loads(body)
-                if req_params is not None:
-                    for k, v in req_params.items():
-                        if data.get(k) is not None:
-                            data[k] = v
-                return json.dumps(data, ensure_ascii=False)
+                # 2024-01-22 switch to Render
+                return Render.render(req_params, body)
             self.append(f"body为空, 不进行替换")
         except Exception as e:
             self.append(f"替换请求body失败, {e}")

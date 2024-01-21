@@ -14,9 +14,7 @@ class TestcaseConstructor(ConstructorAbstract):
             case_id = data.get("constructor_case_id")
             if not case_id:
                 raise Exception("未获取到前/后置条件的用例id, 请检查前置条件")
-            testcase, err = await TestCaseDao.async_query_test_case(case_id)
-            if err:
-                raise Exception(f"用例: [{case_id}]不存在:")
+            testcase = await TestCaseDao.async_query_test_case(case_id)
             executor.append(f"当前路径: {path}, 第{index + 1}条{ConstructorAbstract.get_name(constructor)}")
             # 说明是case
             executor_class = kwargs.get('executor_class')(executor.logger)

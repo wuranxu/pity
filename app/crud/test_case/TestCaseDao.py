@@ -224,11 +224,11 @@ class TestCaseDao(Mapper):
                     select(TestCase).where(TestCase.id == case_id, TestCase.deleted_at == 0))
                 data = result.scalars().first()
                 if data is None:
-                    return None, "用例不存在"
-                return data, None
+                    raise Exception(f"用例id: {case_id}不存在, 可能已经被删除")
+                return data
         except Exception as e:
             TestCaseDao.__log__.error(f"查询用例失败: {str(e)}")
-            return None, f"查询用例失败: {str(e)}"
+            raise Exception(f"查询用例失败: {str(e)}")
 
     @classmethod
     async def list_testcase_tree(cls, projects: List[Project]) -> [List, dict]:
