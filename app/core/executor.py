@@ -102,16 +102,16 @@ class Executor(object):
         for f in fields:
             await self.parse_field(data, f, GconfigType.text(type_), env)
 
-    async def parse_gconfig_v2(self, data, type_, *fields):
-        """upgrade for replacing global variables"""
+    async def load_testcase_variables(self, data, type_, *fields):
+        """load_testcase_variables, include global variables"""
         for f in fields:
-            self.append("解析{}: [{}]中的全局变量".format(GconfigType.text(type_), data, f))
+            self.append("解析{}: [{}]中的变量".format(GconfigType.text(type_), data, f))
             origin_field = getattr(data, f)
             # if not None or ""
             if origin_field:
                 rendered = Render.render(self.glb, origin_field)
                 if rendered != origin_field:
-                    self.append("替换全局变量成功, [{}]:\n\n[{}] -> [{}]\n".format(f, origin_field, rendered))
+                    self.append("替换变量成功, [{}]:\n\n[{}] -> [{}]\n".format(f, origin_field, rendered))
                     setattr(data, f, rendered)
 
     @case_log
@@ -233,46 +233,9 @@ class Executor(object):
         if construct is None:
             self.append(f"构造方法类型: {constructor.type} 不合法, 请检查")
             return
+        # 加载变量
+        constructor.constructor_json = Render.render(params, constructor.constructor_json)
         await construct.run(self, env, index, path, params, req_params, constructor, executor_class=Executor)
-
-    # async def execute_constructor(self, env, index, path, params, req_params, constructor: Constructor):
-    #     if not constructor.enable:
-    #         self.append(f"当前路径: {path}, 构造方法: {constructor.name} 已关闭, 不继续执行")
-    #         return
-    #     if constructor.type == 0:
-    #         try:
-    #             data = json.loads(constructor.constructor_json)
-    #             case_id = data.get("case_id")
-    #             testcase, _ = await TestCaseDao.async_query_test_case(case_id)
-    #             self.append(f"当前路径: {path}, 第{index + 1}条构造方法")
-    #             # 说明是case
-    #             executor = Executor(self.logger)
-    #             new_param = data.get("params")
-    #             if new_param:
-    #                 temp = json.loads(new_param)
-    #                 req_params.update(temp)
-    #             result, err = await executor.run(env, case_id, params, req_params, f"{path}->{testcase.name}")
-    #             if err:
-    #                 raise Exception(err)
-    #             if not result["status"]:
-    #                 raise Exception(f"断言失败, 断言数据: {result.get('asserts', 'unknown')}")
-    #             params[constructor.value] = result
-    #             # await self.parse_params(testcase, params)
-    #         except Exception as e:
-    #             raise Exception(f"{path}->{constructor.name} 第{index + 1}个构造方法执行失败: {e}")
-    #     elif constructor.type == 1:
-    #         # 说明是sql语句
-    #         try:
-    #             self.append(f"当前路径: {path}, 第{index + 1}条构造方法")
-    #             data = json.loads(constructor.constructor_json)
-    #             database = data.get("database")
-    #             sql = data.get("sql")
-    #             self.append(f"当前构造方法类型为sql, 数据库名: {database}\nsql: {sql}\n")
-    #             sql_data = await DbConfigDao.execute_sql(env, database, sql)
-    #             params[constructor.value] = sql_data
-    #             self.append(f"当前构造方法返回变量: {constructor.value}\n返回值:\n {sql_data}\n")
-    #         except Exception as e:
-    #             raise Exception(f"{path}->{constructor.name} 第{index + 1}个构造方法执行失败: {e}")
 
     def add_header(self, case_info, headers):
         """
@@ -328,18 +291,11 @@ class Executor(object):
             # Step2: 获取构造数据
             constructors = await self.get_constructor(case_id)
 
-            # #  Step3: 解析前后置条件的全局变量
-            # for c in constructors:
-            #     await self.parse_gconfig_v2(c, GconfigType.constructor, "constructor_json")
-
             # Step4: 获取断言
             asserts = await TestCaseAssertsDao.async_list_test_case_asserts(case_id)
 
             # 获取出参信息
             out_parameters = await PityTestCaseOutParametersDao.select_list(case_id=case_id)
-
-            # for ast in asserts:
-            #     await self.parse_gconfig_v2(ast, GconfigType.asserts, "expected", "actually")
 
             # Step5: 替换参数
             self.replace_args(req_params, case_info, constructors, asserts)
@@ -348,10 +304,7 @@ class Executor(object):
             await self.execute_constructors(env, path, case_info, case_params, req_params, constructors, asserts)
 
             # 获取全局变量更新body url headers
-            await self.parse_gconfig_v2(case_info, GconfigType.case, *Executor.fields)
-
-            # Step7: 批量改写主方法参数
-            await self.parse_params(case_info, case_params)
+            await self.load_testcase_variables(case_info, GconfigType.case, *Executor.fields)
 
             if case_info.request_headers and case_info.request_headers != "":
                 headers = json.loads(case_info.request_headers)
@@ -359,9 +312,6 @@ class Executor(object):
                 headers = dict()
 
             body = case_info.body if case_info.body != '' else None
-
-            # Step8: 替换请求参数
-            body = self.replace_body(request_param, body, case_info.body_type)
 
             # Step9: 替换base_path
             if case_info.base_path:
@@ -386,17 +336,11 @@ class Executor(object):
             # 替换主变量
             case_params.update(out_dict)
 
-            # 写入response
-            # TODO
-
-            self.replace_asserts(asserts, req_params, case_params)
-            self.replace_constructors(constructors, req_params, case_params)
-
             # Step10: 执行后置条件
             await self.execute_constructors(env, path, case_info, case_params, req_params, constructors, asserts, True)
 
             # Step11: 断言
-            asserts, ok = self.my_assert(asserts, response_info.get('json_format'))
+            asserts, ok = self.my_assert(case_params, asserts)
             response_info["status"] = ok
             response_info["asserts"] = asserts
             # 日志输出, 如果不是主用例则不记录
@@ -517,7 +461,7 @@ class Executor(object):
         return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     @case_log
-    def my_assert(self, asserts: List, json_format: bool) -> [str, bool]:
+    def my_assert(self, params, asserts: List) -> [str, bool]:
         """
         断言验证
         """
@@ -529,9 +473,11 @@ class Executor(object):
         for item in asserts:
             try:
                 # 解析预期/实际结果
-                expected = self.translate(item.expected)
+                exp = Render.render(params, item.expected)
+                act = Render.render(params, item.actually)
+                expected = self.translate(exp)
                 # 判断请求返回是否是json格式，如果不是则不进行loads操作
-                actually = self.translate(item.actually)
+                actually = self.translate(act)
                 status, err = self.ops(item.assert_type, expected, actually)
                 if not status:
                     ok = False
@@ -625,59 +571,79 @@ class Executor(object):
         return re.findall(Executor.pattern, string)
 
     @case_log
-    def translate(self, data):
+    def translate(self, result):
         """
-        反序列化为Python对象
+        尝试反序列化为Python对象
         """
-        return json.loads(data)
 
-    def replace_branch(self, branch: str, params: dict):
-        if not params:
-            return branch
-        if branch.startswith("#"):
-            # 说明branch也是个子变量
-            data = branch[1:]
-            if len(data) == 0:
-                return branch
-            dist = params.get(data)
-            if dist is None:
-                return branch
-            return params.get(data)
-        return branch
+        if isinstance(result, bytes):
+            return result.decode()
 
-    @case_log
-    def parse_variable(self, response_info, string: str, params=None):
-        """
-        解析返回response中的变量
-        """
-        exp = self.get_el_expression(string)
-        if len(exp) == 0:
-            return string
-        data = exp[0]
-        el_list = data.split(".")
-        # ${response.data.id}
-        result = response_info
+        # 优先判断是否是时间
         try:
-            for branch in el_list:
-                branch = self.replace_branch(branch, params)
-                if isinstance(result, str):
-                    # 说明需要反序列化
-                    try:
-                        result = json.loads(result)
-                    except Exception as e:
-                        self.append(f"反序列化失败, result: {result}\nERROR: {e}")
-                        break
-                # 2022-02-27 修复数组变量替换的bug
-                if isinstance(branch, int) or branch.isdigit():
-                    # 说明路径里面的是数组
-                    result = result[int(branch)]
-                else:
-                    result = result.get(branch)
-        except Exception as e:
-            raise Exception(f"获取变量失败: {str(e)}")
-        if string == "${response}":
+            return datetime.strptime(result, "%Y-%m-%d %H:%M:%S")
+        except:
+            pass
+
+        try:
+            return datetime.strptime(result, "%Y-%m-%d %H:%M:%S.%f")
+        except:
+            pass
+
+        if result == '':
+            return None
+        try:
+            return json.loads(result)
+        except:
             return result
-        return json.dumps(result, ensure_ascii=False)
+
+    # def replace_branch(self, branch: str, params: dict):
+    #     if not params:
+    #         return branch
+    #     if branch.startswith("#"):
+    #         # 说明branch也是个子变量
+    #         data = branch[1:]
+    #         if len(data) == 0:
+    #             return branch
+    #         dist = params.get(data)
+    #         if dist is None:
+    #             return branch
+    #         return params.get(data)
+    #     return branch
+
+    # @case_log
+    # def parse_variable(self, response_info, string: str, params=None):
+    #     """
+    #     解析返回response中的变量
+    #     """
+    #     exp = self.get_el_expression(string)
+    #     if len(exp) == 0:
+    #         return string
+    #     data = exp[0]
+    #     el_list = data.split(".")
+    #     # ${response.data.id}
+    #     result = response_info
+    #     try:
+    #         for branch in el_list:
+    #             branch = self.replace_branch(branch, params)
+    #             if isinstance(result, str):
+    #                 # 说明需要反序列化
+    #                 try:
+    #                     result = json.loads(result)
+    #                 except Exception as e:
+    #                     self.append(f"反序列化失败, result: {result}\nERROR: {e}")
+    #                     break
+    #             # 2022-02-27 修复数组变量替换的bug
+    #             if isinstance(branch, int) or branch.isdigit():
+    #                 # 说明路径里面的是数组
+    #                 result = result[int(branch)]
+    #             else:
+    #                 result = result.get(branch)
+    #     except Exception as e:
+    #         raise Exception(f"获取变量失败: {str(e)}")
+    #     if string == "${response}":
+    #         return result
+    #     return json.dumps(result, ensure_ascii=False)
 
     @staticmethod
     async def notice(env: list, plan: PityTestPlan, project: Project, report_dict: dict, users: list):
@@ -808,9 +774,8 @@ class Executor(object):
         except Exception as e:
             raise Exception(f"批量执行用例失败: {e}")
 
-
-if __name__ == "__main__":
-    a = Executor()
-    temp = json.dumps({"a": {"b": [{"c": 1, "d": 2}]}})
-    ans = a.parse_variable(temp, "${a.b.#name.c}", {"name": 0})
-    print(ans)
+# if __name__ == "__main__":
+#     a = Executor()
+#     temp = json.dumps({"a": {"b": [{"c": 1, "d": 2}]}})
+#     ans = a.parse_variable(temp, "${a.b.#name.c}", {"name": 0})
+#     print(ans)
