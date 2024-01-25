@@ -102,14 +102,14 @@ class Executor(object):
         for f in fields:
             await self.parse_field(data, f, GconfigType.text(type_), env)
 
-    async def load_testcase_variables(self, data, type_, *fields):
+    async def load_testcase_variables(self, data, type_, params, *fields):
         """load_testcase_variables, include global variables"""
         for f in fields:
             self.append("解析{}: [{}]中的变量".format(GconfigType.text(type_), data, f))
             origin_field = getattr(data, f)
             # if not None or ""
             if origin_field:
-                rendered = Render.render(self.glb, origin_field)
+                rendered = Render.render(params, origin_field)
                 if rendered != origin_field:
                     self.append("替换变量成功, [{}]:\n\n[{}] -> [{}]\n".format(f, origin_field, rendered))
                     setattr(data, f, rendered)
@@ -222,7 +222,7 @@ class Executor(object):
         for i, c in enumerate(constructors):
             if c.suffix == suffix:
                 await self.execute_constructor(env, current, path, params, req_params, c)
-                self.replace_args(params, case_info, constructors, asserts)
+                # self.replace_args(params, case_info, constructors, asserts)
                 current += 1
 
     async def execute_constructor(self, env, index, path, params, req_params, constructor: Constructor):
@@ -279,7 +279,7 @@ class Executor(object):
 
         # 挂载全局变量
         case_params.update(self.glb)
-        request_param.update(self.glb)
+        req_params.update(self.glb)
 
         try:
             case_info = await TestCaseDao.async_query_test_case(case_id)
@@ -298,13 +298,13 @@ class Executor(object):
             out_parameters = await PityTestCaseOutParametersDao.select_list(case_id=case_id)
 
             # Step5: 替换参数
-            self.replace_args(req_params, case_info, constructors, asserts)
+            # self.replace_args(req_params, case_info, constructors, asserts)
 
             # Step6: 执行前置条件
             await self.execute_constructors(env, path, case_info, case_params, req_params, constructors, asserts)
 
             # 获取全局变量更新body url headers
-            await self.load_testcase_variables(case_info, GconfigType.case, *Executor.fields)
+            await self.load_testcase_variables(case_info, GconfigType.case, case_params, *Executor.fields)
 
             if case_info.request_headers and case_info.request_headers != "":
                 headers = json.loads(case_info.request_headers)

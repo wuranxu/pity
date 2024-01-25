@@ -35,11 +35,11 @@ class AsyncRequest(object):
                     # 修复bug，当http状态码不为200的时候给出提示
                     return await self.collect(False, self.get_data(self.kwargs), resp.status, msg="http状态码不为200")
                 cost = "%.0fms" % ((time.time() - start) * 1000)
-                response, json_format = await AsyncRequest.get_resp(resp)
+                response = await AsyncRequest.get_resp(resp)
                 cookie = self.get_cookie(session)
                 return await self.collect(True, self.get_data(self.kwargs), resp.status, response,
                                           resp.headers, resp.request_info.headers, elapsed=cost,
-                                          cookies=cookie, json_format=json_format)
+                                          cookies=cookie)
 
     async def download(self):
         async with aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar(unsafe=True)) as session:
@@ -99,11 +99,11 @@ class AsyncRequest(object):
         try:
             data = await resp.json(encoding='utf-8')
             # 说明是json格式
-            return json.dumps(data, ensure_ascii=False, indent=4), True
+            # return json.dumps(data, ensure_ascii=False, indent=4), True
         except:
             data = await resp.text()
             # 说明不是json格式，我们不做loads操作了
-            return data, False
+        return data
 
     @staticmethod
     def get_request_data(body):

@@ -3,7 +3,6 @@ from email.header import Header
 from email.mime.text import MIMEText
 from email.utils import make_msgid
 
-import aioify
 from awaits.awaitable import awaitable
 from jinja2.environment import Template
 
