@@ -16,12 +16,12 @@ class TestResultDao(Mapper):
 
     @staticmethod
     async def insert_report(report_id: int, case_id: int, case_name: str, status: int,
-                     case_log: str, start_at: datetime, finished_at: datetime,
-                     url: str, body: str, request_method: str, request_headers: str, cost: str,
-                     asserts: str, response_headers: str, response: str,
-                     status_code: int, cookies: str, retry: int = None,
-                     request_params: str = '', data_name: str = '', data_id: int = None,
-                     ) -> None:
+                            case_log: str, start_at: datetime, finished_at: datetime,
+                            url: str, body: str, request_method: str, request_headers: str, cost: str,
+                            asserts: str, response_headers: str, response: str,
+                            status_code: int, cookies: str, retry: int = None,
+                            request_params: str = '', data_name: str = '', data_id: int = None,
+                            ) -> None:
         try:
             async with async_session() as session:
                 async with session.begin():

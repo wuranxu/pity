@@ -4,7 +4,7 @@ import re
 import time
 from collections import defaultdict
 from datetime import datetime
-from typing import List, Any, Callable
+from typing import List, Callable
 
 from app.core.constructor.case_constructor import TestcaseConstructor
 from app.core.constructor.http_constructor import HttpConstructor
@@ -38,7 +38,6 @@ from app.models.out_parameters import PityTestCaseOutParameters
 from app.models.project import Project
 from app.models.test_case import TestCase
 from app.models.test_plan import PityTestPlan
-from app.models.testcase_asserts import TestCaseAsserts
 from app.utils.case_logger import CaseLog
 from app.utils.decorator import case_log, lock
 from app.utils.gconfig_parser import StringGConfigParser, JSONGConfigParser, YamlGConfigParser
@@ -213,16 +212,16 @@ class Executor(object):
         """获取构造数据"""
         return await TestCaseDao.async_select_constructor(case_id)
 
-    async def execute_constructors(self, env: int, path, case_info, params, req_params, constructors: List[Constructor],
-                                   asserts, suffix=False):
+    async def execute_constructors(self, env: int, path, params, req_params, constructors: List[Constructor],
+                                   suffix=False):
         """开始构造数据"""
         if len(constructors) == 0:
             self.append("前后置条件为空, 跳出该环节")
+            return
         current = 0
         for i, c in enumerate(constructors):
             if c.suffix == suffix:
                 await self.execute_constructor(env, current, path, params, req_params, c)
-                # self.replace_args(params, case_info, constructors, asserts)
                 current += 1
 
     async def execute_constructor(self, env, index, path, params, req_params, constructor: Constructor):
@@ -266,13 +265,9 @@ class Executor(object):
         response_info = dict()
 
         # 初始化case全局变量, 只存在于case生命周期 注意 它与全局变量不是一套逻辑
-        case_params = params_pool
-        if case_params is None:
-            case_params = dict()
+        case_params = params_pool if params_pool is not None else dict()
 
-        req_params = request_param
-        if req_params is None:
-            req_params = dict()
+        req_params = request_param if request_param is not None else dict()
 
         # 加载全局变量
         await self.query_gconfig(env)
@@ -297,11 +292,8 @@ class Executor(object):
             # 获取出参信息
             out_parameters = await PityTestCaseOutParametersDao.select_list(case_id=case_id)
 
-            # Step5: 替换参数
-            # self.replace_args(req_params, case_info, constructors, asserts)
-
             # Step6: 执行前置条件
-            await self.execute_constructors(env, path, case_info, case_params, req_params, constructors, asserts)
+            await self.execute_constructors(env, path, case_params, req_params, constructors)
 
             # 获取全局变量更新body url headers
             await self.load_testcase_variables(case_info, GconfigType.case, case_params, *Executor.fields)
@@ -337,7 +329,7 @@ class Executor(object):
             case_params.update(out_dict)
 
             # Step10: 执行后置条件
-            await self.execute_constructors(env, path, case_info, case_params, req_params, constructors, asserts, True)
+            await self.execute_constructors(env, path, case_params, req_params, constructors, True)
 
             # Step11: 断言
             asserts, ok = self.my_assert(case_params, asserts)
@@ -357,39 +349,6 @@ class Executor(object):
     @staticmethod
     def get_dict(json_data: str):
         return json.loads(json_data)
-
-    def replace_cls(self, params: dict, cls, *fields: Any):
-        for k, v in params.items():
-            for f in fields:
-                fd = getattr(cls, f, '')
-                if fd is None:
-                    continue
-                if k in fd:
-                    data = self.replace_params(f, fd, params)
-                    for a, b in data.items():
-                        fd = fd.replace(a, b)
-                        setattr(cls, f, fd)
-
-    def replace_args(self, params, data: TestCase, constructors: List[Constructor], asserts: List[TestCaseAsserts]):
-        self.replace_testcase(params, data)
-        self.replace_constructors(constructors, params)
-        self.replace_asserts(asserts, params)
-
-    def replace_testcase(self, params: dict, data: TestCase):
-        """替换测试用例中的参数"""
-        self.replace_cls(params, data, "request_headers", "body", "url")
-
-    def replace_constructors(self, constructors: List[Constructor], *params: dict):
-        """替换数据构造器中的参数"""
-        for c in constructors:
-            for par in params:
-                self.replace_cls(par, c, "constructor_json")
-
-    def replace_asserts(self, asserts: List[TestCaseAsserts], *params):
-        """替换断言中的参数"""
-        for a in asserts:
-            for p in params:
-                self.replace_cls(p, a, "expected", "actually")
 
     @staticmethod
     async def run_with_test_data(env, data, report_id, case_id, params_pool: dict = None, request_param: dict = None,
@@ -443,18 +402,6 @@ class Executor(object):
                                               Executor.get_dict(x.json_data),
                                               path, x.name, x.id, retry_minutes=retry_minutes)
                   for x in test_data))
-
-    @case_log
-    def replace_body(self, req_params, body, body_type=1):
-        """根据传入的构造参数进行参数替换"""
-        try:
-            if body:
-                # 2024-01-22 switch to Render
-                return Render.render(req_params, body)
-            self.append(f"body为空, 不进行替换")
-        except Exception as e:
-            self.append(f"替换请求body失败, {e}")
-        return body
 
     @staticmethod
     def get_time():
@@ -597,54 +544,6 @@ class Executor(object):
         except:
             return result
 
-    # def replace_branch(self, branch: str, params: dict):
-    #     if not params:
-    #         return branch
-    #     if branch.startswith("#"):
-    #         # 说明branch也是个子变量
-    #         data = branch[1:]
-    #         if len(data) == 0:
-    #             return branch
-    #         dist = params.get(data)
-    #         if dist is None:
-    #             return branch
-    #         return params.get(data)
-    #     return branch
-
-    # @case_log
-    # def parse_variable(self, response_info, string: str, params=None):
-    #     """
-    #     解析返回response中的变量
-    #     """
-    #     exp = self.get_el_expression(string)
-    #     if len(exp) == 0:
-    #         return string
-    #     data = exp[0]
-    #     el_list = data.split(".")
-    #     # ${response.data.id}
-    #     result = response_info
-    #     try:
-    #         for branch in el_list:
-    #             branch = self.replace_branch(branch, params)
-    #             if isinstance(result, str):
-    #                 # 说明需要反序列化
-    #                 try:
-    #                     result = json.loads(result)
-    #                 except Exception as e:
-    #                     self.append(f"反序列化失败, result: {result}\nERROR: {e}")
-    #                     break
-    #             # 2022-02-27 修复数组变量替换的bug
-    #             if isinstance(branch, int) or branch.isdigit():
-    #                 # 说明路径里面的是数组
-    #                 result = result[int(branch)]
-    #             else:
-    #                 result = result.get(branch)
-    #     except Exception as e:
-    #         raise Exception(f"获取变量失败: {str(e)}")
-    #     if string == "${response}":
-    #         return result
-    #     return json.dumps(result, ensure_ascii=False)
-
     @staticmethod
     async def notice(env: list, plan: PityTestPlan, project: Project, report_dict: dict, users: list):
         """
@@ -773,9 +672,3 @@ class Executor(object):
             return report_id
         except Exception as e:
             raise Exception(f"批量执行用例失败: {e}")
-
-# if __name__ == "__main__":
-#     a = Executor()
-#     temp = json.dumps({"a": {"b": [{"c": 1, "d": 2}]}})
-#     ans = a.parse_variable(temp, "${a.b.#name.c}", {"name": 0})
-#     print(ans)
