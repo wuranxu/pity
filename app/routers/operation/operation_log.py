@@ -28,8 +28,8 @@ async def list_user_operation(start_time: str, end_time: str, user_id: int, tag:
 @router.get("/count")
 async def list_user_activities(user_id: int, start_time: str, end_time: str, _=Depends(Permission())):
     try:
-        start = datetime.strptime(start_time, "%Y-%m-%d")
-        end = datetime.strptime(end_time, "%Y-%m-%d")
+        start = datetime.strptime(start_time, "%Y-%m-%d").replace(hour=0, minute=0, second=0, microsecond=0)
+        end = datetime.strptime(end_time, "%Y-%m-%d").replace(hour=23, minute=59, second=59, microsecond=0)
         records = await PityOperationDao.count_user_activities(user_id, start, end)
         ans = list()
         for r in records:
