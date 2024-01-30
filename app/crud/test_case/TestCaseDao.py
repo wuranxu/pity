@@ -1,4 +1,5 @@
 import json
+from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import List, Dict
 
@@ -395,7 +396,7 @@ class TestCaseDao(Mapper):
 
     @staticmethod
     async def query_weekly_user_case(user_id: int, start_time: datetime, end_time: datetime) -> List:
-        ans = dict()
+        ans = defaultdict(int)
         async with async_session() as session:
             async with session.begin():
                 # date_ = func.date_format(TestCase.created_at, "%Y-%m-%d")
@@ -406,7 +407,7 @@ class TestCaseDao(Mapper):
                 query = await session.execute(sql)
                 for i, q in enumerate(query.all()):
                     date, count = q
-                    ans[date.strftime("%Y-%m-%d")] = count
+                    ans[date.strftime("%Y-%m-%d")] += count
         return await TestCaseDao.fill_data(start_time, end_time, ans)
 
     @staticmethod
