@@ -49,31 +49,3 @@ class Render(object):
             return tmpl.render(**context)
         except Exception as e:
             raise Exception(f"解析参数失败, 请检查变量是否获取到: {str(e)}")
-
-
-if __name__ == "__main__":
-    # import jinja2
-    #
-    # template = jinja2.Template("""hello {{nan.xixi[0].orderId}} """)
-    #
-    # from jinja2 import Environment
-    # from jinja2.runtime import Context
-    #
-    # env = Environment()
-
-    a = "2023-09-14 12:00:00.223"
-    temp = """{{uuid()}}"""
-
-    c = Render.render(dict(), temp)
-    print(c)
-
-    js_dat = {
-        "nan": {
-            "xixi": [
-                {
-                    "ni_zai_gan_ma": "hahahaha",
-                    "orderId": 44
-                }
-            ]
-        }
-    }

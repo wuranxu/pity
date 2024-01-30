@@ -26,5 +26,4 @@ class PityOperationDao(Mapper):
                     PityOperationLog.user_id == user_id) \
                     .group_by(PityOperationLog.operate_time).order_by(PityOperationLog.operate_time)
                 data = await session.execute(sql)
-                print(sql)
                 return data.all()
