@@ -8,7 +8,7 @@ from app.models.constructor import Constructor
 class TestcaseConstructor(ConstructorAbstract):
 
     @staticmethod
-    async def run(executor, env, index, path, params, req_params, constructor: Constructor, **kwargs):
+    async def run(executor, env, index, path, params, constructor: Constructor, **kwargs):
         try:
             data = json.loads(constructor.constructor_json)
             case_id = data.get("constructor_case_id")
@@ -21,13 +21,13 @@ class TestcaseConstructor(ConstructorAbstract):
             new_param = data.get("params")
             if new_param:
                 temp = json.loads(new_param)
-                req_params.update(temp)
-            result, err = await executor_class.run(env, case_id, params, req_params, f"{path}->{testcase.name}")
+                params.update(temp)
+            result, err = await executor_class.run(env, case_id, params, f"{path}->{testcase.name}")
             if err:
                 raise Exception(err)
             if not result["status"]:
                 raise Exception(f"断言失败, 断言数据: {result.get('asserts', 'unknown')}")
-            params[constructor.value] = result
+            return result
         except Exception as e:
             raise Exception(
                 f"{path}->{constructor.name} 第{index + 1}个{ConstructorAbstract.get_name(constructor)}执行失败: {e}")

@@ -10,7 +10,7 @@ class PythonConstructor(ConstructorAbstract):
 
     @staticmethod
     @awaitable
-    def run(executor, env, index, path, params, req_params, constructor: Constructor, **kwargs):
+    def run(executor, env, index, path, params, constructor: Constructor, **kwargs):
         try:
             executor.append(f"当前路径: {path}, 第{index + 1}条{ConstructorAbstract.get_name(constructor)}")
             script = json.loads(constructor.constructor_json)
@@ -24,11 +24,9 @@ class PythonConstructor(ConstructorAbstract):
                 executor.append(
                     f"当前{ConstructorAbstract.get_name(constructor)}未返回任何值")
                 return
-            # if not isinstance(py_data, str):
-            #     py_data = json.dumps(py_data, ensure_ascii=False)
-            params[constructor.value] = py_data
             executor.append(
                 f"当前{ConstructorAbstract.get_name(constructor)}返回变量: {constructor.value}\n返回值:\n {py_data}\n")
+            return py_data
         except Exception as e:
             raise Exception(
                 f"{path}->{constructor.name} 第{index + 1}个{ConstructorAbstract.get_name(constructor)}执行失败: {e}")

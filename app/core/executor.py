@@ -212,8 +212,7 @@ class Executor(object):
         """获取构造数据"""
         return await TestCaseDao.async_select_constructor(case_id)
 
-    async def execute_constructors(self, env: int, path, params, req_params, constructors: List[Constructor],
-                                   suffix=False):
+    async def execute_constructors(self, env: int, path, params, constructors: List[Constructor], suffix=False):
         """开始构造数据"""
         if len(constructors) == 0:
             self.append("前后置条件为空, 跳出该环节")
@@ -221,10 +220,10 @@ class Executor(object):
         current = 0
         for i, c in enumerate(constructors):
             if c.suffix == suffix:
-                await self.execute_constructor(env, current, path, params, req_params, c)
+                await self.execute_constructor(env, current, path, params, c)
                 current += 1
 
-    async def execute_constructor(self, env, index, path, params, req_params, constructor: Constructor):
+    async def execute_constructor(self, env, index, path, params, constructor: Constructor):
         if not constructor.enable:
             self.append(f"当前路径: {path}, 构造方法: {constructor.name} 已关闭, 不继续执行")
             return False
@@ -234,7 +233,9 @@ class Executor(object):
             return
         # 加载变量
         constructor.constructor_json = Render.render(params, constructor.constructor_json)
-        await construct.run(self, env, index, path, params, req_params, constructor, executor_class=Executor)
+        resp = await construct.run(self, env, index, path, params, constructor, executor_class=Executor)
+        if constructor.value and resp:
+            params[constructor.value] = resp
 
     def add_header(self, case_info, headers):
         """
@@ -272,9 +273,9 @@ class Executor(object):
         # 加载全局变量
         await self.query_gconfig(env)
 
-        # 挂载全局变量
+        # 挂载全局变量, 合并请求变量
         case_params.update(self.glb)
-        req_params.update(self.glb)
+        case_params.update(req_params)
 
         try:
             case_info = await TestCaseDao.async_query_test_case(case_id)
@@ -293,7 +294,7 @@ class Executor(object):
             out_parameters = await PityTestCaseOutParametersDao.select_list(case_id=case_id)
 
             # Step4: 执行前置条件
-            await self.execute_constructors(env, path, case_params, req_params, constructors)
+            await self.execute_constructors(env, path, case_params, constructors)
 
             # Step5: 更新body url headers中的变量
             await self.load_testcase_variables(case_info, GconfigType.case, case_params, *Executor.fields)
@@ -329,7 +330,7 @@ class Executor(object):
             case_params.update(out_dict)
 
             # Step8: 执行后置条件
-            await self.execute_constructors(env, path, case_params, req_params, constructors, True)
+            await self.execute_constructors(env, path, case_params, constructors, True)
 
             # Step9: 断言
             asserts, ok = self.my_assert(case_params, asserts)
