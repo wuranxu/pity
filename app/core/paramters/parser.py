@@ -29,4 +29,4 @@ class Parser(object):
             if match_index.lower() == 'all':
                 return data
             raise CaseParametersError(f"invalid match index: {match_index}, not number or random")
-        return data
+        return data[0]
