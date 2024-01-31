@@ -24,8 +24,8 @@ class PythonConstructor(ConstructorAbstract):
                 executor.append(
                     f"当前{ConstructorAbstract.get_name(constructor)}未返回任何值")
                 return
-            if not isinstance(py_data, str):
-                py_data = json.dumps(py_data, ensure_ascii=False)
+            # if not isinstance(py_data, str):
+            #     py_data = json.dumps(py_data, ensure_ascii=False)
             params[constructor.value] = py_data
             executor.append(
                 f"当前{ConstructorAbstract.get_name(constructor)}返回变量: {constructor.value}\n返回值:\n {py_data}\n")

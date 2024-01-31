@@ -231,7 +231,8 @@ class DbConfigDao(Mapper):
                                                   query.database)
             result, _ = await DbConfigDao.execute(data, sql)
             _, result = PityResponse.parse_sql_result(result)
-            return json.dumps(result, cls=JsonEncoder, ensure_ascii=False)
+            return result
+            # return json.dumps(result, cls=JsonEncoder, ensure_ascii=False)
         except Exception as e:
             DbConfigDao.log.error(f"查询数据库配置失败, error: {e}")
             raise Exception(f"执行SQL失败: {e}")
