@@ -283,19 +283,19 @@ class Executor(object):
             method = case_info.request_method.upper()
             response_info["request_method"] = method
 
-            # Step2: 获取构造数据
+            # Step1: 获取构造数据
             constructors = await self.get_constructor(case_id)
 
-            # Step4: 获取断言
+            # Step2: 获取断言
             asserts = await TestCaseAssertsDao.async_list_test_case_asserts(case_id)
 
-            # 获取出参信息
+            # Step3: 获取出参信息
             out_parameters = await PityTestCaseOutParametersDao.select_list(case_id=case_id)
 
-            # Step6: 执行前置条件
+            # Step4: 执行前置条件
             await self.execute_constructors(env, path, case_params, req_params, constructors)
 
-            # 获取全局变量更新body url headers
+            # Step5: 更新body url headers中的变量
             await self.load_testcase_variables(case_info, GconfigType.case, case_params, *Executor.fields)
 
             if case_info.request_headers and case_info.request_headers != "":
@@ -305,7 +305,7 @@ class Executor(object):
 
             body = case_info.body if case_info.body != '' else None
 
-            # Step9: 替换base_path
+            # Step6: 替换base_path
             if case_info.base_path:
                 base_path = await PityGatewayDao.query_gateway(env, case_info.base_path)
                 case_info.url = f"{base_path}{case_info.url}"
@@ -313,7 +313,7 @@ class Executor(object):
             response_info["url"] = case_info.url
             response_info["request_data"] = body
 
-            # Step9: 完成http请求
+            # Step7: 完成http请求
             request_obj = await AsyncRequest.client(url=case_info.url, body_type=case_info.body_type, headers=headers,
                                                     body=body)
             res = await request_obj.invoke(method)
@@ -328,10 +328,10 @@ class Executor(object):
             # 替换主变量
             case_params.update(out_dict)
 
-            # Step10: 执行后置条件
+            # Step8: 执行后置条件
             await self.execute_constructors(env, path, case_params, req_params, constructors, True)
 
-            # Step11: 断言
+            # Step9: 断言
             asserts, ok = self.my_assert(case_params, asserts)
             response_info["status"] = ok
             response_info["asserts"] = asserts
