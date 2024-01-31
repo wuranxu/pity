@@ -93,14 +93,6 @@ class Executor(object):
         else:
             self.logger.append(content, end)
 
-    @case_log
-    async def parse_gconfig(self, data, type_, env, *fields):
-        """
-        解析全局变量
-        """
-        for f in fields:
-            await self.parse_field(data, f, GconfigType.text(type_), env)
-
     async def load_testcase_variables(self, data, type_, params, *fields):
         """load_testcase_variables, include global variables"""
         for f in fields:
