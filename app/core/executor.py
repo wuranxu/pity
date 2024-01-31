@@ -36,7 +36,6 @@ from app.middleware.AsyncHttpClient import AsyncRequest
 from app.models.constructor import Constructor
 from app.models.out_parameters import PityTestCaseOutParameters
 from app.models.project import Project
-from app.models.test_case import TestCase
 from app.models.test_plan import PityTestPlan
 from app.utils.case_logger import CaseLog
 from app.utils.decorator import case_log, lock
@@ -64,8 +63,6 @@ gconfig_parser = {
 
 class Executor(object):
     log = Log("Executor")
-    el_exp = r"\$\{(.+?)\}"
-    pattern = re.compile(el_exp)
     # 需要替换全局变量的字段
     fields = ['body', 'url', 'request_headers']
 
@@ -123,81 +120,6 @@ class Executor(object):
         if parser is None:
             raise Exception(f"全局变量类型: {key_type}不合法, 请检查!")
         return parser
-
-    async def parse_field(self, data, field, name, env):
-        """
-        解析字段
-        """
-        try:
-            self.append("获取{}: [{}]字段: [{}]中的el表达式".format(name, data, field))
-            field_origin = getattr(data, field)
-            variables = self.get_el_expression(field_origin)
-            for v in variables:
-                key = v.split(".")[0]
-                cf = await GConfigDao.async_get_gconfig_by_key(key, env)
-                if cf is not None:
-                    # 解析变量
-                    parse = self.get_parser(cf.key_type)
-                    new_value = parse(cf.value, v)
-                    new_field = field_origin.replace("${%s}" % v, new_value)
-                    setattr(data, field, new_field)
-                    self.append("替换全局变量成功, 字段: [{}]:\n\n[{}] -> [{}]\n".format(field, "${%s}" % v, new_value))
-                    field_origin = new_field
-            self.append("获取{}字段: [{}]中的el表达式".format(name, field), True)
-        except Exception as e:
-            Executor.log.error(f"查询全局变量失败, error: {str(e)}")
-            raise Exception(f"查询全局变量失败, error: {str(e)}")
-
-    def replace_params(self, field_name, field_origin, params: dict):
-        new_data = dict()
-        if not isinstance(field_origin, str):
-            return new_data
-        variables = self.get_el_expression(field_origin)
-        for v in variables:
-            key = v.split(".")
-            if not params.get(key[0]):
-                continue
-            result = params
-            for branch in key:
-                if isinstance(result, str):
-                    # 说明需要反序列化
-                    try:
-                        result = json.loads(result)
-                    except Exception as e:
-                        self.append(f"反序列化失败, result: {result}\nERROR: {e}")
-                        break
-                if branch.isdigit():
-                    # 说明路径里面的是数组
-                    result = result[int(branch)]
-                else:
-                    result = result.get(branch)
-                if result is None:
-                    raise Exception(f"变量路径: {v}不存在, 请检查JSON或路径!")
-            if field_name == "request_headers":
-                new_value = json.loads(result)
-            elif not isinstance(result, str):
-                new_value = json.dumps(result, ensure_ascii=False)
-            else:
-                new_value = result
-                if new_value is None:
-                    self.append("替换变量失败, 找不到对应的数据")
-                    continue
-            new_data["${%s}" % v] = new_value
-        return new_data
-
-    async def parse_params(self, data: TestCase, params: dict):
-        self.append("正在替换变量")
-        try:
-            for c in data.__table__.columns:
-                field_origin = getattr(data, c.name)
-                replace_kv = self.replace_params(c.name, field_origin, params)
-                for k, v in replace_kv.items():
-                    new_field = field_origin.replace(k, v)
-                    setattr(data, c.name, new_field)
-                    self.append("替换流程变量成功，字段: [{}]: \n\n[{}] -> [{}]\n".format(c.name, k, v))
-        except Exception as e:
-            Executor.log.error(f"替换变量失败, error: {str(e)}")
-            raise Exception(f"替换变量失败, error: {str(e)}")
 
     @case_log
     async def get_constructor(self, case_id):
@@ -258,9 +180,9 @@ class Executor(object):
         response_info = dict()
 
         # 初始化case全局变量, 只存在于case生命周期 注意 它与全局变量不是一套逻辑
-        case_params = params_pool if params_pool is not None else dict()
+        case_params = params_pool or dict()
 
-        req_params = request_param if request_param is not None else dict()
+        req_params = request_param or dict()
 
         # 加载全局变量
         await self.query_gconfig(env)
@@ -502,13 +424,6 @@ class Executor(object):
                 return True, f"预期结果: {exp} 文本包含于 实际结果: {act}【❌】"
             return False, f"预期结果: {exp} 文本不包含于 实际结果: {act}【✔】"
         return False, "不支持的断言方式💔"
-
-    def get_el_expression(self, string: str):
-        """获取字符串中的el表达式
-        """
-        if string is None:
-            return []
-        return re.findall(Executor.pattern, string)
 
     @case_log
     def translate(self, result):
