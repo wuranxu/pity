@@ -67,7 +67,7 @@ class Executor(object):
     el_exp = r"\$\{(.+?)\}"
     pattern = re.compile(el_exp)
     # 需要替换全局变量的字段
-    fields = ['url', 'request_headers']
+    fields = ['body', 'url', 'request_headers']
 
     def __init__(self, log: CaseLog = None):
         # 这里是一个彩蛋, 奔驰大G LB（括弧1.3T）
