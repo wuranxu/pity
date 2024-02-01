@@ -22,7 +22,7 @@ class TestcaseConstructor(ConstructorAbstract):
             if new_param:
                 temp = json.loads(new_param)
                 params.update(temp)
-            result, err = await executor_class.run(env, case_id, params, f"{path}->{testcase.name}")
+            result, err = await executor_class.run(env, case_id, params, None, f"{path}->{testcase.name}")
             if err:
                 raise Exception(err)
             if not result["status"]:
