@@ -1,6 +1,5 @@
 import asyncio
 import json
-import re
 import time
 from collections import defaultdict
 from datetime import datetime
@@ -293,6 +292,9 @@ class Executor(object):
             request_method = result.get("request_method")
             request_headers = result.get("request_headers")
             response = result.get("response")
+            if not isinstance(response, str):
+                # dumps ensure response is str
+                response = json.dumps(response, ensure_ascii=False)
             case_name = result.get("case_name")
             response_headers = result.get("response_headers")
             cookies = result.get("cookies")
