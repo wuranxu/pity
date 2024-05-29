@@ -97,7 +97,8 @@ class AsyncRequest(object):
     @staticmethod
     async def get_resp(resp):
         try:
-            data = await resp.json(encoding='utf-8')
+            data = await resp.text()
+            data = json.loads(data)
             # 说明是json格式
             # return json.dumps(data, ensure_ascii=False, indent=4), True
         except:
